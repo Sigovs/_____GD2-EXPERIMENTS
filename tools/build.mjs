@@ -79,7 +79,7 @@ const OPENS = {
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 const enc = p => p.split('/').map(encodeURIComponent).join('/')
 
-function card (e, scope, previewPrefix) {
+function card (e, scope, hrefPrefix, previewPrefix) {
   const lab = LABS[e.group]
   const href = enc(scope === 'lab' ? slugFor(e)
     : [lab.dir, slugFor(e)].filter(Boolean).join('/'))
@@ -88,7 +88,7 @@ function card (e, scope, previewPrefix) {
              : existsSync(join(OUT, 'previews', e.slug + '.jpeg')) ? e.slug + '.jpeg' : null
   const cls = 'card' + (e.rejected ? ' card--rejected' : '') + (e.broken ? ' card--broken' : '')
   return `      <li>
-        <a class="${cls}" href="${href}/">
+        <a class="${cls}" href="${hrefPrefix}${href}/">
           <div class="card__shot${shot ? '' : ' card__shot--none'}">${
             shot ? `<img src="${previewPrefix}previews/${shot}" alt="" width="1440" height="900" loading="lazy" decoding="async">`
                  : '<span class="card__shot__none">no preview</span>'}</div>
@@ -216,13 +216,13 @@ console.log('· хаб каждой лаборатории')
 for (const g of cat.groups) {
   if (g.id === 'root') continue
   const lab = LABS[g.id], entries = byGroup[g.id] || []
-  const cards = entries.map(e => card(e, 'lab', '../')).join('\n')
+  const cards = entries.map(e => card(e, 'lab', '', '../')).join('\n')
   write(join(lab.dir, 'index.html'), hub({
     depth: 1,
     title: `${lab.dir} — every version`,
     eyebrow: lab.dir,
     h1: `${entries.length} ${entries.length === 1 ? 'version' : 'versions'} in this folder.`,
-    lede: `  <p class="hub__lede">${esc(g.blurb)}</p>\n  <p class="hub__lede">Each card opens one version. <a href="../">All six labs</a>.</p>`,
+    lede: `  <p class="hub__lede">${esc(g.blurb)}</p>\n  <p class="hub__lede">Each card opens one version. <a href="../all/">All six labs</a>.</p>`,
     groups: `  <section class="grp">\n    <ul class="shelf">\n${cards}\n    </ul>\n  </section>`,
   }))
 }
@@ -231,17 +231,17 @@ console.log('· корневой хаб')
 const rootGroups = cat.groups.map(g => {
   const entries = byGroup[g.id] || []
   const head = g.id === 'root' ? '' :
-    `    <p class="grp__blurb">${esc(g.blurb)} <a href="${enc(LABS[g.id].dir)}/">Открыть лабораторию →</a></p>\n`
+    `    <p class="grp__blurb">${esc(g.blurb)} <a href="../${enc(LABS[g.id].dir)}/">Открыть лабораторию →</a></p>\n`
   return `  <section class="grp">
     <h2 class="grp__h">${esc(g.title)}</h2>
 ${head}    <ul class="shelf">
-${entries.map(e => card(e, 'root', '')).join('\n')}
+${entries.map(e => card(e, 'root', '../', '../')).join('\n')}
     </ul>
   </section>`
 }).join('\n\n')
 
-write('index.html', hub({
-  depth: 0,
+write('all/index.html', hub({
+  depth: 1,
   title: 'GD 2 AAN — every version',
   eyebrow: 'GD 2 AAN — every version',
   h1: `${cat.groups.length} labs, ${cat.entries.length} versions, one shelf.`,
@@ -347,7 +347,7 @@ for (const e of byGroup.test6 || []) {
     зеркало держит корневые пути и работает лишь в корне сервера, а сверх того
     это полная копия чужого сайта. Запуск — <code>START.bat</code> в
     <code>aan test 6</code>, порт ${esc(e.url || '')}.</p>
-  <p class="hub__foot"><a href="../">← aan test 6</a> · <a href="../../">все лаборатории</a></p>
+  <p class="hub__foot"><a href="../">← aan test 6</a> · <a href="../../all/">все лаборатории</a></p>
 </main>
 </body>
 </html>
