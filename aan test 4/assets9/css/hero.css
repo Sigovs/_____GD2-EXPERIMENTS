@@ -1,0 +1,184 @@
+/* Акт 1 — ВЕРШИНА, и шов, который ведёт вниз.
+   Одна сцена — один файл. Удали его, и содержимое всё ещё на месте. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: auto; }           /* скроллом правит Lenis */
+body {
+  margin: 0;
+  background: var(--ink-800);
+  color: var(--fg);
+  font: 400 16px/1.6 var(--face);
+  -webkit-font-smoothing: antialiased;
+  /* clip, а не hidden: hidden делает body контейнером прокрутки, и тогда
+     position: fixed начинает считаться от него — мачта уезжает вместе со
+     страницей. clip запрещает горизонтальный сдвиг, не создавая контейнера. */
+  overflow-x: clip;
+}
+
+/* ── мачта ─────────────────────────────────────────────── */
+.masthead {
+  position: fixed; inset: var(--s-3) 0 auto;
+  z-index: 40; display: flex; justify-content: center;
+  pointer-events: none;
+}
+.masthead__in {
+  display: flex; align-items: center; gap: var(--s-5);
+  padding: var(--s-2) var(--s-3);
+  width: min(72rem, calc(100vw - var(--s-4)));
+  background: rgba(10,13,20,.72);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(230,234,242,.10);
+  border-radius: 2px;
+  pointer-events: auto;
+}
+.wordmark {
+  font: 600 1.05rem/1 var(--face); letter-spacing: -.02em; margin-right: auto;
+}
+.wordmark b { color: var(--instrument); font-weight: 600; }
+.masthead nav { display: flex; gap: var(--s-3); }
+.masthead a {
+  color: var(--fg-dim); text-decoration: none;      /* подчёркивания в навигации нет */
+  font-size: var(--t-min); letter-spacing: .01em;
+  transition: color var(--d-1) var(--ease);
+}
+.masthead a:hover, .masthead a:focus-visible { color: var(--fg); }
+.masthead a:focus-visible { outline: 2px solid var(--instrument); outline-offset: 4px; }
+@media (max-width: 54rem) { .masthead nav { display: none; } }
+
+/* ── сцена ─────────────────────────────────────────────── */
+/* Обрез делает не план, а контейнер: overflow: hidden рубит по границе экрана,
+   и маска внутри до этого края не доживает. Поэтому низ сцены гасится сам —
+   ::after уводит изображение в тон земли на протяжении 26vh, и стык со
+   следующей секцией перестаёт быть линией. */
+.stage {
+  position: relative; height: 100svh; overflow: hidden;
+  background: var(--ink-800);
+}
+.stage::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+  height: 38vh; z-index: 30; pointer-events: none;
+  background: linear-gradient(to bottom,
+    rgba(10,13,20,0) 0%, rgba(10,13,20,.28) 38%,
+    rgba(10,13,20,.72) 72%, var(--ink-800) 100%);
+}
+.plates { position: absolute; inset: 0; }
+
+/* НИ ОДНОГО ЖЁСТКОГО КРАЯ НА ВСЁМ САЙТЕ — и достигается это не маской
+   на каждом плане, а тем, что краёв в кадре просто нет. Каждая маска
+   создаёт новый край, который вылезет на сочетании, которое никто не
+   проверял: так и появлялись пустые кадры один за другим. */
+/* Обёртка и план — как в index.html. Обёртка выходит за экран на 14vh и 12vw
+   и обрезает; план заполняет её целиком, поэтому он КРУПНЕЕ окна и его край
+   физически не может войти в кадр при любом ходе анимации. Именно этого у меня
+   не было — плана размером с окно достаточно, чтобы показать свою границу. */
+.pw {
+  position: absolute;
+  inset: -14vh -12vw;
+  overflow: clip;
+  will-change: transform;
+}
+.pl {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  min-width: 100%; min-height: 100%;
+  object-fit: cover;
+  will-change: transform;
+}
+/* ПРАВИЛО СЦЕНЫ: у плана либо нет края в кадре, либо край гасится длинно.
+   Короткая маска — это тот же обрез, только мягче на два пикселя.
+
+   Гора маски не имеет вовсе: она крупнее кадра, её низ всегда ниже экрана,
+   и гасить там нечего. Каждая маска — это ещё один край, который может
+   вылезти на сочетании, которое я не проверял. */
+.pl--mtn { object-position: 50% 100%; }
+
+.pl--sky { object-position: 50% 62%; }
+/* Передний план. Правило было снесено моей же чисткой регуляркой, поэтому
+   он жил на одних стилях .pl и накрывал экран целиком — и «опусти ниже»
+   ничего не делало, потому что править было нечего.
+
+   Ширина явная, высота от пропорции: у img с заданной шириной и height:auto
+   собственные пропорции работают, в отличие от связки inset + width:auto.
+   Растёт от нижнего края, чтобы при увеличении не отходил от низа. */
+.pl--fg {
+  left: 50%; margin-left: -58vw; right: auto;
+  top: auto; bottom: calc(-4% - 520px + 10.07vw);
+  /* Размер задаёт ширина, высота идёт от пропорции — object-fit тут не нужен
+     и мешает: он вписывает картинку в бокс, которого нет. */
+  width: 116vw; min-width: 116vw; height: auto;
+  object-fit: fill;
+  transform-origin: 50% 100%;
+  z-index: 12;   /* ВЫШЕ маршрута: перекрытие и даёт глубину */
+}
+
+/* Доминанта уходит в правую треть: колонка слева освобождается под слово,
+   и композиция перестаёт быть симметричной. Текст не ложится на склон. */
+
+
+
+/* ── слово ─────────────────────────────────────────────── */
+.copy {
+  position: absolute; z-index: 20;  /* ниже мачты, выше сцены */
+  left: clamp(var(--s-3), 5vw, var(--s-5));
+  top: 54%; transform: translateY(-50%);
+  width: min(38rem, 46vw);
+}
+@media (max-width: 54rem) { .copy { width: min(34rem, 84vw); top: 42%; } }
+.display {
+  font-size: var(--t-display); font-weight: 800;
+  line-height: .94; letter-spacing: -.035em;
+  margin: 0 0 var(--s-3); text-wrap: balance;
+}
+.display .promise { color: var(--promise); }
+.lede {
+  font-size: var(--t-lede); color: var(--fg-dim);
+  margin: 0 0 var(--s-3); max-width: 27ch;   /* короче — не доходит до склона */
+}
+.rule { width: 7rem; height: 2px; background: var(--promise); border: 0; margin: 0; }
+
+/* ── маршрут: дословно из index.html ───────────────────── */
+.hero__marks {
+  position: absolute; left: 34%; top: 18%; width: 34%; height: 78%;
+  z-index: 8;              /* НИЖЕ переднего плана — он и режет линию */
+  pointer-events: none;
+}
+.route { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.route__p { fill: none; stroke: url(#routeFade); stroke-width: 1.1;
+  stroke-linecap: round; stroke-linejoin: round; }
+.lead__l {
+  fill: none;
+  stroke: var(--instrument); stroke-width: .85; opacity: .72;
+  stroke-linecap: square; stroke-linejoin: miter;
+  vector-effect: non-scaling-stroke;
+}
+.lead__a { fill: var(--instrument); filter: drop-shadow(0 0 3px rgba(63,201,224,.55)); }
+.lead--0 .lead__l { opacity: .66; }
+
+/* ── метка ─────────────────────────────────────────────── */
+.mark { position: absolute; z-index: 18; width: min(15rem, 40vw); }
+.mark__k {
+  font: 500 var(--t-min)/1.2 var(--mono);
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--instrument); margin: 0 0 var(--s-1);
+}
+.mark__v { font-size: var(--t-min); color: var(--fg); margin: 0; }
+@media (max-width: 54rem) { .mark { display: none; } }
+
+/* ── шов ───────────────────────────────────────────────── */
+.seam {
+  position: relative; height: 100svh;
+  /* Тон переходит непрерывно — секции не встречаются линией. */
+  background: linear-gradient(to bottom, var(--ink-800) 0, var(--ink-900) 34%);
+}
+.seam__say {
+  position: sticky; top: 45vh;
+  text-align: center; font-size: var(--t-lede); color: var(--fg-faint);
+  font-family: var(--mono); letter-spacing: .1em; text-transform: uppercase;
+}
+
+/* ── статика: без скриптов страница читается ───────────── */
+.no-js 
+@media (prefers-reduced-motion: reduce) {
+    .route path { stroke-dasharray: none !important; stroke-dashoffset: 0 !important; }
+}

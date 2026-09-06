@@ -1,0 +1,117 @@
+/* =========================================================================
+   GD2 — the mountain as real 3D (index3 only)
+
+   Second pass. The first one used 3D only as an intro and crossfaded into the
+   PNG plate; the plates were different mountains and the cut read as a cut.
+   So the PNG mountain is gone from this page and the model carries the hero
+   the whole way — which is also what makes a route drawn ON the terrain
+   possible at all.
+
+   Everything else is still the hero's own and untouched: sky, scrim, weather,
+   near ground, masthead, copy. Only the mountain plate is replaced.
+   ====================================================================== */
+
+.m3d {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* The PNG mountain never appears on this page. Kept in the DOM so nothing in
+   main.js loses a query target — only made invisible and unmeasured. */
+.pl--mtn { opacity: 0 !important; }
+
+/* Held back while the camera moves, released the moment it settles.
+   !important because GSAP owns .hero__say as an inline style. */
+[data-m3d="intro"] .hero__say,
+[data-m3d="intro"] .mh { opacity: 0 !important; }
+.hero__say, .mh { transition: opacity .55s cubic-bezier(.22,1,.36,1); }
+
+/* The old SVG route is retired on this page: it was authored in percentages
+   over a flat plate and would slide off a slope that turns. Its replacement is
+   real geometry in the scene — see .m3d-marks below for the readouts it
+   carries, which are still HTML and still the system's own annotation. */
+.hero__marks { display: none !important; }
+
+/* =========================================================================
+   THE READOUTS ON THE ROUTE
+
+   HTML, positioned every frame from a projected 3D anchor. They sit above the
+   scrim, like the hero's own readouts, and they carry the system's annotation
+   type unchanged — the device is the same, only what pins it to the world has
+   moved from percentages to a point on the mesh.
+   ====================================================================== */
+.m3d-marks {
+  position: absolute; inset: 0;
+  z-index: var(--z-content);
+  pointer-events: none;
+}
+.m3d-stop {
+  position: absolute; top: 0; left: 0;
+  display: flex; align-items: flex-start; gap: var(--s3);
+  opacity: 0;
+  transition: opacity .45s var(--ease);
+  will-change: transform, opacity;
+}
+/* the anchor sits ON the point; the reading hangs to its right */
+.m3d-dot {
+  position: relative; z-index: 1;
+  flex: 0 0 auto; margin-top: .3em;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 0 4px rgba(11,15,30,.85), 0 0 14px 3px rgba(0,236,255,.5);
+}
+.m3d-say { position: relative; max-width: 24ch; transform: translateY(-.35em); }
+.m3d-say .annot__s { margin-top: .35em; }
+
+/* No wash under the readings — Alex asked for none, and a patch of ground
+   under each one was reading as a shadow. Legibility now has to come from
+   WHERE they sit: the solver keeps the route out of the reading column, and a
+   reading that falls on lit snow is a placement to fix, not a thing to cover.
+   Measured after this change and reported. */
+
+@media (max-width: 62rem) {
+  /* one column has no room beside the slope; the readings would land on the
+     headline. They go, and that is recorded debt, not a decision. */
+  .m3d-marks { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-m3d] .hero__say,
+  [data-m3d] .mh { opacity: 1 !important; }
+}
+
+/* =========================================================================
+   THE SCRIM, RE-SOLVED
+
+   main.css solves it against a dark photographic plate whose lit mass sits
+   right of the type. The model is brighter, larger and centred differently,
+   and under the original weights it drowned — 98% of ground over its left
+   half. So this page overrides the stops.
+
+   The rule that does NOT change: legibility is fixed at the background layer,
+   solved against the worst pixel actually behind each run. The type column is
+   still carried to ~40%; what is relaxed is everything to the right of it,
+   where there is no reading matter to protect.
+   ====================================================================== */
+.hero__plate::after {
+  background:
+    linear-gradient(to right,
+      rgba(11,15,30,.970) 0%,  rgba(11,15,30,.945) 30%,
+      rgba(11,15,30,.660) 44%, rgba(11,15,30,.240) 60%,
+      rgba(11,15,30,.090) 80%, rgba(11,15,30,.260) 100%),
+    linear-gradient(to bottom,
+      rgba(11,15,30,.640) 0%,  rgba(11,15,30,.070) 24%,
+      rgba(11,15,30,.060) 60%, rgba(11,15,30,.820) 92%, var(--bg) 100%);
+}
+
+@media (max-width: 62rem) {
+  /* one column: the type sits over the mass, so the floor rises again */
+  .hero__plate::after {
+    background:
+      linear-gradient(to bottom,
+        rgba(11,15,30,.80) 0%,  rgba(11,15,30,.58) 22%,
+        rgba(11,15,30,.86) 52%, rgba(11,15,30,.94) 82%, var(--bg) 100%);
+  }
+}

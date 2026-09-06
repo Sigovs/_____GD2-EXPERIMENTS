@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Собрано tools/build.mjs из tools/versions.json. Руками не править:
+     следующая сборка перезапишет. Что версия ЕСТЬ и что она РЕШАЕТ —
+     перенесено из документа, который уже существовал; versions.json
+     называет источник каждой строки. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>aan test 6 — every version</title>
+<meta name="theme-color" content="#0B0F1E">
+<link rel="stylesheet" href="../_shelf/tokens.css">
+<link rel="stylesheet" href="../_shelf/hub.css">
+<style>
+/* Only what a shelf spanning six labs needs on top of hub.css. Cyan, never
+   orange: DESIGN-SYSTEM.md §4 reserves orange for a promise to a visitor, and
+   an index of build variants is system chrome from top to bottom. */
+
+.grp { margin-bottom: var(--s10); }
+.grp:last-of-type { margin-bottom: 0; }
+
+.grp__h {
+  margin: 0 0 var(--s3);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--rule);
+  font-size: var(--t-h3);
+  font-weight: var(--w-strong);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-head);
+}
+
+.grp__blurb {
+  max-width: var(--measure);
+  margin: 0 0 var(--s7);
+  font-size: var(--t-sm);
+  color: var(--ink-64);
+}
+
+/* How the page opens is a fact about it, not a warning: half of these need a
+   server and finding that out by clicking is the worst way to learn it. */
+.card__opens {
+  margin: var(--s3) 0 0;
+  /* pinned to the foot of the card, so a row of them draws one line across
+     the shelf. The alternative — stretching the description block instead —
+     aligns the rule above it but opens a void in every card beside a long one,
+     and index3 alone is seven lines of verbatim rejection grounds. */
+  margin-top: auto;
+  padding-top: var(--s4);
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ink-48);
+}
+
+.card__flag {
+  margin-left: var(--s2);
+  padding: .1em .5em;
+  border: 1px solid var(--ink-40);
+  border-radius: var(--r-pill);
+  font-size: .85em;
+  letter-spacing: var(--ls-label);
+  /* the name is typed as written, but this is a label about the name */
+  text-transform: uppercase;
+  color: var(--ink-64);
+}
+
+/* THE NAME IS TYPED, NOT SHOUTED. hub.css uppercases it, which is right for
+   a micro-label and wrong here: nine of these names are query parameters, and
+   a query parameter is case-sensitive. A card reading ?MOUNTAINLABV2=1 sends
+   anyone who retypes it to the default mode instead. */
+.card__name {
+  text-transform: none;
+  letter-spacing: var(--ls-mark);
+}
+
+/* The settles rule is a drawn line, so it has to land at one height across a
+   row — ragged, it reads as three different components rather than three of
+   the same. The card stretches to its grid track and the what-block takes up
+   the slack. */
+.card { height: 100%; }
+
+/* Notes here are sentences, not readouts. hub.css sets them in the mono, which
+   is right for the fragments aan test 4 had ("was index.html until…") and wrong
+   for a note that runs to three lines — mono at that length is a wall, and it
+   stacks straight onto the mono chip below it. Kept subordinate by size and
+   ink, not by voice. */
+.card__note {
+  font-family: var(--sans);
+  letter-spacing: var(--ls-body);
+  line-height: 1.5;
+}
+
+.hub__lede code {
+  font-family: var(--mono);
+  font-size: .9em;
+  padding: .15em .45em;
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* A rejected direction stays on the shelf — it is evidence — but it is not
+   offered at the same weight as a live one. */
+.card--rejected .card__shot { opacity: .55; }
+.card--rejected:hover .card__shot { opacity: 1; }
+.card--rejected .card__name { color: var(--ink-64); }
+
+/* A page that throws before it draws gets the same demotion, for a different
+   reason. Its preview is a truthful photograph of a loading screen that never
+   advances — and an almost-black rectangle in a grid of pictures reads as a
+   failure of THIS page, not of the one behind it. The flag beside the name is
+   what tells them apart; the dimming only stops the eye stopping there. */
+.card--broken .card__shot { opacity: .55; }
+.card--broken:hover .card__shot { opacity: 1; }
+.card--broken .card__name { color: var(--ink-64); }
+</style>
+</head>
+<body>
+
+<main class="wrap">
+
+  <p class="hub__eyebrow">aan test 6</p>
+  <h1 class="hub__h">2 versions in this folder.</h1>
+  <p class="hub__lede">An offline 1:1 copy of mont-fort.com kept for studying its architecture, and the variant overlays built against it.</p>
+  <p class="hub__lede">Each card opens one version. <a href="../">All six labs</a>.</p>
+
+  <section class="grp">
+    <ul class="shelf">
+      <li>
+        <a class="card" href="original/">
+          <div class="card__shot"><img src="../previews/t6-original.jpeg" alt="" width="1440" height="900" loading="lazy" decoding="async"></div>
+          <p class="card__name">Оригинал Montfort</p>
+          <p class="card__what">Untouched mirror of mont-fort.com. 33 pages, ~260 MB, URL structure kept 1:1 so every /_astro/ and /assets/ path resolves without rewriting.</p>
+          <p class="card__settles">The base every variant is an overlay on.</p>
+          <p class="card__opens" title="Blocked on a file:// origin — start the server named below.">needs a server</p>
+        </a>
+      </li>
+      <li>
+        <a class="card" href="proba/">
+          <div class="card__shot"><img src="../previews/t6-proba.jpeg" alt="" width="1440" height="900" loading="lazy" decoding="async"></div>
+          <p class="card__name">Проба пера</p>
+          <p class="card__what">First variant — palette work. A variant is an overlay, not a copy: only changed files live in variants/01-proba/, the rest is served from the base.</p>
+          <p class="card__settles">Whether the mirror's architecture survives being re-coloured.</p>
+          <p class="card__opens" title="Blocked on a file:// origin — start the server named below.">needs a server</p>
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <p class="hub__foot"><span class="hub__stamp">tools/versions.json · 2026-09-06</span></p>
+
+</main>
+</body>
+</html>

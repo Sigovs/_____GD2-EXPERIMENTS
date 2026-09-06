@@ -1,0 +1,4 @@
+﻿three r185.1 (0.185.1), vendored 2026-08-15
+from npm: three@0.185.1
+files: build/three.module.min.js, build/three.core.min.js, examples/jsm/loaders/GLTFLoader.js, examples/jsm/utils/{BufferGeometryUtils,SkeletonUtils}.js
+MIT licence, (c) three.js authors

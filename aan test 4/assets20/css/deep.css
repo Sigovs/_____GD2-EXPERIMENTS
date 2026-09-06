@@ -1,0 +1,668 @@
+/* =========================================================================
+   GD2 — SCENE 2 · THE DEEP
+
+   The hero descends a mountain and says "the deeper you go". This is what is
+   under the line, and it is deliberately NOT a second section: there is no
+   moment where the hero ends and this begins. The mountain falls into
+   darkness, the darkness gains depth and moving light, and the reader is
+   underwater without having crossed an edge.
+
+   Like main.css this is ONE composition and nothing else. The base, the type
+   ranks, the primitives and the masthead live in ds.css; every value resolves
+   to tokens.css. Delete this file and the section is still there.
+
+   ROLE · SUPPORT (dimensionality). The water reinforces a composition that
+   stands without it (DM1). ONE DEPTH IDEA (DM6): a single continuous descent
+   through one environment — no second camera, no second spatial claim.
+
+   ------------------------------------------------------------------------
+   HOW THE TWO SCENES OVERLAP — the whole trick is here.
+
+   The water is NOT laid on top of the hero and it does not arrive after it.
+   It sits UNDERNEATH, already loaded and holding its first frame, and the
+   hero dissolves off it:
+
+       z --z-content (2)   .hero-track / .hero   the mountain, fading
+       z --z-fg      (1)   .deep                 the water, already there
+
+   The water is SCROLLED, not played — deep.js maps scroll position onto
+   currentTime and nothing ever calls play(). Which is also why the two rock
+   layers can never be confused: the hero's foreground belongs to the hero
+   timeline and leaves with it, and the only rocks left in the frame are the
+   ones inside the footage.
+
+   For that to work the water has to be filling the viewport BEFORE the
+   mountain starts to go, or the dissolve would open onto page ground. So the
+   section starts a long way up inside the hero's pinned scroll — far enough
+   that its sticky stage is already flush with the viewport when the hero
+   begins to fade. That distance is `--deep-overlap`.
+
+   The overlap is large ON PURPOSE and it is invisible: it is where the
+   section BEGINS in the document, not where it becomes visible. What the
+   reader sees is the last var(--hero-fade) of the hero's pin, which is the
+   transition.
+
+   That used to read "the last ~76svh", a figure worked out by hand from a
+   380% pin and a phase split of .80 and then left to rot in a comment. It is
+   published now: bus.js computes it from the geometry that actually shipped
+   and writes --hero-fade alongside the pin flag, so it is right at both
+   breakpoints and stays right when the pin is retuned. The 76svh fallback in
+   tokens.css is the wide value, so this file is correct before the bus has
+   run and correct on a page served without it.
+
+   The 180svh overlap below is NOT derived from it and is not pretending to
+   be. It is an authored margin — enough room for the stage to be flush before
+   anything begins to fade — and it is a composition decision, so it stays a
+   written number rather than becoming a formula that looks principled.
+
+   ------------------------------------------------------------------------
+   THE FALLBACK IS NOT THE SAME GEOMETRY.
+
+   All of the above depends on the hero actually being pinned. Without GSAP,
+   or under reduced motion, there is no pin — and a -180svh margin against an
+   unpinned hero would pull this section up over the top of it and wreck the
+   page. So the big overlap is gated on `[data-hero-pinned]`, which main.js
+   sets only when it has really created the pin. Everything degrades to a
+   short overlap and a static gradient, which is still a soft handover and
+   still not a cut.
+   ====================================================================== */
+
+/* the mask's travel, declared so it interpolates as a length rather than as
+   a swapped string — the transition is scrubbed, so it is tweened every frame */
+@property --mask-y {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+.deep {
+  /* the fallback geometry: short overlap, no pin assumed */
+  --deep-overlap: 36svh;
+  --deep-length:  200svh;
+
+  position: relative;
+  z-index: var(--z-fg);          /* BEHIND the hero — see the stack above */
+  margin-top: calc(var(--deep-overlap) * -1);
+  margin-bottom: 0;
+  min-height: var(--deep-length);
+  background: var(--bg);
+}
+
+/* the real geometry, and only once the pin it depends on exists */
+[data-hero-pinned] .deep {
+  --deep-overlap: 180svh;
+  --deep-length:  300svh;
+}
+
+/* =========================================================================
+   THE STAGE
+
+   One viewport of water, held still while the section scrolls past it. The
+   section is longer than the stage on purpose: that surplus is the scroll
+   Scene 2's own storytelling will be built on, and it exists now so that
+   adding it later does not re-time the transition.
+   ====================================================================== */
+.deep__stage {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100svh;
+  overflow: hidden;
+  /* Sticky decides where this LANDS; the handover decides where it is on the
+     way there. It is parked a full viewport low until the hero's foreground
+     starts to climb, then travels up into the locked position with it — a
+     transform, so the section's height and the sticky lock are untouched and
+     the page gains no dead scroll.
+
+     THE TRAVEL IS READ, NOT RECEIVED. main.js used to reach in and tween
+     yPercent on this element from the hero's timeline. Now the bus publishes
+     --stage-y from --transition and this rule consumes it, so the movement is
+     declared in the file that owns the element.
+
+     The default is 0, which is the landed position — so with no JavaScript,
+     or under reduced motion, the stage is simply where sticky puts it and
+     there is nothing to undo. */
+  --stage-y: 0;
+  will-change: transform;
+}
+
+/* THE TRAVEL IS GATED ON THE PIN, on the same contract the overlap above uses,
+   and not written on .deep__stage unconditionally. A transform is a stacking
+   context and a containing block for any fixed descendant even when it
+   resolves to identity, and the no-JS and reduced-motion paths never had one
+   here. They keep not having one. (will-change already forces that context,
+   so nothing about the layering changes either way — but the rule should say
+   what it means, and what it means is "only while the hero is held still".) */
+[data-hero-pinned] .deep__stage {
+  transform: translate3d(0, calc(var(--stage-y) * 1%), 0);
+}
+
+/* =========================================================================
+   THE WATER
+
+   Full-bleed environmental media. Not a panel, not a frame, not a window —
+   there is no container edge anywhere in here, and nothing centres it.
+   ====================================================================== */
+.deep__media {
+  position: absolute;
+  /* 2px PROUD OF THE TOP, and it is not cosmetic. With the media's box landing
+     exactly on the stage's overflow clip, the compositor let a single unmasked
+     row of video through at the leading edge while the stage was travelling —
+     measured at rgb(15,50,83) against rgb(11,16,31) either side of it, which
+     is a bright hairline drawing the exact rectangle this transition exists to
+     avoid. Pushing the box two pixels past the clip moves that row out of the
+     visible area. The cover box grows by 2px in ~900, so the crop does not
+     meaningfully move. */
+  top: -2px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  pointer-events: none;
+
+  /* ---- the feather on the advancing edge -----------------------------
+     This is NOT a curtain that uncovers a stationary picture. The stage is
+     physically travelling up from below the fold, and this only softens the
+     line where its leading edge meets what is still above it.
+
+     So it is SHORT: 20% of the stage, and it reaches full opacity there. A
+     long ramp was the previous mistake — it washed out the top two thirds of
+     the arriving scene and made the whole thing look like a fade again.
+
+     The mask image is 1.2x the stage's height with the ramp inside its top
+     16.67% — which is 20% of the stage. Sliding it 0% -> 100% moves it by
+     exactly the extra 20%, which is precisely enough to carry the ramp off
+     the top and leave the element completely opaque. One animatable value,
+     no shape change, nothing left over at the end.
+
+     Stops are therefore 1/1.2 of the figures they read as against the stage:
+     0 / 2.5 / 5 / 8.3 / 11 / 13.8 / 16.67 here is
+     0 / 3 / 6 / 10 / 13 / 16.5 / 20 across the stage.
+
+     It stays fully extended for the whole entrance and is only slid away once
+     the stage is nearly landed — see phase C in main.js. Retract it early and
+     the leading edge stops being feathered at all: the ramp's first stop is
+     no longer 0, so the boundary comes back as a measurable step.
+     ------------------------------------------------------------------ */
+  --mask-y: 0%;
+  -webkit-mask-image: linear-gradient(to bottom,
+    rgba(0,0,0,0)   0%,
+    rgba(0,0,0,.08) 2.5%,
+    rgba(0,0,0,.24) 5%,
+    rgba(0,0,0,.52) 8.3%,
+    rgba(0,0,0,.78) 11%,
+    rgba(0,0,0,.93) 13.8%,
+    #000            16.67%,
+    #000            100%);
+  -webkit-mask-size: 100% 120%;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: 0% var(--mask-y);
+  mask-image: linear-gradient(to bottom,
+    rgba(0,0,0,0)   0%,
+    rgba(0,0,0,.08) 2.5%,
+    rgba(0,0,0,.24) 5%,
+    rgba(0,0,0,.52) 8.3%,
+    rgba(0,0,0,.78) 11%,
+    rgba(0,0,0,.93) 13.8%,
+    #000            16.67%,
+    #000            100%);
+  mask-size: 100% 120%;
+  mask-repeat: no-repeat;
+  mask-position: 0% var(--mask-y);
+}
+
+/* THE BLURRED FILL IS GONE, AND SO IS EVERYTHING IT DRAGGED IN.
+
+   It existed because the footage was 1.295:1 and had to be shown whole, so it
+   was fitted rather than cropped, and a fitted frame leaves bars. The fill
+   covered the bars; the walls covered the fill's own seam; the picture's four
+   edges carried feathers so they would not show against the fill; and every
+   one of those widths had to be solved from the window's ratio.
+
+   The master is now delivered at 16:9. On the ratio nearly every desktop
+   actually is, `cover` fills the frame exactly and there is no leftover
+   anywhere — no bars, so no fill, so no seam, so no feathers, so no ratio
+   arithmetic. Four mechanisms removed by re-cutting one asset.
+
+   The cost is stated rather than hidden: 27% of the master's height is cropped
+   away. The crop is taken from the BOTTOM, so what is kept is the top of the
+   rift where the light comes from, which is the subject; what is lost is the
+   dark water below it.
+   ====================================================================== */
+
+/* THE SIDE WALLS ARE GONE, BOTH OF THEM.
+
+   They were never a design element to begin with — each was hiding a fill
+   band left over from fitting a 1.295:1 shot into a 16:9 frame. The master is
+   cut to 16:9 now and the picture is the frame, so there is nothing on either
+   side to stand in front of. A rock wall over rock the footage already has is
+   two foregrounds doing one job, and the scene is a narrow rift of light in
+   the dark: everything added at the edges argues with that rather than
+   helping it.
+
+   Their artwork stays in video/final ocean/ if it is ever wanted again.
+   ====================================================================== */
+/* ---- full bleed, and nothing around it ---------------------------------
+   Back to the simplest thing there is: one element the size of the stage,
+   filled by the footage. The master is 16:9 now, so on the ratio nearly every
+   desktop actually is, this crops nothing at all � the picture and the frame
+   are the same rectangle. On anything else `cover` trims the overflow, which
+   is what cover is for, and there is still no leftover to fill or feather.
+
+   No mask on this element. Every feather it used to carry existed to soften a
+   boundary against the blurred fill, and there is no fill and no boundary any
+   more; the picture's edges are the frame's edges.
+
+   object-position holds the TOP. The light source is the mouth of the rift and
+   it is the subject, so when a very wide or very narrow window does force a
+   vertical trim, the trim comes off the dark water at the bottom rather than
+   off the light.
+   ---------------------------------------------------------------------- */
+.deep__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 12%;
+}
+/* ---- the diver's canvas ------------------------------------------------
+   A transparent sheet between the water and everything drawn on it. It is
+   inserted before .deep__marks, so the route line and the whole reading
+   column paint over the figure and it can never sit on top of a word.
+
+   It takes no pointer events and it is out of the accessibility tree: the
+   figure carries no information the copy does not already carry, which is
+   also why the section reads correctly with the file absent.
+   ---------------------------------------------------------------------- */
+.deep__diver {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-scene);
+  pointer-events: none;
+  display: block;
+}
+
+/* ---- the pose editor, ?diverDebug=1 only -------------------------------
+   Both of these only ever exist when the query flag is set — deep-diver.js
+   does not create the elements otherwise, so nothing here reaches the live
+   page. The pad covers the VIDEO HALF only: over the reading column it would
+   swallow the wheel and every click the accordion needs.
+   ---------------------------------------------------------------------- */
+/* The pad is only a cursor and a capture host now. The listeners live on the
+   window in the capture phase, because .deep__in is a full-bleed absolute
+   layer over this same stage and anything hung on a child underneath it never
+   sees a press. */
+.deep__edit {
+  position: absolute;
+  left: 0; top: 0;
+  width: 55%; height: 100%;
+  z-index: var(--z-content);
+  cursor: grab;
+  touch-action: none;
+}
+.deep__edit:active { cursor: grabbing; }
+
+/* a drag that starts on the video must not select the copy on the way past */
+body.diver-debug { user-select: none; -webkit-user-select: none; }
+
+.deep__editui {
+  position: fixed;
+  left: var(--s5); bottom: var(--s5);
+  z-index: 999;
+  display: grid; gap: .35em;
+  padding: var(--s4);
+  min-width: 17rem;
+  border: 1px solid var(--cyan-line);
+  background: #04121ae6;
+  backdrop-filter: var(--glass-blur);
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  line-height: var(--lh-tight);
+  letter-spacing: .06em;
+  color: var(--ink-78);
+}
+.deep__editui b { color: var(--cyan); letter-spacing: var(--ls-label); }
+.deep__editui em { float: right; font-style: normal; color: var(--orange); }
+.deep__editui s { color: var(--ink); text-decoration: none; float: right; }
+.deep__editui i { color: var(--ink-48); font-style: normal; font-size: 11px;
+  letter-spacing: 0; line-height: 1.5; }
+.deep__editui p { display: flex; gap: var(--s2); margin: var(--s2) 0 0; }
+.deep__editui button {
+  flex: 1; cursor: pointer;
+  padding: var(--s2) var(--s2);
+  border: 1px solid var(--rule-ui);
+  background: none;
+  font: inherit; font-size: 11px; letter-spacing: .04em;
+  color: var(--ink-78);
+}
+.deep__editui button:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ---- the drag surface --------------------------------------------------
+   Its own element, and NOT the canvas. The canvas is full-bleed, so giving it
+   pointer events would lay a transparent sheet across the copy and take every
+   click the reader meant for the page. This one stops at the divider — its
+   width is set from the measured left edge of the reading column — so the
+   right half is never covered by it.
+
+   It takes pointer events but not wheel, so the page still scrolls under the
+   hand. On coarse pointers it is not drawn at all: a drag surface over a phone
+   would swallow the vertical swipe that scrolls the page.
+   ---------------------------------------------------------------------- */
+.deep__grip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  z-index: var(--z-scene);
+  cursor: grab;
+  touch-action: pan-y;          /* the page keeps the vertical swipe */
+}
+.deep__grip[data-dragging] { cursor: grabbing; }
+
+@media (hover: none), (pointer: coarse), (max-width: 62rem) {
+  .deep__grip { display: none; }
+}
+
+/* =========================================================================
+   THE ROUTE
+
+   The hero's own device, carried under the water. Same stroke weight, same
+   fade at both ends, same non-scaling stroke — it has to read as the line
+   continuing, not as a line answering it.
+
+   It is placed against the rift rather than centred in the frame: the box
+   sits over the dark wall on the light's right-hand side, which is where the
+   eye already is and where the footage is steady. Measured over a full pass
+   of the loop, the mid and lower bands there hold 7.1:1 and 10.5:1 for white
+   at their brightest moment, so the stroke never has to fight the water.
+
+   preserveAspectRatio is none on purpose. The path is almost vertical and
+   what matters is that it keeps its PROPORTIONAL place at any window shape;
+   letting it letterbox would park it off the rift on a wide screen. The
+   stroke is protected from the resulting scale by vector-effect.
+   ====================================================================== */
+.deep__marks {
+  position: absolute;
+  /* moved off the rift and onto the edge of the dark half. The line is not
+     decoration here — the three readings hang on it, so it has to run where
+     they can be read, and that is the right column: 20.6:1 for white across
+     the whole loop against 4.7:1 at the rift's worst. Same relationship the
+     hero uses, where the route runs left of its readouts. */
+  left: 46%;
+  top: 0;
+  width: 12%;
+  height: 100%;
+  z-index: var(--z-scene);
+  pointer-events: none;
+}
+
+.deep__route {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.deep__route-p {
+  fill: none;
+  stroke: url(#deepFade);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* =========================================================================
+   THE COPY OVER THE WATER
+
+   No plate, no card, no scrim. The footage was measured over a full pass of
+   its loop and the copy is placed where it already holds:
+
+       right column   20.6 : 1 for white, drift 0.0008 across the whole loop
+       foot           10.5 : 1 at its brightest moment
+       rift and top   4.7 : 1 at worst, and swinging — nothing goes there
+
+   That is why everything sits right of centre. It is not a layout preference;
+   it is the only part of this shot that will hold type without darkening the
+   picture, which was the one thing this pass was told not to do.
+   ====================================================================== */
+.deep__in {
+  /* THE SPINE. The line is at 52% of the frame (.deep__marks starts at 46%,
+     the path sits at 50% of its 12% width) and everything hangs off it: the
+     rings sit ON it, and every run of type starts one ring plus one gap to
+     its right, so the headline, the intro and the three titles all share a
+     single left edge. One column against the dark half, with the descent as
+     its spine — which is the hero's arrangement, route left of its readouts.
+
+     Laid out as a grid rather than by absolute placement, because the first
+     attempt put the copy and the readings at fixed percentages and they
+     collided: the headline is three lines at one width and four at another,
+     so its foot cannot be predicted. A row that sizes to its content can. */
+  --spine: 52%;
+  --spine-gap: calc(14px + var(--s4));
+
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-content);
+  display: grid;
+  grid-template-columns: var(--spine) 1fr;
+  grid-template-rows: auto 1fr;
+  /* No inline padding, and that is load-bearing: grid percentages resolve
+     against the CONTENT box, so a right gutter here made 52% mean 52% of
+     (frame - gutter) and slid the whole column 7px off the line. The gutter
+     moves onto the two children instead, where it cannot move the spine. */
+  /* The column is pulled up and opened out so the descent has somewhere to
+     happen. At the first spacing the three rings sat 94px apart on a 900px
+     frame — under a tenth of the view between one chapter and the next — and a
+     swimmer covering that distance has no room to be a swimmer; he just
+     appears at the next dot. The reading loses nothing by it: the same three
+     lines, further apart. */
+  padding: clamp(4rem, 10vh, 6.5rem) 0 clamp(2rem, 5vh, 3.5rem);
+  pointer-events: none;   /* the water keeps the frame; only controls take input */
+}
+.deep__in :where(button, a) { pointer-events: auto; }
+
+.deep__say {
+  grid-column: 2;
+  margin-left: var(--spine-gap);
+  max-width: 30rem;
+  display: grid;
+  gap: var(--s4);
+}
+.deep__say .body { max-width: none; }
+
+/* =========================================================================
+   THE THREE, ON THE LINE
+
+   They are not a row of features. They are three readings hung on the
+   descent, the way the hero hangs its readouts on the route: a ring sitting
+   ON the line marks where each one is, and the reading itself stands beside
+   it. Stacked vertically, because the line is vertical and the reader is
+   going down it.
+
+   They open as the descent passes them — scroll owns which one is live, the
+   same way scroll owns how much of the line is drawn. Clicking still works
+   and is still a real button, because a scroll-driven reveal that cannot be
+   reached from a keyboard is not reachable at all.
+
+   THE STACK MUST NOT SHUFFLE. Each reading sits in a slot reserved to the
+   height of the tallest of the three, so opening a long one after a short one
+   never moves the two below it. Nothing here is anchored to the foot, but
+   items jumping under the reader's eye as they scroll is worse than a little
+   reserved air.
+   ====================================================================== */
+.feats {
+  grid-column: 2;
+  align-self: start;
+  margin: clamp(2rem, 5.5vh, 3.25rem) 0 0;
+  padding: 0;
+  max-width: 30rem;
+  list-style: none;
+  display: grid;
+  /* the travel between chapters, and therefore the room the diver has */
+  gap: clamp(1.5rem, 5.5vh, 3.75rem);
+}
+
+.feat {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  column-gap: var(--s4);
+  align-content: start;
+}
+
+/* the ring rides the line, so it is pulled back onto it by half its width */
+.feat__ring {
+  grid-column: 1;
+  position: relative;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  margin-top: .15em;
+  border-radius: 50%;
+  border: 1px solid var(--cyan-line);
+  transition: border-color var(--d-2) var(--ease), box-shadow var(--d-2) var(--ease);
+}
+.feat__ring::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--ink-40);
+  transition: background-color var(--d-2) var(--ease);
+}
+.feat[data-open] .feat__ring { border-color: var(--cyan); box-shadow: var(--cyan-glow); }
+.feat[data-open] .feat__ring::after { background: var(--cyan); }
+
+.feat__btn {
+  grid-column: 2;
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: var(--s3);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink-56);
+  transition: color var(--d-2) var(--ease);
+}
+.feat[data-open] .feat__btn { color: var(--ink); }
+.feat__btn:hover { color: var(--ink); }
+.feat__btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 6px; }
+
+.feat__n {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  letter-spacing: var(--ls-data);
+  color: var(--ink-48);
+  transition: color var(--d-2) var(--ease);
+}
+.feat[data-open] .feat__n { color: var(--cyan); }
+
+.feat__t {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: currentColor;
+}
+
+/* the slot holds the stack still; the reading moves inside it */
+.feat__slot { grid-column: 2; height: var(--feat-reserve, auto); overflow: hidden; }
+
+.feat__body {
+  display: grid;
+  grid-template-rows: 1fr;          /* the no-JS state: open */
+  opacity: 1;
+  transition: grid-template-rows var(--d-2) var(--ease), opacity var(--d-2) var(--ease);
+}
+.feat__body > * {
+  margin: var(--s2) 0 0;
+  overflow: hidden;
+  font-size: var(--t-sm);
+  line-height: 1.5;
+  color: var(--ink-78);
+  translate: 0 0;
+  transition: translate var(--d-2) var(--ease);
+}
+.feat:not([data-open]) .feat__body { grid-template-rows: 0fr; opacity: 0; }
+.feat:not([data-open]) .feat__body > * { translate: 0 -.4rem; }
+
+/* =========================================================================
+   ONE COLUMN
+
+   The line and its rings go: at 390px there is no room for a spine and a
+   column of readings beside it, and the readings are the part that carries
+   meaning. They become a plain stack down the frame, and the shared reserve
+   goes with the line — stacked in a narrow frame, a slot sized to the longest
+   reading would leave two holes down the page.
+   ====================================================================== */
+@media (max-width: 62rem) {
+  .deep__marks { display: none; }
+
+  /* the spine goes with the line: one column, no offset, and no gutter held
+     open for a ring that is not drawn */
+  .deep__in {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    padding: clamp(4.5rem, 12vh, 6.5rem) var(--gut) clamp(1.25rem, 3.5vh, 2.5rem);
+  }
+
+  /* The headline drops a rank, and that is a fit problem rather than a taste
+     one: at the h-1 clamp the argument and the three readings measured 902px
+     against 684px of frame, and the frame does not scroll — the stage is
+     pinned. What it drops to is still the section's heading and still the
+     largest thing here, so the hierarchy holds where the overflow would not. */
+  .deep__say {
+    grid-column: 1;
+    margin: 0;
+    max-width: none;
+    gap: var(--s2);
+  }
+  .deep__say .h-1 { font-size: var(--t-h2); }
+  .deep__say .body { font-size: var(--t-sm); }
+
+  .feats {
+    grid-column: 1;
+    align-self: end;
+    margin: var(--s4) 0 0;
+    max-width: none;
+    gap: 0;
+  }
+  .feat {
+    grid-template-columns: 1fr;
+    border-block-start: 1px solid var(--rule);
+    padding-block: var(--s2);
+    transition: border-color var(--d-2) var(--ease);
+  }
+  .feat[data-open] { border-block-start-color: var(--cyan); }
+  .feat__ring { display: none; }
+  .feat__btn, .feat__slot { grid-column: 1; }
+}
+/* =========================================================================
+   THE AUTHORED STILL — the scene's reduced-motion path.
+
+   The footage is not slowed or frozen, it is simply never fetched: deep.js
+   attaches no source and builds no scrub, and a <video> with no source paints
+   its poster. The poster is the master's exact first frame, which is also
+   frame 0 of the scrub — so this is the same picture the scrolled version
+   opens on, held still.
+
+   The gradient handover is NOT removed here. The mask stays where it starts
+   and the stage stops being sticky, so the ramp travels up out of the frame
+   on the reader's own scroll instead of being retreated by a scrub. Same
+   soft handover, no scrubbed motion.
+   ====================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .deep__stage { position: static; }
+}
+

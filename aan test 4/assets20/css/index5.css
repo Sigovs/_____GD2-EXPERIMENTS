@@ -1,0 +1,1002 @@
+/* =========================================================================
+   GD2 — index5
+
+   Chaptered editorial with one cinematic act. index3 and index4 are continuous
+   pinned worlds; shipping a third would be the same page three times, so the
+   grammar is deliberately different here (DNA36).
+
+   Requires tokens.css and ds.css. Everything below is scoped to .p5 so no
+   other page can be reached by it.
+
+   THE GRID, declared before use (DNA10)
+     12 columns · gutter --gut · measure --col (max 1560)
+     Bleed is a chapter device and only act 3 uses it (DNA12).
+
+   THE ONE COLOUR DECISION WORTH READING
+     Act 4 inverts the ground. The light is not a new colour: it is the brand
+     ground's own hue at the other end of the lightness scale — #0B0F1E is
+     hsl(225 46% 8%), and --paper is hsl(225 16% 92%). And the ink on it is
+     #0B0F1E itself, unchanged. The ground becomes the ink.
+
+     Neither accent survives that flip as text: #00ECFF on --paper is 1.5:1 and
+     #FF9300 is 2.1:1. So on the light act colour steps out entirely and rank is
+     carried by scale, weight and rules. The absence of colour IS the seam's
+     second signal, and the accents come back with the dark (DNA64, color I1).
+   ====================================================================== */
+
+.p5 {
+  --paper:     #E7E9EE;   /* the ground's own hue, inverted in lightness */
+  --paper-ink: #0B0F1E;   /* 15.5:1 — the ground, used as ink */
+  --paper-2:   #5A606E;   /*  5.6:1 — supporting text on paper */
+  --paper-rule:#0B0F1E24;
+
+  /* one size the rest of the system does not have: the figure. It is the
+     largest type on the page, and it is a NUMBER, not a headline (DNA32) */
+  --t-figure: clamp(3rem, 11.5vw, 10.5rem);
+  --t-say:    clamp(2.25rem, 4.2vw + .5rem, 4.5rem);
+  --t-folio:  clamp(2.5rem, 4vw + .5rem, 4rem);
+
+  background: var(--bg);
+}
+
+.p5 main { display: block; }
+
+/* the page shell — every act sits on it or breaks it on purpose */
+.p5 .act {
+  width: var(--col); margin-inline: auto;
+  padding-block: clamp(6rem, 14vh, 10rem) clamp(8rem, 18vh, 14rem);
+}
+.p5 .act--bleed { width: 100%; padding: 0; }
+
+/* running heads: editorial furniture, cheaper than another card (DNA34) */
+.p5 .rh {
+  display: flex; align-items: baseline; gap: var(--s4);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  color: var(--ink-56);
+  padding-block-end: var(--s5);
+  border-block-end: 1px solid var(--rule);
+  margin-block-end: clamp(3rem, 7vh, 5rem);
+}
+.p5 .rh b { font-weight: var(--w-body); color: var(--cyan); }
+.p5 .rh span { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
+
+/* =========================================================================
+   ACT 1 · ARRIVAL — reveal
+
+   The field exists before the subject. Five masses: the bar, the live marker,
+   the statement, the deep quiet on the right, and the horizon breaking the
+   bottom edge. The horizon is a presence, not a photograph — it is graded down
+   until it is nearly ground, so the type never competes with it (C1).
+   ====================================================================== */
+.p5 .arrival {
+  position: relative;
+  min-height: 100svh;
+  display: grid; align-content: center;
+  padding-block: clamp(7rem, 16vh, 11rem) clamp(7rem, 15vh, 10rem);
+}
+.p5 .arrival__in { position: relative; z-index: 2; max-width: 52rem; }
+
+/* the live marker: one thing on screen is alive, and it is the subject */
+.p5 .live {
+  display: inline-flex; align-items: center; gap: var(--s3);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-data); text-transform: uppercase;
+  color: var(--ink-64);
+  margin-block-end: var(--s6);
+}
+.p5 .live__dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--cyan); box-shadow: var(--cyan-glow);
+  position: relative;
+}
+.p5 .live__dot::after {
+  content: ''; position: absolute; inset: -7px; border-radius: 50%;
+  border: 1px solid var(--cyan);
+  animation: p5ring 2.8s var(--ease) infinite;
+}
+@keyframes p5ring {
+  0%   { transform: scale(.45); opacity: 1; }
+  70%, 100% { transform: scale(1.7); opacity: 0; }
+}
+.p5 .live b { font-weight: var(--w-body); color: var(--ink); }
+
+.p5 .say {
+  margin: 0;
+  font-size: var(--t-say); font-weight: var(--w-display);
+  line-height: .98; letter-spacing: var(--ls-display);
+  text-wrap: balance;
+}
+.p5 .arrival .body { margin-block-start: var(--s6); max-width: 46ch; }
+.p5 .arrival .rule-o { margin-block-start: var(--s7); }
+
+/* the horizon — a full-bleed mass at the foot, behind everything */
+/* Full bleed by translate, not by negative margins: a percentage margin on an
+   absolutely positioned box resolves against its containing block, which here
+   is the 1295px column — it left a 57px seam down the right edge. */
+.p5 .horizon {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100vw; height: 58%; z-index: 1;
+  overflow: clip; pointer-events: none;
+}
+/* the ridge, not the mountain: the plate sits low so only its skyline crosses
+   the frame, and it reads as a horizon rather than a photograph placed on the
+   right (C1 — the statement stays dominant) */
+.p5 .horizon img {
+  position: absolute; inset: 0;
+  /* The cut-out is the same photograph with its sky removed, so it carries
+     transparent margins the flattened plate did not: at 100% it read as a
+     small hill in the corner. 124% wide, pulled left by half the overflow,
+     and cropped lower — the ridge crosses the frame where it did before. */
+  width: 124%; max-width: none; height: 100%; left: -12%;
+  object-fit: cover; object-position: 50% 34%;
+  opacity: .86;
+  /* No top fade any more. It existed to dissolve a photographed sky into the
+     ground; this plate has no sky in it — above the ridge it is transparent,
+     which is the whole reason the light can be behind it. The foot still
+     dissolves, so the mass breaks the bottom edge rather than being cut by
+     the section line. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 82%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0, #000 82%, transparent 100%);
+}
+/* The plate dissolves at its foot instead of stopping on the section line: at
+   100svh the ridge runs off the bottom of the SCREEN, but the page continues,
+   so on the way to act 2 the same edge became a straight tonal step across the
+   full width. A mass may break an edge; it may not be cut by one. */
+/* the reading zone is held at the background layer, never with a shadow on the
+   type (color I4) — solved against the brightest pixel the run overlaps */
+.p5 .horizon::after {
+  content: ''; position: absolute; inset: 0;
+  /* Its own top edge is faded out. The plate box got taller so the light
+     could live behind the ridge, and a flat scrim starting at that box drew
+     a straight tonal step right across the frame — the same failure the
+     plate's own foot had, one layer up. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 15%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 15%, #000 100%);
+  background: linear-gradient(to right,
+    rgba(11,15,30,.97) 0%, rgba(11,15,30,.92) 34%,
+    rgba(11,15,30,.55) 56%, rgba(11,15,30,.18) 78%, rgba(11,15,30,.32) 100%);
+}
+
+/* =========================================================================
+   THE LIGHT BEHIND THE RIDGE
+
+   Act 1 had one live thing in it — the marker — and a horizon that was
+   entirely still. This is the second: a light behind the ridge that changes,
+   so the field reads as air rather than as a plate.
+
+   THREE UNEQUAL BANKS AT THREE UNEQUAL RATES. One smooth ellipse breathing on
+   a single period reads as a pulsing shape, which is an effect; three banks of
+   different size drifting and breathing at 27s, 19s and 33s against opacity
+   periods of 17s, 11s and 23s never line up over any span anyone watches, and the
+   sum reads as weather. The construction is the hero's own `.hero__sky`
+   (main.css) — torn gradients, soft everywhere, masked rather than clipped.
+
+   IT IS LIGHT, NOT PAINT. `screen` over the ground adds to the near-black sky
+   and does almost nothing to the lit snow, which is what a light behind a
+   ridge does. Neither accent is touched: orange is the promise and cyan is the
+   instrument (§4), and weather is neither — the tints are the sky family the
+   hero already uses. The vault's `organimo-com` is the case that earns this:
+   a soft atmospheric haze on a near-black ground reads as discipline exactly
+   as long as the accent stays the only sharp colour in the frame.
+
+   THE LEFT HALF IS MASKED OUT, not dimmed. The statement and the paragraph are
+   read there, nothing loops perpetually inside a reading zone (DM9), and the
+   band that survives the mask sits behind the mountain where there is no type.
+   ====================================================================== */
+.p5 .dawn {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100vw; height: 78%;
+  z-index: 0;                 /* under the plate (1), under the statement (2) */
+  pointer-events: none;
+  mix-blend-mode: screen;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0, transparent 38%, rgba(0,0,0,.34) 48%,
+                    #000 58%, #000 88%, rgba(0,0,0,.40) 100%),
+    linear-gradient(to bottom, transparent 0, #000 22%, #000 62%, transparent 88%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0, transparent 38%, rgba(0,0,0,.34) 48%,
+                    #000 58%, #000 88%, rgba(0,0,0,.40) 100%),
+    linear-gradient(to bottom, transparent 0, #000 22%, #000 62%, transparent 88%);
+  mask-composite: intersect;
+}
+.p5 .dawn__b {
+  position: absolute; display: block;
+  filter: blur(44px);
+  will-change: transform, opacity;
+}
+
+/* the low band, the widest — it sits along the whole ridge line */
+.p5 .dawn__b--1 {
+  left: 24%; right: -6%; top: 26%; height: 52%;
+  background:
+    radial-gradient(80% 90% at 30% 60%, rgba(138,116,232,.50), rgba(138,116,232,0) 100%),
+    radial-gradient(64% 100% at 58% 50%, rgba(196,218,246,.44), rgba(196,218,246,0) 100%),
+    radial-gradient(52% 80% at 84% 62%, rgba(92,214,168,.34), rgba(92,214,168,0) 100%);
+  animation: p5dawnDrift 27s var(--ease) infinite,
+             p5dawnBreathe 17s var(--ease) infinite;
+}
+/* the core, held behind the summit itself — the brightest thing in the field */
+.p5 .dawn__b--2 {
+  left: 28%; width: 40%; top: 16%; height: 52%;
+  background:
+    radial-gradient(76% 84% at 48% 62%, rgba(210,228,252,.52), rgba(210,228,252,0) 100%),
+    radial-gradient(56% 60% at 66% 34%, rgba(150,126,240,.44), rgba(150,126,240,0) 100%);
+  animation: p5dawnRise 19s var(--ease) infinite,
+             p5dawnBreathe 11s var(--ease) infinite;
+  animation-delay: 0s, -4s;
+}
+/* the thin high band, and it travels the other way: two layers moving the same
+   direction at different speeds read as one sheet sliding, which is not air */
+.p5 .dawn__b--3 {
+  left: 30%; right: 0; top: 6%; height: 34%;
+  background:
+    radial-gradient(90% 80% at 34% 54%, rgba(92,214,168,.34), rgba(92,214,168,0) 100%),
+    radial-gradient(60% 70% at 76% 46%, rgba(160,132,244,.30), rgba(160,132,244,0) 100%);
+  animation: p5dawnDriftBack 33s var(--ease) infinite,
+             p5dawnBreathe 23s var(--ease) infinite;
+  animation-delay: 0s, -13s;
+}
+/* THE RATES ARE THE WHOLE THING, AND THE FIRST PASS GOT THEM WRONG. Drift at
+   68s against a 34s breath moved the light 3px and 0.05 of opacity in three
+   seconds: running, correct, and indistinguishable from a still. main.css
+   records the identical mistake on the hero's cloud banks and the identical
+   verdict — a movement too slow to be seen is a decision not taken. These
+   periods are 17s to 33s, each bank travels a tenth of the frame, and the
+   swell is visible inside the first few seconds of looking at it.
+
+   IT WANDERS, IT DOES NOT PULSE. Two stops on a sine is a throb, and a throb
+   is a status light. Each bank's opacity runs four uneven stops on its own
+   period, so the three sum to a light that arrives somewhere and leaves rather
+   than to a beat that can be counted. */
+@keyframes p5dawnDrift {
+  0%   { transform: translate3d(-6%, 2.5%, 0) scale(1); }
+  36%  { transform: translate3d(1%, -1%, 0) scale(1.12); }
+  68%  { transform: translate3d(6%, 1%, 0) scale(1.05); }
+  100% { transform: translate3d(-6%, 2.5%, 0) scale(1); }
+}
+@keyframes p5dawnDriftBack {
+  0%   { transform: translate3d(5%, -1.5%, 0) scale(1.08); }
+  42%  { transform: translate3d(-3%, 1.5%, 0) scale(1); }
+  73%  { transform: translate3d(-7%, 0, 0) scale(1.06); }
+  100% { transform: translate3d(5%, -1.5%, 0) scale(1.08); }
+}
+@keyframes p5dawnRise {
+  0%   { transform: translate3d(2%, 4%, 0) scale(.94); }
+  33%  { transform: translate3d(-1%, -2%, 0) scale(1.14); }
+  62%  { transform: translate3d(-4%, -4.5%, 0) scale(1.04); }
+  100% { transform: translate3d(2%, 4%, 0) scale(.94); }
+}
+@keyframes p5dawnBreathe {
+  0%   { opacity: .34; }
+  27%  { opacity: 1; }
+  53%  { opacity: .52; }
+  78%  { opacity: .92; }
+  100% { opacity: .34; }
+}
+
+
+/* =========================================================================
+   ACT 2 · EVIDENCE — macro
+
+   Not three equal cards. One dominant figure and two subordinates (DNA9),
+   and the chain is fact → consequence, never a bare label (DNA32).
+   ====================================================================== */
+/* The figure takes the whole measure — at 11.5vw the twelve glyphs of
+   600,000,000 set to about 1190px inside a 1295px column, so it fills the
+   line without touching either edge. It is checked at the size the page
+   actually sets it, not at the size it was chosen at (I10). */
+.p5 .fig--hero { margin-block-end: clamp(3.5rem, 8vh, 6rem); }
+.p5 .fig--hero .fig__s { margin-block-start: var(--s4); max-width: 40ch; }
+
+.p5 .fig { display: grid; gap: var(--s3); }
+.p5 .fig__n {
+  font-family: var(--mono); font-weight: var(--w-medium);
+  font-size: var(--t-figure); line-height: .9;
+  letter-spacing: -.045em; font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  margin: 0;
+}
+.p5 .fig__k {
+  margin: 0;
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  color: var(--cyan);
+}
+.p5 .fig__s { margin: 0; max-width: 34ch; color: var(--ink-78); }
+
+/* the rail: two subordinates side by side, hairline-separated, at a scale that
+   cannot be mistaken for the dominant */
+.p5 .fig-rail {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(2rem, 5vw, 4.5rem);
+  border-block-start: 1px solid var(--rule);
+  padding-block-start: clamp(2rem, 4vh, 3rem);
+}
+.p5 .fig-rail .fig__n { font-size: clamp(2rem, 3.6vw, 3.5rem); line-height: 1; }
+
+/* =========================================================================
+   ACT 3 · DESCENT — push-in. The page's one pinned section and its peak.
+   ====================================================================== */
+.p5 .descent { position: relative; }
+.p5 .descent__stage {
+  position: relative; height: 100svh; overflow: clip;
+  background: var(--bg);
+}
+.p5 .descent__layer { position: absolute; inset: 0; }
+.p5 .descent__layer img,
+.p5 .descent__layer video {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.p5 .descent__layer--water { opacity: 0; }
+
+/* one ground travels the whole act, so summit and water read as one place
+   rather than two pictures (DNA65) */
+/* The frame is composed in three bands rather than veiled by one flat wash:
+   dark at the left where the statement sits, open through the middle where
+   the water is the picture, dark again at the right under the record. A panel
+   behind the record would be a box drawn on a photograph; a gradient is the
+   light in the scene (C1). */
+.p5 .descent__stage::after {
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background:
+    linear-gradient(to right,
+      rgba(11,15,30,.95) 0%,  rgba(11,15,30,.86) 28%,
+      rgba(11,15,30,.34) 45%, rgba(11,15,30,.20) 58%,
+      rgba(11,15,30,.52) 74%, rgba(11,15,30,.74) 100%),
+    linear-gradient(to bottom,
+      rgba(11,15,30,.74) 0%,  rgba(11,15,30,.10) 30%,
+      rgba(11,15,30,.14) 66%, rgba(11,15,30,.86) 100%);
+}
+
+/* The act is lit as one move: the surface is a silhouette on the way in and
+   the light is underneath. Graded on the layer, so this is the scene's own
+   lighting rather than a plate slid under the text — measured at the top of
+   the pin, the lit snow was holding the record's keys at 2.6:1. */
+.p5 .descent__layer--peak  img   { filter: brightness(.42) contrast(1.12); }
+.p5 .descent__layer--water video { filter: brightness(1.32) saturate(1.08); }
+
+.p5 .descent__in {
+  position: absolute; inset: 0; z-index: 3;
+  width: var(--col); margin-inline: auto;
+  display: grid; align-content: center;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+  column-gap: clamp(2rem, 5vw, 5rem);
+  row-gap: clamp(2.5rem, 5vh, 4rem);
+  align-items: start;
+}
+/* the spine */
+.p5 .descent__in .rh--span { grid-column: 1 / -1; margin: 0; }
+
+.p5 .descent__say { max-width: 34rem; }
+.p5 .descent__say .h-2 { margin-block-end: var(--s5); }
+
+/* ---- the record: the signature move ------------------------------------
+   Fields struck out as bars, resolving to a STATE as the descent deepens.
+   Never to invented names or numbers — showing fabricated personal data would
+   be both false and repellent (CP7, GI3). */
+/* no top rule of its own — it hangs from the spine above (C4) */
+.p5 .record { font-family: var(--mono); font-size: var(--t-xs); }
+.p5 .record__row:first-child { padding-block-start: 0; }
+.p5 .record__row {
+  display: grid; grid-template-columns: minmax(7rem, 10rem) 1fr auto;
+  gap: var(--s4); align-items: center;
+  padding-block: var(--s3);
+  border-block-end: 1px solid var(--rule);
+}
+.p5 .record__k {
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  color: var(--ink-56);
+}
+/* The bar IS the redaction. It does not fill with a colour — colour filling a
+   bar reads as a progress meter, which is a different claim. It is erased from
+   the left as the field resolves, and what is left behind is the value. */
+.p5 .record__bar {
+  height: 10px; border-radius: 1px;
+  background: var(--ink-24);
+  clip-path: inset(0 0 0 calc(var(--fill, 0) * 100%));
+  transition: clip-path .55s var(--ease);
+}
+.p5 .record__v {
+  letter-spacing: var(--ls-data); text-transform: uppercase;
+  color: var(--cyan); opacity: 0;
+  transition: opacity .4s var(--ease) .12s;
+  font-variant-numeric: tabular-nums;
+}
+.p5 .record__row[data-on] .record__v { opacity: 1; }
+/* the row itself lifts a shade as it resolves — the only other thing that
+   changes, so the erase stays the event */
+.p5 .record__row[data-on] .record__k { color: var(--ink-78); }
+
+.p5 .record__foot {
+  margin: 0; padding-block-start: var(--s4);
+  font-size: var(--t-xs); line-height: var(--lh-tight);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase; color: var(--ink-56);
+}
+.p5 .record__foot b { font-weight: var(--w-body); color: var(--ink); }
+
+/* =========================================================================
+   ACT 4 · THE TURN — interruption
+
+   The seam says what changed: down there is the data, up here is what you do
+   with it (DNA64). Ground inverts; colour steps out.
+   ====================================================================== */
+.p5 .turn { background: var(--paper); color: var(--paper-ink); }
+.p5 .turn .act { padding-block: clamp(7rem, 16vh, 12rem) clamp(9rem, 20vh, 15rem); }
+.p5 .turn .rh { color: var(--paper-2); border-block-end-color: var(--paper-rule); }
+.p5 .turn .rh b { color: var(--paper-ink); }
+
+.p5 .turn__lead {
+  max-width: 26ch; margin: 0 0 clamp(4rem, 9vh, 7rem);
+  font-size: var(--t-h1); font-weight: var(--w-display);
+  line-height: var(--lh-head); letter-spacing: var(--ls-head);
+  color: var(--paper-ink);
+}
+.p5 .turn__lead + .body { margin-block-start: calc(-1 * clamp(2.5rem, 6vh, 4.5rem)); }
+
+/* a numbered sequence, staggered — editorial furniture, not three cards */
+/* Three sequential steps, so they descend from one horizon line rather than
+   stacking as three equal bands. The rule is the horizon; each column drops a
+   little further below it and a hairline tick draws the drop, so the sequence
+   is spatial and the eye travels down and to the right (C5). */
+.p5 .steps {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: clamp(1.5rem, 3.5vw, 3.5rem);
+  border-block-start: 1px solid var(--paper-rule);
+}
+.p5 .step {
+  position: relative;
+  --drop: 0rem;
+  padding-block: calc(clamp(1.75rem, 3.5vh, 2.5rem) + var(--drop)) 0;
+}
+.p5 .step:nth-child(2) { --drop: clamp(1.5rem, 4vh, 3rem); }
+.p5 .step:nth-child(3) { --drop: clamp(3rem, 8vh, 6rem); }
+.p5 .step::before {
+  content: ''; position: absolute; inset-block-start: 0; inset-inline-start: 0;
+  width: 1px; height: calc(clamp(1.75rem, 3.5vh, 2.5rem) + var(--drop) - 0.75rem);
+  background: var(--paper-rule);
+}
+.p5 .step__n {
+  margin: 0 0 var(--s4);
+  font-family: var(--mono); font-size: var(--t-xs); line-height: 1;
+  letter-spacing: var(--ls-label); color: var(--paper-ink);
+  font-variant-numeric: tabular-nums;
+}
+.p5 .step__t {
+  margin: 0 0 var(--s3);
+  font-size: var(--t-h3); font-weight: var(--w-strong);
+  line-height: var(--lh-head); letter-spacing: var(--ls-head);
+  color: var(--paper-ink); text-wrap: balance;
+}
+.p5 .step__b { margin: 0; color: var(--paper-2); }
+
+/* =========================================================================
+   ACT 5 · RESOLUTION — release. The page arrives somewhere and stops (DNA30).
+   ====================================================================== */
+.p5 .close { position: relative; }
+.p5 .close__say {
+  margin: 0; max-width: 20ch;
+  font-size: var(--t-h1); font-weight: var(--w-display);
+  line-height: var(--lh-head); letter-spacing: var(--ls-head);
+}
+.p5 .close__act {
+  margin-block-start: clamp(3rem, 8vh, 5rem);
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: end; gap: var(--s5) clamp(2rem, 5vw, 4rem);
+}
+/* the action is a phone number, because it is the only real, verifiable route
+   this page has. It is set in the instrument voice and it is the largest thing
+   in the act (CP1 — nothing here is invented). */
+.p5 .close__tel {
+  font-family: var(--mono); font-weight: var(--w-medium);
+  font-size: clamp(1.75rem, 3.4vw, 3rem); line-height: 1;
+  letter-spacing: var(--ls-data); font-variant-numeric: tabular-nums;
+  color: var(--ink); text-decoration: none;
+  border-block-end: 2px solid var(--orange);
+  padding-block-end: var(--s2);
+  transition: color var(--d-1) var(--ease), border-color var(--d-1) var(--ease);
+}
+.p5 .close__tel:hover { color: var(--orange); }
+.p5 .close__note {
+  margin: 0 0 var(--s2); max-width: 15ch;
+  font-family: var(--mono); font-size: var(--t-xs); line-height: var(--lh-tight);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  color: var(--ink-56);
+}
+/* subordinate by every means at once — size, weight, colour and position —
+   so it never reads as an alternative to the number */
+.p5 .close__login {
+  margin-block-end: var(--s2); justify-self: end;
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  color: var(--ink-78); text-decoration: none; white-space: nowrap;
+  border-block-end: 1px solid var(--cyan-line);
+  padding-block-end: var(--s2);
+  transition: color var(--d-1) var(--ease), border-color var(--d-1) var(--ease);
+}
+.p5 .close__login:hover { color: var(--cyan); border-color: var(--cyan); }
+
+/* =========================================================================
+   ACT 5 · COMPLIANCE — a spec plate on paper
+
+   Five acronyms and one paragraph. As five equal badges they would read as a
+   badge wall, which is what a compliance section usually is and what nobody
+   reads; as a plate — keys in a column, values against them, one hairline per
+   row — they read as a record, which is the same object act 3 resolves.
+   ====================================================================== */
+.p5 .plate {
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(2rem, 6vw, 6rem);
+  border-block-start: 1px solid var(--paper-rule);
+  padding-block-start: clamp(2rem, 4vh, 3rem);
+}
+.p5 .plate__list { margin: 0; padding: 0; list-style: none; }
+/* The acronym is the whole row. The source never wrote the long names —
+   its own file carries "need longer name for visual balance" beside each
+   one — so the row holds what exists and no filler stands where the name
+   will go (CP7). */
+.p5 .plate__row {
+  padding-block: var(--s4);
+  border-block-end: 1px solid var(--paper-rule);
+}
+.p5 .plate__row:first-child { padding-block-start: 0; }
+.p5 .plate__k {
+  font-family: var(--mono); font-weight: var(--w-medium);
+  font-size: var(--t-h3); line-height: 1;
+  letter-spacing: var(--ls-data); color: var(--paper-ink);
+}
+.p5 .plate__note { margin: 0; max-width: 44ch; color: var(--paper-2); }
+
+/* =========================================================================
+   ACT 6 · THE TRIAL — a range, not four cards
+
+   Four names and no prices. Four cards would each leave a price-shaped hole
+   in the middle of them, so the tiers are set as one ascending line: the
+   sequence is the information, and the sequence is all the source has.
+   ====================================================================== */
+.p5 .terms {
+  margin: 0 0 clamp(3rem, 7vh, 5rem); padding: 0; list-style: none;
+  display: flex; flex-wrap: wrap; gap: var(--s4) clamp(1.5rem, 4vw, 3.5rem);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  color: var(--paper-2);
+}
+.p5 .terms li { position: relative; padding-inline-start: 1.35rem; }
+/* the mark is the promise's own colour, and it is the only colour on paper —
+   at 3.27:1 it is a control edge, never the carrier of the words (§4) */
+.p5 .terms li::before {
+  content: ''; position: absolute; inset-inline-start: 0; inset-block-start: .48em;
+  width: .7rem; height: 1px; background: var(--orange);
+}
+.p5 .tiers {
+  margin: 0; padding: 0; list-style: none;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-block-start: 1px solid var(--paper-rule);
+}
+.p5 .tier {
+  display: flex; align-items: baseline; gap: var(--s3);
+  padding-block: clamp(1.5rem, 3vh, 2.25rem);
+  padding-inline: var(--s4) var(--s4);
+  font-size: var(--t-h3); font-weight: var(--w-strong);
+  line-height: var(--lh-head); letter-spacing: var(--ls-head);
+  color: var(--paper-ink);
+  border-inline-start: 1px solid var(--paper-rule);
+}
+.p5 .tier:first-child { border-inline-start: 0; padding-inline-start: 0; }
+.p5 .tier__n {
+  font-family: var(--mono); font-size: var(--t-xs); font-weight: var(--w-body);
+  letter-spacing: var(--ls-data); color: var(--paper-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================================
+   ACT 7 · IN USE — the dark ground returns
+
+   Names as type. There are no wordmark files, and a drawn approximation of
+   somebody else's mark is worse than their name set properly (GI2). One size
+   only, so the wall reads as one mass rather than as a ranking nobody
+   supplied.
+   ====================================================================== */
+.p5 .inuse__b { max-width: 58ch; margin-block-start: var(--s5); }
+.p5 .brands {
+  margin: clamp(3.5rem, 8vh, 6rem) 0 0; padding: 0; list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0;
+  /* The last row is short — eleven names into six columns — so the closing
+     rule is drawn by the container. Without it the line stops under the
+     final name and the wall looks unfinished rather than uneven. */
+  border-block-start: 1px solid var(--rule);
+  border-block-end: 1px solid var(--rule);
+}
+.p5 .brands li {
+  padding-block: clamp(1.5rem, 3.2vh, 2.25rem);
+  padding-inline-end: var(--s5);
+  border-block-end: 1px solid var(--rule);
+  font-size: var(--t-h3); font-weight: var(--w-body);
+  line-height: var(--lh-head); letter-spacing: var(--ls-head);
+  color: var(--ink-78);
+}
+
+/* =========================================================================
+   THE FOOTER — the last mass, and it is composed
+
+   Four columns and a legal line, on the same measure as everything above it.
+   It closes the page rather than trailing off it (C12).
+   ====================================================================== */
+.p5 .foot {
+  width: var(--col); margin-inline: auto;
+  padding-block: clamp(3.5rem, 8vh, 6rem) var(--s7);
+  border-block-start: 1px solid var(--rule);
+}
+.p5 .foot__top {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) repeat(4, minmax(0, 1fr));
+  gap: clamp(2rem, 4vw, 3.5rem);
+}
+.p5 .foot .mark { font-size: var(--t-h3); }
+.p5 .foot__col { display: grid; align-content: start; gap: var(--s3); }
+.p5 .foot__h {
+  margin: 0 0 var(--s2);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  color: var(--ink-56);
+}
+.p5 .foot__col a {
+  color: var(--ink-78); text-decoration: none; font-size: var(--t-body);
+  transition: color var(--d-1) var(--ease);
+}
+.p5 .foot__col a:hover { color: var(--cyan); }
+.p5 .foot__q { margin: 0; color: var(--ink-56); font-size: var(--t-body); }
+.p5 .foot__tel {
+  font-family: var(--mono); letter-spacing: var(--ls-data);
+  font-variant-numeric: tabular-nums; color: var(--ink);
+}
+.p5 .foot__legal {
+  margin-block-start: clamp(3rem, 7vh, 5rem);
+  padding-block-start: var(--s5);
+  border-block-start: 1px solid var(--rule);
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s3) var(--s7);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  color: var(--ink-56);
+}
+.p5 .foot__legal p { margin: 0; }
+
+
+/* =========================================================================
+   THE TRACE — one line, three acts, no seam
+
+   The page is about a single visit resolving, so a single line carries it:
+   off the summit, down through the evidence, and into the water as the
+   plumb line of the descent. It is CYAN because it is an instrument — a
+   trace, a reading, an annotation — and orange is the promise (§4). It
+   never becomes a control and it never carries a word on its own.
+
+   THREE SEGMENTS, NOT ONE PATH. One SVG spanning the document would have to
+   survive a pinned section in the middle of it, and a pin moves the ground
+   under any element anchored to the document. Each act owns its own segment
+   in its own box, and the JOIN IS MADE BY THE STROKE: every segment fades
+   into transparency at both ends, so nothing starts and nothing stops — the
+   handover is invisible and it survives any gap between the sections.
+
+   non-scaling-stroke is required, not tidy. The viewBox is 0–100 in both
+   axes against a box that is neither square nor a constant ratio, so the
+   scale is anisotropic: without it the line is 4px thick at the top of a
+   tall act and hairline at the bottom of a wide one.
+   ====================================================================== */
+.p5 .trace {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; overflow: visible;
+}
+.p5 .trace__p { stroke-width: 1.25px; stroke-linecap: round; }
+
+/* act 1 — over the plate, under the statement */
+.p5 .trace--peak { z-index: 2; }
+.p5 .trace--peak .trace__p { stroke: url(#traceFadeA); }
+/* the summit ring: the trace has a beginning even though it has no visible
+   end, because a reading starts somewhere and that somewhere is the peak */
+/* The route is WHITE. It is a line drawn on terrain — part of the world, like
+   the one index.html draws on this same mountain — and cyan is the layer that
+   points AT it: the anchor, the leader, the readout. Colouring the route itself
+   cyan made the world an instrument and left the annotation nothing to be. */
+.p5 .trace__lead {
+  fill: none; stroke: var(--cyan); stroke-width: 1px; opacity: .78;
+}
+/* the anchor: the point on the route the readout is about. Same construction
+   as the live marker in the copy — one dot, one ring — because they are the
+   same kind of object, a reading taken at a place. */
+.p5 .anchor {
+  position: absolute; z-index: 2; left: 56.9%; top: 57.4%;
+  width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%; background: var(--cyan); box-shadow: var(--cyan-glow);
+  pointer-events: none;
+}
+.p5 .anchor::after {
+  content: ''; position: absolute; inset: -6px;
+  border-radius: 50%; border: 1px solid var(--cyan); opacity: .5;
+}
+
+/* the readout the leader arrives at, in the air the act was keeping empty */
+.p5 .peakout {
+  position: absolute; z-index: 2; margin: 0;
+  left: 72.2%; top: 47.4%; transform: translateY(-50%);
+  display: grid; gap: var(--s2);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-data); text-transform: uppercase;
+  color: var(--ink-78);
+}
+.p5 .peakout span:first-child { color: var(--cyan); }
+.p5 .arrival__in { z-index: 3; }
+
+/* act 2 — behind the figures, never over them */
+.p5 .evidence { position: relative; }
+.p5 .trace--thread { z-index: 0; }
+.p5 .trace--thread .trace__p { stroke: url(#traceFadeB); }
+.p5 .evidence > .rh, .p5 .evidence .fig, .p5 .evidence .fig-rail { position: relative; z-index: 1; }
+
+/* act 3 — in the water, between the footage and the copy */
+.p5 .trace--deep { z-index: 1; }
+.p5 .trace--deep .trace__p { stroke: url(#traceFadeC); }
+/* where the line stops is where the record resolves: the descent arrives at
+   something rather than running out of scroll (DNA30) */
+.p5 .trace__end { fill: var(--cyan); stroke: none; opacity: .9; }
+
+/* Mobile is authored, not shrunk. The peak segment is redrawn against the
+   phone crop — the plate is 150% wide there and the apex sits at the middle
+   of the frame, not at 56% of it — and the thread loses its lean, because a
+   line that drifts 16% of a 390px frame reads as a mistake rather than as a
+   route (MJ8). */
+@media (max-width: 62rem) {
+  /* The phone crop puts the summit somewhere else entirely: the plate is
+     150% wide there and cropped shorter, so the apex sits at 61% across and
+     68% down instead of 57% and 57%. The route is redrawn against that, not
+     scaled to it — and it starts BELOW the paragraph, because a line that
+     begins inside the reading zone is a line through the reading zone. */
+  .p5 .trace--peak .trace__p {
+    d: path("M61 68 C 63 72, 64.4 76, 65.4 81 C 66.4 86, 66 91, 65 95 C 64.4 98, 64.1 100, 63.9 102");
+  }
+  .p5 .anchor { left: 61%; top: 68%; }
+  .p5 .trace--thread .trace__p {
+    d: path("M63.9 -2 C 62.6 20, 58 42, 55 64 C 52.6 80, 51 92, 50 102");
+  }
+  /* the leader and its readout do not fit a 390px frame, and the marker at
+     the top of the act already names the signal (U12: nothing is dropped,
+     it is carried by something else) */
+  .p5 .trace__lead, .p5 .peakout { display: none; }
+  .p5 .trace--thread .trace__p {
+    d: path("M58 -2 C 57 20, 55 42, 53 64 C 51.6 80, 50.6 92, 50 102");
+  }
+}
+
+/* =========================================================================
+   REVEALS — transform and opacity only (DNA76). The static page is complete
+   without them: this is the entrance, not the content.
+   ====================================================================== */
+html[data-js] .p5 [data-rise] { opacity: 0; transform: translate3d(0, 18px, 0); }
+/* The un-hide has to outrank the hide, and it did not. `html[data-js] .p5
+   [data-rise]` carries a type selector; `.p5 [data-rise][data-in]` does not, so
+   at equal class weight the hiding rule won every time and all nine blocks —
+   the 600,000,000, act 4's three steps and act 5's phone number — stayed at
+   opacity 0 for the whole life of the page. The observer was firing and setting
+   the attribute correctly the entire time, which is why nothing ever threw. */
+html[data-js] .p5 [data-rise][data-in] {
+  opacity: 1; transform: none;
+  transition: opacity .7s var(--ease), transform .7s var(--ease);
+  transition-delay: var(--delay, 0s);
+}
+
+/* =========================================================================
+   MOBILE — a recomposition, not a stack (DNA67)
+   ====================================================================== */
+@media (max-width: 62rem) {
+  /* Running heads: the descriptor takes its own line rather than letting each
+     half wrap internally, which turned "04 The turn / What you do with it"
+     into two ragged columns. */
+  .p5 .rh { display: block; }
+  .p5 .rh span { display: block; margin: var(--s2) 0 0; }
+
+  /* the bar: phone in, Log in folded into the menu */
+  .p5 .mh__tel { display: inline-flex; }
+  .p5 .mh__act .btn { display: none; }
+  .p5 .mh__nav-login { display: block; }
+  .p5 .mh[data-compact] .mh__nav a { padding-block: var(--s3); }
+
+  /* every control reaches 44px on a touch screen. The bar's own height is
+     unchanged — the target grows inside it, not around it. */
+  .p5 .mh__tel { padding-block: var(--s3); }
+  .p5 a.mark { padding-block: var(--s3); }
+  .p5 .burger { min-width: 44px; min-height: 44px; }
+  .p5 .close__tel { padding-block: var(--s2) var(--s3); }
+
+  /* Act 3 is not a fixed stage on a phone. Held at 100svh with the content
+     absolutely placed, the headline was clipped behind the masthead; the
+     content sizes the section instead and the image sits behind it. */
+  .p5 .descent__stage {
+    height: auto; min-height: 100svh;
+    display: grid; align-content: end;
+  }
+  .p5 .descent__in {
+    position: static;
+    width: var(--col); margin-inline: auto;
+    padding-block: clamp(7rem, 20vh, 10rem) clamp(3rem, 10vh, 6rem);
+  }
+
+  .p5 .fig-rail { grid-template-columns: 1fr; gap: 0; }
+  .p5 .fig-rail .fig { padding-block: var(--s6); border-block-start: 1px solid var(--rule); }
+  .p5 .fig-rail .fig:first-child { border-block-start: 0; padding-block-start: 0; }
+  .p5 .fig-rail .fig__n { font-size: clamp(1.75rem, 9vw, 2.5rem); }
+
+  /* act 3 is not pinned on mobile: two stills, each holding its own frame */
+  .p5 .descent__in {
+    grid-template-columns: 1fr; align-content: end;
+    padding-block-end: clamp(3rem, 10vh, 6rem);
+    gap: var(--s6);
+  }
+  /* On a phone the picture gets one band and the type gets a ground, because
+     they cannot share the same pixels: measured on the composited render, the
+     shaft of light in the water crossed the act's headline at 2.9:1. The band
+     sits above where the type begins — the section's own top padding — so the
+     water is still seen on the way in. */
+  .p5 .descent__stage::after {
+    background: linear-gradient(to bottom,
+      rgba(11,15,30,.42) 0%,  rgba(11,15,30,.30) 14%,
+      rgba(11,15,30,.80) 21%, rgba(11,15,30,.90) 58%,
+      rgba(11,15,30,.96) 100%);
+  }
+  .p5 .record__row { grid-template-columns: minmax(6rem, 8rem) 1fr auto; }
+
+  /* the stair needs three columns to be a stair. Stacked, it becomes a list,
+     so the drop and its tick are removed rather than left as a stub (DNA67). */
+  .p5 .steps { grid-template-columns: 1fr; }
+  .p5 .step { --drop: 0rem; padding-block: var(--s6) 0; }
+  .p5 .step + .step { border-block-start: 1px solid var(--paper-rule); }
+  .p5 .step::before { display: none; }
+  .p5 .step__b { max-width: 46ch; }
+
+  /* act 5: the number is the whole row again */
+  .p5 .close__act { grid-template-columns: 1fr; gap: var(--s5); }
+  .p5 .close__login { justify-self: start; margin-block-end: 0; }
+  .p5 .close__note { margin-block-end: 0; }
+  .p5 .close__note br { display: none; }
+
+
+  /* Act 5: the plate is a record, and a record is read down. Two columns
+     inside 390px would give the paragraph a 22-character measure. */
+  .p5 .plate { grid-template-columns: 1fr; gap: var(--s6); }
+
+  /* Act 6: four tiers side by side become four two-word columns. As rows
+     they keep the ascending reading the sequence is carrying, and the
+     dividing line moves from between them to under each. */
+  .p5 .tiers { grid-template-columns: 1fr; }
+  .p5 .tier {
+    border-inline-start: 0; padding-inline: 0;
+    border-block-end: 1px solid var(--paper-rule);
+  }
+  .p5 .tier:last-child { border-block-end: 0; }
+
+  /* Act 7: two names across a phone is one name too many at this size. */
+  .p5 .brands { grid-template-columns: 1fr; }
+  .p5 .brands li { padding-inline-end: 0; }
+
+  /* The footer stacks, and the wordmark leads it rather than sitting in a
+     column of its own with nothing under it. */
+  .p5 .foot__top { grid-template-columns: 1fr 1fr; gap: var(--s7) var(--s5); }
+  .p5 .foot .mark { grid-column: 1 / -1; }
+  .p5 .foot__legal { flex-direction: column; gap: var(--s3); }
+
+  .p5 .horizon { height: 46%; }
+  /* The plate is widened so its own edge leaves the screen — on a phone the
+     frame is narrower than the ridge needs. `width: 150%` alone was a silent
+     no-op: ds.css sets `img { max-width: 100% }`, which capped it back to the
+     box and left the right quarter of the screen with no mountain in it and a
+     straight vertical edge where the photograph stopped (U-hard-edge). */
+  .p5 .horizon img { width: 150%; max-width: none; left: -25%; }
+
+  /* The light is re-authored, not scaled down. On a phone the copy runs the
+     full measure, so there is no left half to mask it out of; instead the band
+     is moved BELOW the paragraph and the rule, and only the ridge is lit. The
+     blur comes down with the box — 58px on a 500px frame is a wash. */
+  .p5 .dawn {
+    height: 62%;
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0, #000 16%, #000 86%, transparent 100%),
+      linear-gradient(to bottom, transparent 0, transparent 30%, #000 46%, #000 82%, transparent 100%);
+    mask-image:
+      linear-gradient(to right, transparent 0, #000 16%, #000 86%, transparent 100%),
+      linear-gradient(to bottom, transparent 0, transparent 30%, #000 46%, #000 82%, transparent 100%);
+  }
+  .p5 .dawn__b { filter: blur(38px); }
+  .p5 .dawn__b--1 { left: 2%; right: 2%; top: 30%; height: 52%; }
+  .p5 .dawn__b--2 { left: 12%; width: 70%; top: 22%; height: 56%; }
+  .p5 .dawn__b--3 { display: none; }   /* three banks in a 500px frame is one bank */
+}
+
+@media (max-width: 40rem) {
+  .p5 .close__act { gap: var(--s5); }
+
+  /* Below 40rem two footer columns still fit; one column would run the
+     footer to three screens on its own. */
+  .p5 .foot__top { grid-template-columns: 1fr; gap: var(--s6); }
+  /* one column, and every row a real touch target rather than an 18px line */
+  .p5 .foot { flex-direction: column; align-items: stretch; gap: 0; }
+  .p5 .foot .mark { margin: 0 0 var(--s4); }
+  .p5 .foot a {
+    display: block; padding-block: var(--s3);
+    border-block-start: 1px solid var(--rule);
+  }
+  .p5 .close__login { padding-block: var(--s3) var(--s3); }
+}
+
+/* =========================================================================
+   REDUCED MOTION — an authored state, not a disabled one (DNA43).
+   The record is already resolved; the descent is already at the water.
+   ====================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html[data-js] .p5 [data-rise] { opacity: 1; transform: none; }
+  .p5 .live__dot::after { display: none; }
+  .p5 .record__row .record__v { opacity: 1; }
+  .p5 .record__row .record__bar { clip-path: inset(0 0 0 100%); }
+  /* The light behind the ridge keeps its composition and loses its clock: the
+     banks are placed at a frame chosen from the loop rather than snapped to a
+     keyframe boundary, so the still is a composed one (DNA43). */
+  .p5 .dawn__b { animation: none; }
+  .p5 .dawn__b--1 { transform: translate3d(1%, -1%, 0) scale(1.12); opacity: .82; }
+  .p5 .dawn__b--2 { transform: translate3d(-1%, -2%, 0) scale(1.14); opacity: 1; }
+  .p5 .dawn__b--3 { transform: translate3d(-3%, 1.5%, 0) scale(1); opacity: .62; }
+}
+
+/* =========================================================================
+   THE BAR OVER PAPER
+
+   A fixed dark glass bar sitting on a light ground is the one thing act 4
+   breaks, so the bar is told which ground it is over. It is part of the
+   composition, not chrome laid on top of it (U10, DNA31).
+
+   The cyan numeral cannot come with it: #00ECFF on --paper is 1.5:1. So it is
+   darkened until it clears AA on that ground and no further — same hue, same
+   job, a value that can be read. Measured: 4.77:1.
+   ====================================================================== */
+/* the bar's mobile order is set here, not in ds.css, which is shared */
+.mh__nav-login { display: none; }
+
+html[data-bar="light"] .mh {
+  background: #E7E9EEcc;
+  border-color: #0B0F1E1f;
+  box-shadow: 0 18px 44px -22px #0B0F1E38, inset 0 1px 0 #ffffff8c;
+}
+html[data-bar="light"] .mh .mark { color: #0B0F1E; }
+html[data-bar="light"] .mh .mark__n { color: #00707F; }          /* 4.77:1 on paper */
+html[data-bar="light"] .mh__nav a { color: #3F4553; }        /* 7.9:1 */
+html[data-bar="light"] .mh__nav a:hover,
+html[data-bar="light"] .mh__nav a[aria-current="page"] {
+  color: #0B0F1E; background: #00707F14; box-shadow: inset 0 0 0 1px #00707F52;
+}
+html[data-bar="light"] .mh__tel { color: #3F4553; }
+html[data-bar="light"] .mh__tel:hover { color: #00707F; }
+html[data-bar="light"] .mh .btn {
+  color: #0B0F1E; border-color: #00707F8c; background: #00707F0f;
+}
+html[data-bar="light"] .mh .btn:hover { border-color: #00707F; background: #00707F1f; }
+html[data-bar="light"] .mh .burger { border-color: #0B0F1E4d; }
+html[data-bar="light"] .mh .burger span { background: #0B0F1E; }
+html[data-bar="light"] .mh[data-compact] { background: #E7E9EEe0; }
+
+/* ds.css folds the nav into a dropdown when the bar compacts and unfolds it
+   again above 1100px — but it unsets the panel's background, border and
+   shadow while leaving its backdrop-filter and radius behind. On every dark
+   ground that residue is invisible; over act 4's paper it renders as a grey
+   pill behind the links. Corrected here rather than in ds.css, which is
+   shared with the production page. */
+@media (min-width: 1100px) {
+  .p5 .mh[data-compact] .mh__nav {
+    -webkit-backdrop-filter: none; backdrop-filter: none; border-radius: 0;
+  }
+}
+
+.mh, .mark, .mark__n, .mh__nav a, .mh__tel, .btn, .burger, .burger span {
+  transition: background-color .45s var(--ease), color .45s var(--ease),
+              border-color .45s var(--ease), box-shadow .45s var(--ease);
+}

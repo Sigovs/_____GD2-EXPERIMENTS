@@ -1,0 +1,212 @@
+/* =========================================================================
+   GD2 — SCENE 2, THE 2.5D OCEAN (experiment, index6.html only)
+
+   An alternative to the WebGL diver: no canvas, no renderer, no model. The
+   footage stays exactly what it is and everything added sits on top of it as
+   flat plates moving at different rates, which is what 2.5D means — the depth
+   is in the RATES, not in the geometry.
+
+   Loaded only by index6.html. index.html and index2.html do not reference this
+   file and are untouched.
+
+   THE LAYER ORDER IS THE WHOLE ARGUMENT, and it is fixed:
+
+     --z-plate    the video                       .deep__media    (existing)
+     --z-scene    far haze          rate 0.15     .ocean__far
+                  middle rock       rate 0.35     .ocean__mid
+                  the actor (rov | diver)        .ocean__actor
+                  near rock         rate 0.65     .ocean__near
+                  sonar and dust                  .ocean__ping / .ocean__dust
+     --z-content  the copy and the accordion      .deep__in       (existing)
+
+   The near rock is AFTER the ROV on purpose: it has to be able to pass in
+   front of it. A machine that is never occluded by anything reads as a sticker
+   on the video however well it is lit, and one that slides behind a rock is
+   inside the canyon.
+
+   Nothing here takes pointer events. The accordion keeps every click it had.
+   ====================================================================== */
+
+.ocean {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-scene);
+  overflow: hidden;
+  pointer-events: none;
+  /* its own compositing context, so a layer moving cannot repaint the video */
+  isolation: isolate;
+}
+
+/* every moving thing here is promoted once, and only transform/opacity are
+   ever written to it — no width, no top, no filter animation */
+.ocean__far,
+.ocean__mid,
+.ocean__near,
+.ocean__actor,
+.ocean__dust {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+/* ---- the plates --------------------------------------------------------
+   Placeholders, and built to be thrown away: each carries its artwork in a
+   custom property, so swapping a temporary silhouette for a bought WebP is one
+   value and touches no animation code. deep-gsap.js probes
+   assets20/ocean/plates/<name>.webp on load and uses it if it is there.
+   ---------------------------------------------------------------------- */
+.ocean__plate {
+  position: absolute;
+  background-image: var(--plate);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  will-change: transform;
+}
+
+/* the far layer is not rock at all — it is the water going soft with
+   distance, which is what actually separates a far plane from a near one */
+.ocean__far {
+  background:
+    radial-gradient(120% 70% at 32% 4%, rgba(150, 210, 255, .16), rgba(150, 210, 255, 0) 62%),
+    radial-gradient(80% 50% at 20% 96%, rgba(6, 20, 34, .55), rgba(6, 20, 34, 0) 70%);
+}
+
+.ocean__mid  .ocean__plate { opacity: .72; }
+.ocean__near .ocean__plate { opacity: .95; }
+
+/* left and right walls. Sized in svh so they hold their proportion against
+   the frame rather than against the window's width. */
+.ocean__plate--l { left: -2%;  top: -6%; width: 34%; height: 112%; }
+.ocean__plate--r { right: -4%; top: -8%; width: 30%; height: 116%; }
+.ocean__mid .ocean__plate--l { left: 2%;  width: 26%; }
+.ocean__mid .ocean__plate--r { right: 24%; width: 22%; }
+
+/* ---- the actor slot ----------------------------------------------------
+   A BOX THAT TRAVELS, and it does not care what is drawn inside it. The scene
+   places it, scales it and aims it; ?actor= decides the artwork. Its size is
+   set from JS because that number belongs to the actor, not to the layout.
+
+   Both proxies are placeholders and should look like it: enough to judge
+   scale, path, timing and how the thing sits in the canyon, and nothing that
+   would survive into production.
+   ---------------------------------------------------------------------- */
+.ocean__actor {
+  inset: auto;
+  left: 0;
+  top: 0;
+  transform-origin: 50% 50%;
+}
+.ocean__actor svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+.rov__cone { fill: url(#rovCone); opacity: .5; }
+.rov__hull { fill: #0e1826; stroke: #33506d; stroke-width: 1.1; }
+.rov__trim { fill: none; stroke: #476b8c; stroke-width: 1; opacity: .8; }
+.rov__lamp { fill: var(--cyan); }
+.rov__glow { fill: var(--cyan); opacity: .22; }
+.rov__prop { transform-origin: center; transform-box: fill-box; }
+
+/* the diver proxy. Transparent on purpose — a body in water is not a cut-out,
+   and reading it against the plate is half of what is being judged here. */
+.dv__body { fill: rgba(10, 20, 32, .78); stroke: rgba(96, 146, 186, .5); stroke-width: 1; }
+.dv__tank { fill: rgba(20, 36, 54, .85); stroke: rgba(110, 168, 210, .45); stroke-width: .9; }
+.dv__limb { fill: none; stroke: rgba(14, 26, 40, .8); stroke-width: 5.5; stroke-linecap: round; }
+.dv__fin  { fill: rgba(12, 24, 38, .78); }
+.dv__line { fill: none; stroke: rgba(120, 178, 214, .55); stroke-width: 1.1; }
+.dv__leg  { transform-origin: 30px 50px; transform-box: fill-box; }
+
+/* ---- sonar -------------------------------------------------------------
+   One ring per checkpoint, fired from wherever the machine happens to be. It
+   is a pulse, not a HUD: a single stroke that grows and goes.
+   ---------------------------------------------------------------------- */
+.ocean__ping {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.ping__r {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+}
+
+/* ---- suspended dust ----------------------------------------------------
+   Not decoration: it is the only thing that says there is water BETWEEN the
+   viewer and the machine, which is what stops the whole overlay reading flat.
+   ---------------------------------------------------------------------- */
+.ocean__dust i {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background: rgba(190, 224, 250, .5);
+  will-change: transform, opacity;
+}
+
+/* ---- reduced motion ----------------------------------------------------
+   The scene keeps its composition and loses its travel: the machine is parked
+   at a chosen point on the path, nothing drifts, nothing spins. The accordion
+   is untouched and stays fully usable.
+   ---------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .ocean__dust { display: none; }
+  .rov__prop { display: none; }
+  .dv__leg { transform: none !important; }
+}
+
+/* ---- debug -------------------------------------------------------------
+   ?oceanDebug=1 only. Nothing below is reachable without it.
+   ---------------------------------------------------------------------- */
+.ocean--debug .ocean__far  { outline: 1px dashed rgba(120, 200, 255, .35); }
+.ocean--debug .ocean__mid  { outline: 1px dashed rgba(120, 255, 200, .35); }
+.ocean--debug .ocean__near { outline: 1px dashed rgba(255, 200, 120, .35); }
+.ocean--debug .ocean__plate { outline: 1px solid rgba(255, 255, 255, .25); }
+.ocean--debug .ocean__actor { outline: 1px solid var(--cyan); }
+
+.ocean__path { position: absolute; inset: 0; overflow: visible; display: none; }
+.ocean--debug .ocean__path { display: block; }
+.ocean__path path { fill: none; stroke: var(--cyan); stroke-width: 1;
+  stroke-dasharray: 4 5; opacity: .7; vector-effect: non-scaling-stroke; }
+.ocean__path circle { fill: var(--orange); }
+
+.ocean-hud {
+  position: fixed;
+  left: var(--s5); bottom: var(--s5);
+  z-index: 90;
+  font-family: var(--mono); font-size: var(--t-xs); line-height: 1.55;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: var(--ink-78);
+  background: var(--glass-solid);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--r-1);
+  padding: var(--s3) var(--s4);
+  pointer-events: none;
+  min-width: 15rem;
+}
+.ocean-hud b { display: block; color: var(--cyan); margin-bottom: var(--s2);
+  letter-spacing: var(--ls-label); }
+.ocean-hud s { text-decoration: none; color: var(--ink); float: right; }
+
+/* the actor switch. It is the only thing in the HUD that takes a click,
+   because swapping in place — at the scroll position already on screen — is
+   the only way the two concepts get judged against the same frame. */
+.ocean-hud__sw { display: flex; gap: var(--s2); margin: var(--s3) 0 0;
+  pointer-events: auto; }
+.ocean-hud__sw button {
+  flex: 1 1 auto;
+  font: inherit; letter-spacing: var(--ls-label);
+  color: var(--ink-56); background: none; cursor: pointer;
+  border: 1px solid var(--rule-ui); border-radius: var(--r-1);
+  padding: var(--s2) var(--s3);
+}
+.ocean-hud__sw button:hover { color: var(--ink); }
+.ocean-hud__sw button[data-on] { color: var(--cyan); border-color: var(--cyan-line);
+  background: var(--cyan-wash); }
+
+/* the near rock is allowed to eat the actor, and on a phone it must not: at
+   one column there is no canyon to be inside, only a body in the way */
+@media (max-width: 62rem) {
+  .ocean__near .ocean__plate { opacity: .55; }
+}

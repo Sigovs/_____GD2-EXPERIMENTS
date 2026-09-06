@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- index5 — chaptered editorial with one cinematic act.
+
+     Concept, feeling curve, shot list, peak, signature move, budget and the
+     claims ledger are in docs/BRIEF-index5.md, written before this markup
+     existed (DNA1). Nothing here is invented: every figure and every line of
+     copy comes from index4, which is this page's content but not its art
+     direction.
+
+     No canvas. index3 and index4 are the 3D trials; a third continuous pinned
+     world would be the same page three times (DNA36). The first headline is
+     real HTML text at its final size, so the LCP never sits behind anything
+     (DNA74). -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GD2 — Know who's shopping</title>
+<meta name="description" content="GD2 turns anonymous website activity into actionable buyer intelligence — without forms or sign-ups.">
+<meta name="theme-color" content="#0B0F1E">
+<link rel="icon" href="../favicon.ico" sizes="32x32">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="stylesheet" href="../assets20/css/tokens.css">
+<link rel="stylesheet" href="../assets20/css/ds.css">
+<link rel="stylesheet" href="../assets20/css/index5.css">
+<!-- Reveals are hidden only where there is a script to reveal them. Without
+     this flag [data-rise] starts at opacity 0 and, with scripting off, nine
+     blocks of real content never come back (DNA39). One line, before paint,
+     so there is no flash either way. -->
+<script>document.documentElement.dataset.js = '1';</script>
+<link rel="preload" as="image" href="../assets20/img/mountain-cut.webp" fetchpriority="high">
+</head>
+<body class="p5">
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="mh">
+  <a class="mark" href="#main" aria-label="GD2 — home">GD<span class="mark__n">2</span></a>
+  <nav class="mh__nav" id="mh-nav" aria-label="Primary">
+    <ul>
+      <li><a href="#evidence">Products &amp; Services</a></li>
+      <li><a href="#turn">Grow your Business</a></li>
+      <li><a href="#compliance">Compliance</a></li>
+      <li><a href="#close">Contact</a></li>
+      <!-- On a phone the bar carries the phone number, because the phone
+           number is this page's one action; Log in folds into the menu with
+           the rest of the route. Nothing is dropped, only reordered (U12). -->
+      <li class="mh__nav-login"><a href="#main">Log in</a></li>
+    </ul>
+  </nav>
+  <div class="mh__act">
+    <a class="mh__tel" href="tel:+18665917555">(866)&nbsp;591-7555</a>
+    <a class="btn" href="#close">Log in</a>
+  </div>
+  <button class="burger" type="button" aria-expanded="false" aria-controls="mh-nav" aria-label="Menu">
+    <span></span><span></span>
+  </button>
+</header>
+
+<main id="main">
+
+  <!-- ===================================================================
+       ACT 1 · ARRIVAL — reveal.
+       The field is there before the subject. The horizon is a presence, not a
+       photograph: graded down until it is nearly ground, so it never competes
+       with the statement (C1).
+       =================================================================== -->
+  <section class="act arrival" aria-labelledby="say">
+    <!-- The light behind the ridge, and it is behind it for real: the plate is
+         the cut-out mountain the production hero already ships, so the sky
+         above the ridge is transparent and this layer shows through it while
+         the summit occludes it. Nothing is faked with a blend mode.
+
+         Three unequal bands at three unequal rates, masked entirely off the
+         half of the frame the statement is read in — nothing loops
+         perpetually inside a reading zone (DM9). -->
+    <div class="dawn" aria-hidden="true">
+      <span class="dawn__b dawn__b--1"></span>
+      <span class="dawn__b dawn__b--2"></span>
+      <span class="dawn__b dawn__b--3"></span>
+    </div>
+
+    <div class="horizon" aria-hidden="true">
+      <img src="../assets20/img/mountain-cut.webp" width="2000" height="1156" alt="" fetchpriority="high">
+    </div>
+    <!-- THE TRACE, PART ONE — it leaves the summit.
+
+         One line runs the whole page: off the peak here, down through the
+         evidence, and on into the water as the plumb line of the descent.
+         It is the visit the page is about, and it is drawn by the reader.
+
+         Neither end of any segment is an event: the stroke itself runs out
+         into transparency, so where one act hands over to the next there is
+         nothing to see happening — the same trick index.html uses between
+         its hero and its water (main.css, deep.css).
+
+         gradientUnits="userSpaceOnUse" is not a preference. The default is
+         objectBoundingBox, and a near-vertical path has a bounding box a
+         fraction of a unit wide; a bbox gradient on it is undefined and the
+         browser drops the stroke entirely — no error, no line. deep.css
+         carries the same note for the same reason. -->
+    <svg class="trace trace--peak" viewBox="0 0 100 100" preserveAspectRatio="none"
+         fill="none" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="traceFadeA" gradientUnits="userSpaceOnUse" x1="0" y1="55" x2="0" y2="102">
+          <stop offset="0"   stop-color="#FFFFFF" stop-opacity="0"/>
+          <stop offset=".14" stop-color="#FFFFFF" stop-opacity=".72"/>
+          <stop offset=".78" stop-color="#FFFFFF" stop-opacity=".72"/>
+          <stop offset="1"   stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path class="trace__p" vector-effect="non-scaling-stroke"
+            d="M56.9 57.4 C 59.4 61.8, 60.8 65, 62.2 68.6
+               C 64.2 73.4, 66.6 77.4, 67.4 82.6
+               C 68.2 87.4, 67 91, 65.6 94.6
+               C 64.8 97, 64.4 99, 64 101"/>
+      <!-- The leader branches FROM the route, in the route's own
+           coordinates, so it cannot drift from it however the box is scaled.
+           Two segments, angular, never curved: it is an instrument reaching
+           for a label, not a second route. index.html draws the identical
+           join on the identical mountain. -->
+      <path class="trace__lead" vector-effect="non-scaling-stroke"
+            d="M56.9 57.4 L61.4 50.6 L71.5 50.6"/>
+    </svg>
+
+    <!-- What the leader arrives at. Two lines, both already in the claims
+         ledger, in the instrument voice. It is deliberately not a third
+         headline: the statement stays the dominant of this screen (C1). -->
+    <!-- The anchor is HTML, not SVG. The trace boxes are 0-100 in both axes
+         against acts of arbitrary shape, so a circle inside one is drawn as
+         an ellipse — 30px across and 19px tall at this viewport. The line
+         can take that distortion; a marker cannot. -->
+    <span class="anchor" aria-hidden="true"></span>
+    <p class="peakout" aria-hidden="true">
+      <span>600M+ consumer profiles</span>
+      <span>Updated daily</span>
+    </p>
+    <div class="arrival__in">
+      <p class="live">
+        <span class="live__dot" aria-hidden="true"></span>
+        Signal 001 · <b>Unidentified</b>
+      </p>
+      <h1 class="say" id="say">The deeper you go,<br>the more you <em class="promise">know.</em></h1>
+      <p class="body">From a single page view we identify 300+ data points on your
+        visitors — name, phone, email, address, income, home value, credit,
+        existing loans, social links. You also see which pages they looked at,
+        and when.</p>
+      <span class="rule-o"></span>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       ACT 2 · EVIDENCE — macro.
+       One dominant figure and two subordinates, never three equal cards
+       (DNA9). Each figure states its consequence, not a label (DNA32).
+       =================================================================== -->
+  <section class="act evidence" id="evidence" aria-labelledby="ev-h">
+    <!-- THE TRACE, PART TWO — it crosses the evidence.
+         It carries no annotation here and it is quieter than in act 1: this
+         act belongs to one figure, and a line that competed with it would be
+         a second dominant (C1). It exists to keep the descent continuous. -->
+    <svg class="trace trace--thread" viewBox="0 0 100 100" preserveAspectRatio="none"
+         fill="none" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="traceFadeB" gradientUnits="userSpaceOnUse" x1="0" y1="-2" x2="0" y2="102">
+          <stop offset="0"   stop-color="#FFFFFF" stop-opacity="0"/>
+          <stop offset=".16" stop-color="#FFFFFF" stop-opacity=".5"/>
+          <stop offset=".82" stop-color="#FFFFFF" stop-opacity=".5"/>
+          <stop offset="1"   stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path class="trace__p" vector-effect="non-scaling-stroke"
+            d="M64 -2 C 63.4 14, 61.4 26, 59.4 41
+               C 58.4 53, 55.8 66, 53.4 80 C 51.8 89, 50.6 96, 50 102"/>
+    </svg>
+
+    <p class="rh"><b>02</b> Evidence <span>The database</span></p>
+
+    <!-- The figure gets the whole measure. It is the macro shot of the act and
+         the largest thing on the page, and it is a number rather than a
+         headline (DNA32). The two subordinates sit under it on a rail, so they
+         read as evidence beneath a claim rather than as its equals (DNA9). -->
+    <div class="fig fig--hero" data-rise>
+      <p class="fig__k" id="ev-h">Consumer profiles</p>
+      <p class="fig__n">600,000,000</p>
+      <p class="fig__s">Matched against anonymous visits to your site, and
+        refreshed daily.</p>
+    </div>
+
+    <div class="fig-rail">
+      <div class="fig" data-rise style="--delay:.08s">
+        <p class="fig__k">Data points</p>
+        <p class="fig__n">300+</p>
+        <p class="fig__s">Recovered from a single page view — no form, no
+          sign-up, no cookie banner to accept.</p>
+      </div>
+      <div class="fig" data-rise style="--delay:.16s">
+        <p class="fig__k">Visitor signals</p>
+        <p class="fig__n">600+</p>
+        <p class="fig__s">Turned into a clear picture of each shopper and
+          what they intend to do.</p>
+      </div>
+      <div class="fig" data-rise style="--delay:.24s">
+        <p class="fig__k">Records updated daily</p>
+        <p class="fig__n">100,000,000</p>
+        <p class="fig__s">The file does not go stale between the visit and the
+          call.</p>
+      </div>
+      <div class="fig" data-rise style="--delay:.32s">
+        <p class="fig__k">Years of data</p>
+        <p class="fig__n">30+</p>
+        <p class="fig__s">Long enough to know a household, not just a
+          session.</p>
+      </div>    </div>
+
+  </section>
+
+  <!-- ===================================================================
+       ACT 3 · DESCENT — push-in. The page's one pinned section, and its peak.
+       The summit gives way to water and the record resolves as it goes: the
+       signature move (DNA37). Fields resolve to a STATE, never to invented
+       names or numbers (CP7, GI3).
+       =================================================================== -->
+  <section class="descent" id="descent" aria-labelledby="de-h">
+    <div class="descent__stage">
+      <div class="descent__layer descent__layer--peak" aria-hidden="true">
+        <img src="../assets20/img/peak2.webp" width="2000" height="1152" alt="" loading="lazy">
+      </div>
+      <div class="descent__layer descent__layer--water" aria-hidden="true">
+        <video muted playsinline loop preload="none"
+               poster="../assets20/video/ocean-back-poster.jpg" width="1920" height="1080">
+          <source src="../assets20/video/ocean-back-final.webm" type="video/webm">
+          <source src="../assets20/video/ocean-back-final.mp4" type="video/mp4">
+        </video>
+      </div>
+
+      <!-- THE TRACE, PART THREE — it goes under.
+           Straight, and vertical. The line wanders in act 1 because it is
+           drawn on something: it follows a slope that exists in the plate.
+           There is no slope in open water, and a line that meanders through
+           it is decoration pretending to be terrain. A plumb line is what a
+           descent through water actually looks like. -->
+      <svg class="trace trace--deep" viewBox="0 0 100 100" preserveAspectRatio="none"
+           fill="none" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="traceFadeC" gradientUnits="userSpaceOnUse" x1="0" y1="-2" x2="0" y2="86">
+            <stop offset="0"   stop-color="#FFFFFF" stop-opacity="0"/>
+            <stop offset=".12" stop-color="#FFFFFF" stop-opacity=".62"/>
+            <stop offset=".84" stop-color="#FFFFFF" stop-opacity=".62"/>
+            <stop offset="1"   stop-color="#FFFFFF" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path class="trace__p" vector-effect="non-scaling-stroke" d="M50 -2 L50 86"/>
+        <circle class="trace__end" cx="50" cy="86" r="1.6" vector-effect="non-scaling-stroke"/>
+      </svg>
+
+      <div class="descent__in">
+        <!-- The running head spans the whole measure, so its rule is one
+             hairline crossing the frame and both columns hang from it. Two
+             columns each with their own little rule read as two panels; one
+             rule reads as one page (C4). -->
+        <p class="rh rh--span"><b>03</b> Descent <span>Signal → profile</span></p>
+
+        <div class="descent__say">
+          <h2 class="h-2" id="de-h">Every visit begins with a trace.</h2>
+          <p class="body">Anonymous activity becomes actionable insight. The
+            deeper the session goes, the more of the record resolves.</p>
+        </div>
+
+        <div class="record" aria-label="Fields resolved from one anonymous visit">
+          <div class="record__row" data-field>
+            <span class="record__k">Name</span>
+            <span class="record__bar" aria-hidden="true"></span>
+            <span class="record__v">Matched</span>
+          </div>
+          <div class="record__row" data-field>
+            <span class="record__k">Phone</span>
+            <span class="record__bar" aria-hidden="true"></span>
+            <span class="record__v">Matched</span>
+          </div>
+          <div class="record__row" data-field>
+            <span class="record__k">Email</span>
+            <span class="record__bar" aria-hidden="true"></span>
+            <span class="record__v">Matched</span>
+          </div>
+          <div class="record__row" data-field>
+            <span class="record__k">Address</span>
+            <span class="record__bar" aria-hidden="true"></span>
+            <span class="record__v">Matched</span>
+          </div>
+          <div class="record__row" data-field>
+            <span class="record__k">Income</span>
+            <span class="record__bar" aria-hidden="true"></span>
+            <span class="record__v">Matched</span>
+          </div>
+          <div class="record__row" data-field>
+            <span class="record__k">Credit</span>
+            <span class="record__bar" aria-hidden="true"></span>
+            <span class="record__v">Matched</span>
+          </div>
+          <p class="record__foot">+ home value, existing loans, social links</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       ACT 4 · THE TURN — interruption.
+       The seam says what changed: down there is the data, up here is what you
+       do with it (DNA64). The ground inverts to the brand ground's own hue at
+       the far end of the lightness scale, and colour steps out entirely —
+       neither accent clears AA on paper, so rank is carried by scale, weight
+       and rules instead.
+       =================================================================== -->
+  <section class="turn" id="turn" aria-labelledby="tu-h">
+    <div class="act">
+      <p class="rh"><b>04</b> The turn <span>What you do with it</span></p>
+
+      <h2 class="turn__lead" id="tu-h" data-rise>GD2 turns anonymous website
+        activity into actionable buyer intelligence.</h2>
+
+      <div class="steps">
+        <article class="step" data-rise>
+          <p class="step__n">01</p>
+            <h3 class="step__t">Active visitor analytics</h3>
+          <p class="step__b">Identify high-intent shoppers and see the vehicles,
+            pages, and behaviors driving their interest.</p>
+        </article>
+        <article class="step" data-rise style="--delay:.08s">
+          <p class="step__n">02</p>
+            <h3 class="step__t">Actionable buyer profiles</h3>
+          <p class="step__b">Turn 600+ visitor signals into a clear picture of
+            each shopper and their intent.</p>
+        </article>
+        <article class="step" data-rise style="--delay:.16s">
+          <p class="step__n">03</p>
+            <h3 class="step__t">Reach them at the right moment</h3>
+          <p class="step__b">Connect by email, text, or phone while the
+            opportunity is still warm.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       ACT 5 · COMPLIANCE — the daylight continues.
+       Colour is still out. The acts on paper are one structural event, not
+       three, so the ground does not flicker back and forth (DNA64).
+
+       The five names are placeholders in the source and stay placeholders
+       here: the client's own file carries the note "need longer name for
+       visual balance" beside each acronym, so the expansion has never been
+       written. A placeholder that looks like copy is the failure (CP4).
+       =================================================================== -->
+  <section class="turn compliance" id="compliance" aria-labelledby="co-h">
+    <div class="act">
+      <p class="rh"><b>05</b> Compliance <span>What we will not do</span></p>
+
+      <h2 class="turn__lead" id="co-h" data-rise>Consumer privacy is a
+        cornerstone of how we do business, not a page in the footer.</h2>
+
+      <div class="plate" data-rise style="--delay:.08s">
+        <ul class="plate__list">
+          <li class="plate__row"><span class="plate__k">CDPR</span></li>
+          <li class="plate__row"><span class="plate__k">CCPA</span></li>
+          <li class="plate__row"><span class="plate__k">FCRA</span></li>
+          <li class="plate__row"><span class="plate__k">GLBA</span></li>
+          <li class="plate__row"><span class="plate__k">DPPA</span></li>
+        </ul>
+        <p class="plate__note">GD2 considers consumer privacy protection, and
+          the security of the information we present and share with our
+          clients, a cornerstone of how we do business.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       ACT 6 · THE TRIAL — still on paper, and the last thing said in
+       daylight before the page returns to the dark to close.
+
+       Four names and no prices, because the source carries four names and no
+       prices. A price invented to fill a card is the one thing this page may
+       not do (CP7), so the tiers are set as a range rather than as four
+       cards that would each leave a price-shaped hole.
+       =================================================================== -->
+  <section class="turn trial" id="trial" aria-labelledby="tr-h">
+    <div class="act">
+      <p class="rh"><b>06</b> The trial <span>Start before you pay</span></p>
+
+      <h2 class="turn__lead" id="tr-h" data-rise>Fourteen days, and the door
+        stays unlocked on the way out.</h2>
+
+      <ul class="terms" data-rise style="--delay:.06s">
+        <li>Free 14-day trial</li>
+        <li>Cancel anytime</li>
+        <li>No obligation consultations</li>
+      </ul>
+
+      <ol class="tiers" data-rise style="--delay:.12s">
+        <li class="tier"><span class="tier__n">01</span> Startup</li>
+        <li class="tier"><span class="tier__n">02</span> Small Business</li>
+        <li class="tier"><span class="tier__n">03</span> Growth</li>
+        <li class="tier"><span class="tier__n">04</span> Enterprise</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       ACT 7 · IN USE — back to the dark ground for the last two chapters.
+       The names are set as type because no wordmark files exist, and a drawn
+       approximation of somebody else's logo is worse than the name (GI2).
+       =================================================================== -->
+  <section class="act inuse" id="inuse" aria-labelledby="iu-h">
+    <p class="rh"><b>07</b> In use <span>Who runs on it</span></p>
+
+    <h2 class="h-2" id="iu-h" data-rise>The people already asking who is on
+      the lot.</h2>
+    <p class="body inuse__b" data-rise style="--delay:.06s">The solutions
+      offered by GD2 have proven instrumental in enhancing client engagement
+      and optimizing conversion rates. By harnessing advanced analytics and
+      user behaviour insights, businesses can tailor their strategies to meet
+      the evolving needs of their target audience.</p>
+
+    <ul class="brands" data-rise style="--delay:.12s">
+      <li>Rolls-Royce</li>
+      <li>Sotheby&rsquo;s</li>
+      <li>McLaren</li>
+      <li>Gorsuch</li>
+      <li>Vogel Marketing Group</li>
+      <li>ELLE</li>
+      <li>Pininfarina</li>
+      <li>AAN All Auto Network</li>
+      <li>duPont Registry</li>
+      <li>Christine Alexander</li>
+      <li>Koenigsegg</li>
+    </ul>
+  </section>
+  <!-- ===================================================================
+       ACT 8 · RESOLUTION — release.
+       The page arrives somewhere and stops (DNA30). The action is a phone
+       number because it is the only real, verifiable route this page has.
+       =================================================================== -->
+  <section class="act close" id="close" aria-labelledby="cl-h">
+    <p class="rh"><b>08</b> Resolution <span>Start here</span></p>
+    <h2 class="close__say" id="cl-h" data-rise>Know who&rsquo;s shopping.<br>Act while it matters.</h2>
+    <!-- One object, and two quiet things sitting on its own baseline. A boxed
+         button next to a phone number set this large would be two controls
+         competing to be the action; there is only one action (DNA30). -->
+    <div class="close__act" data-rise style="--delay:.1s">
+      <a class="close__tel" href="tel:+18665917555">(866)&nbsp;591-7555</a>
+      <p class="close__note">Without forms or sign-ups.</p>
+      <a class="close__login" href="#main">Log in <span aria-hidden="true">&rarr;</span></a>
+    </div>
+  </section>
+
+</main>
+
+<!-- The footer is the last mass on the page, not a list of leftovers: four
+     columns, the fourth of which the source leaves titled "XXXXXXX", so it is
+     titled as the placeholder it is rather than given an invented name (CP4). -->
+<footer class="foot">
+  <div class="foot__top">
+    <span class="mark">GD<span class="mark__n">2</span></span>
+
+    <nav class="foot__col" aria-label="Products">
+      <p class="foot__h">GD2</p>
+      <a href="#evidence">Products &amp; Services</a>
+      <a href="#turn">Grow your Business</a>
+      <a href="#compliance">Compliance</a>
+      <a href="#inuse">About</a>
+      <a href="#close">Contact</a>
+    </nav>
+
+    <nav class="foot__col" aria-label="Privacy">
+      <p class="foot__h">Privacy</p>
+      <a href="#compliance">Privacy guidelines</a>
+      <a href="#compliance">Terms of use</a>
+      <a href="#compliance">Privacy policy</a>
+      <a href="#compliance">Opt out</a>
+    </nav>
+
+    <div class="foot__col">
+      <p class="foot__h">Get in touch</p>
+      <p class="foot__q">Toll free customer care</p>
+      <a class="foot__tel" href="tel:+18665917555">(866)&nbsp;591-7555</a>
+      <a href="#close">Need support?</a>
+    </div>
+
+    <nav class="foot__col" aria-label="Reference">
+      <p class="foot__h">Reference</p>
+      <a href="#evidence">Data attributes</a>
+      <a href="#inuse">Case study</a>
+      <a href="#turn">Key features</a>
+    </nav>
+  </div>
+
+  <div class="foot__legal">
+    <p>&copy; 2026 GD2 · All rights reserved</p>
+    <p>CDPR, CCPA, FCRA, GLBA, DPPA compliant · Ethical and compliant data storage</p>
+  </div>
+</footer>
+
+<script src="../assets20/vendor/gsap.min.js"></script>
+<script src="../assets20/vendor/ScrollTrigger.min.js"></script>
+<!-- If this file fails to arrive the flag comes back off, so the reveals
+     un-hide rather than leaving nine blocks of copy permanently invisible. -->
+<script src="../assets20/js/index5.js" onerror="document.documentElement.removeAttribute('data-js')"></script>
+</body>
+</html>

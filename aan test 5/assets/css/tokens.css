@@ -1,0 +1,35 @@
+/* GD2 — tokens. Cold near-monochrome ground, one warm accent.
+   Colour is NOT locked: it is derived from the hero and stays open until the
+   hero is signed off. Nothing here is inherited from an old draft as styling. */
+
+@font-face{font-family:"Inter Tight";src:url("../fonts/inter-tight-400.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Inter Tight";src:url("../fonts/inter-tight-500.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"Inter Tight";src:url("../fonts/inter-tight-600.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:"Inter Tight";src:url("../fonts/inter-tight-800.woff2") format("woff2");font-weight:800;font-style:normal;font-display:swap}
+@font-face{font-family:"Plex Mono";src:url("../fonts/plex-mono-400.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Plex Mono";src:url("../fonts/plex-mono-500.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+
+:root{
+  /* ground — cold neutral, not blue-branded */
+  --ink-000:#05070C;
+  --ink-050:#080B13;
+  --ink-100:#0C111C;
+
+  /* text on the ground */
+  --fg-100:#F2F5FA;
+  --fg-080:#C3CCDC;
+  --fg-060:#8E99AC;
+  --fg-040:#606B7E;
+
+  /* the one warm accent — candidate, not final */
+  --warm:#FF9300;
+
+  /* the route and its marks: light, not a colour */
+  --route:rgba(238,244,255,.72);
+  --route-dim:rgba(238,244,255,.26);
+
+  --display:"Inter Tight",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+
+  --pad:clamp(20px,5vw,72px);
+}

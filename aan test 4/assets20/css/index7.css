@@ -1,0 +1,503 @@
+/* =========================================================================
+   index7 — the vault reading
+
+   ONE COMPOSITION, ONE FILE. Delete this stylesheet and index7.html is still a
+   complete document: every word is in the markup, in order, and nothing here
+   is load-bearing for content.
+
+   The direction is answerable to docs/BRIEF-index7.md, which is answerable to
+   the vault. Three findings shape everything below:
+
+     C2e  a dark atmospheric ground is not itself a preference — and every
+          other version of this page is dark. This one alternates.
+     A2   identity is carried by ONE system. There is no third typeface here
+          and no second accent: character comes from scale, crop, rule and
+          number, which is what ciridae-com and ruadh-com both do.
+     B1   rhythm as a felt alternation, STATED as a sequence. The ground turns
+          over three times, on the beat of the five parts.
+
+   The palette's warm neutral is new to this project and is the one thing that
+   makes the page not-dark, so it is measured rather than eyeballed — the table
+   is in §MEASURED at the foot of this file.
+   ====================================================================== */
+.p7 {
+  /* the warm neutral, and the ink for it. ciridae-com pairs deep navy with a
+     warm cream rather than with the cold grey most dark sites reach for; the
+     hue here is the brand ground's own, carried across the lightness scale and
+     warmed by 14 degrees so it reads as paper and not as an inverted screen. */
+  --cream:     #EDE9E1;
+  --cream-ink: #14161C;   /* 14.94:1 on --cream */
+  --cream-2:   #55596A;   /*  5.74:1 — supporting text */
+  --cream-3:   #626676;   /*  4.71:1 — the floor. #6E7280 was written here
+                              first from an estimate and measures 3.96, which
+                              is under AA for the 14px numbers it sets. */
+  --cream-rule:#14161C24;
+}
+
+/* =========================================================================
+   THE PARTS, AND THE GROUND THAT TURNS OVER
+
+   Every part carries its number and its title in the same place. That is
+   E3 condition 4 — a sufficient signal of continuation — and it is the one
+   this project has failed before: a visitor who can see there is an 03 after
+   the 02 never reads a quiet screen as a broken one.
+   ====================================================================== */
+.p7 .part {
+  position: relative;
+  width: var(--col); margin-inline: auto;
+  padding-block: clamp(6rem, 14vh, 10rem);
+}
+/* the ground change is a full-bleed event, and the measure stays put inside it */
+.p7 .part--paper { background: var(--cream); color: var(--cream-ink); }
+.p7 .part--paper::before {
+  content: ''; position: absolute; z-index: -1; inset-block: 0;
+  left: 50%; transform: translateX(-50%); width: 100vw;
+  background: var(--cream);
+}
+.p7 .part--dark { background: var(--bg); }
+
+.p7 .pn {
+  margin: 0 0 clamp(3rem, 7vh, 5rem);
+  padding-block-end: var(--s4);
+  border-block-end: 1px solid var(--rule);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  color: var(--ink-56);
+}
+.p7 .pn b { font-weight: var(--w-medium); color: var(--cyan); margin-inline-end: var(--s4); }
+.p7 .part--paper .pn { color: var(--cream-2); border-block-end-color: var(--cream-rule); }
+.p7 .part--paper .pn b { color: var(--cream-ink); }
+
+.p7 .h-2 {
+  margin: 0; max-width: 22ch;
+  font-size: var(--t-h1); font-weight: var(--w-display);
+  line-height: var(--lh-head); letter-spacing: var(--ls-head);
+  text-wrap: balance;
+}
+.p7 .part--paper .body { color: var(--cream-2); }
+
+/* =========================================================================
+   01 · STATEMENT — one governing event
+
+   The wordmark and the ridge are one mass. The summit rises INTO the
+   letterforms and takes a bite out of the 2, which is beings-co's move
+   ("портреты входят с ним в конфликт, перекрываются") and the reason this is
+   a composition rather than a photograph with a logo on it.
+
+   No second column. A1's content is that everything else defers, and the
+   readout, the annotation and the callout all belong to other versions.
+   ====================================================================== */
+/* the bar carries Log in as a button; the same link inside the list is the
+   phone-only route to it, and two of them on one desktop bar is one of them
+   being a mistake */
+.p7 .mh__nav-login { display: none; }
+
+.p7 .statement { padding-block-start: clamp(7rem, 16vh, 11rem); }
+.p7 .statement__mass { position: relative; }
+
+/* The wordmark is the largest thing the project has ever set, and it is set in
+   the sans it already owns — no display face is introduced for one screen
+   (A2). At 21vw the three glyphs run the full measure at every width from 390
+   up, which is checked in the render rather than assumed (typography I10). */
+.p7 .wordmark {
+  margin: 0; position: relative; z-index: 1;
+  font-size: clamp(5rem, 21vw, 20rem);
+  font-weight: var(--w-display); line-height: .82;
+  letter-spacing: -.045em; color: var(--ink);
+  text-align: center;
+}
+.p7 .wordmark span { color: var(--cyan); }
+
+/* the ridge crosses it: the plate is in front of the wordmark's foot and
+   behind its shoulders, which is what makes them one mass and not two layers */
+.p7 .statement__ridge {
+  position: absolute; z-index: 2; left: 50%; transform: translateX(-50%);
+  bottom: -18%; width: 100vw; height: 104%;
+  overflow: clip; pointer-events: none;
+}
+.p7 .statement__ridge img {
+  position: absolute; inset: 0;
+  width: 118%; max-width: none; left: -9%; height: 100%;
+  object-fit: cover; object-position: 50% 62%;
+  opacity: .9;
+  /* The plate dissolves where it crosses the letterforms. Burying the
+     wordmark is not the same event as conflicting with it: beings-co has the
+     portraits INTERRUPT the mark and change how it is read, and a mark that
+     cannot be read has not been interrupted, it has been replaced (B2). */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, rgba(0,0,0,.55) 22%, #000 52%, #000 86%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, rgba(0,0,0,.55) 22%, #000 52%, #000 86%, transparent 100%);
+}
+
+.p7 .statement__say {
+  position: relative; z-index: 3;
+  margin-block-start: clamp(2rem, 5vh, 4rem);
+  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 5rem) clamp(2rem, 6vw, 6rem);
+  align-items: end;
+}
+.p7 .claim {
+  margin: 0; grid-column: 1;
+  font-size: var(--t-h1); font-weight: var(--w-display);
+  line-height: var(--lh-head); letter-spacing: var(--ls-head);
+}
+/* The second half of the claim is the half about the reader, and it is marked
+   by TONE rather than by an italic: the project ships four romans of Inter
+   Tight and no italic, so font-style: italic asks the browser to slant a
+   roman — a synthesised face at 60px is visible as one, and a display face is
+   verified in the render (typography I10). */
+.p7 .claim em { font-style: normal; color: var(--ink-56); }
+.p7 .statement .body { grid-column: 2; max-width: 44ch; margin: 0; }
+.p7 .statement__foot {
+  grid-column: 1 / -1; margin: clamp(1rem, 3vh, 2rem) 0 0;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s4) var(--s6);
+}
+.p7 .tel {
+  font-family: var(--mono); font-size: var(--t-h3); font-weight: var(--w-medium);
+  letter-spacing: var(--ls-data); font-variant-numeric: tabular-nums;
+  color: var(--ink); text-decoration: none;
+  border-block-end: 2px solid var(--orange); padding-block-end: var(--s2);
+  transition: color var(--d-1) var(--ease);
+}
+.p7 .tel:hover { color: var(--orange); }
+.p7 .statement__foot span {
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--ink-56);
+}
+
+/* =========================================================================
+   02 · THE RECORD — the plate
+
+   ciridae-com: numbered lines, tables and fine rules turn technical
+   information into a designed system. index5 performs this list as a
+   redaction that lifts; this one publishes it, because a dealer can read a
+   table at a glance and a mechanism has to be watched (MJ10 — take the device
+   away and the information is still there).
+   ====================================================================== */
+.p7 .record__head {
+  display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  margin-block-end: clamp(3rem, 8vh, 5rem);
+}
+.p7 .record__head .body { max-width: 46ch; align-self: end; }
+
+.p7 .plate {
+  margin: 0; padding: 0; list-style: none;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: clamp(2rem, 5vw, 5rem);
+  border-block-start: 1px solid var(--cream-rule);
+}
+.p7 .plate__row {
+  display: flex; align-items: baseline; gap: var(--s4);
+  padding-block: clamp(.85rem, 1.8vh, 1.25rem);
+  border-block-end: 1px solid var(--cream-rule);
+}
+.p7 .plate__n {
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-data); color: var(--cream-3);
+  font-variant-numeric: tabular-nums;
+}
+.p7 .plate__f {
+  font-size: var(--t-h3); font-weight: var(--w-body);
+  line-height: var(--lh-head); letter-spacing: var(--ls-head);
+  color: var(--cream-ink);
+}
+/* the tenth row is not a field, it is the sentence the nine add up to */
+.p7 .plate__row--wide { grid-column: 1 / -1; }
+.p7 .plate__row--wide .plate__f { color: var(--cream-2); }
+
+/* =========================================================================
+   03 · THE INSTRUMENT — and the density rises
+
+   The page gets denser as it descends. ciridae-com's own recorded weakness is
+   that its rhythm goes too sparse for the volume of product information; four
+   figures on one rank is the answer, and each states its consequence rather
+   than a label (DNA32).
+   ====================================================================== */
+.p7 .database .h-2 { margin-block-end: clamp(3rem, 8vh, 5rem); }
+.p7 .figs {
+  margin: 0; padding: 0; list-style: none;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  border-block-start: 1px solid var(--rule);
+}
+.p7 .fig {
+  padding: clamp(1.75rem, 4vh, 2.75rem) clamp(1rem, 2vw, 2rem) 0 0;
+  border-inline-start: 1px solid var(--rule);
+  padding-inline-start: clamp(1rem, 2vw, 2rem);
+}
+.p7 .fig:first-child { border-inline-start: 0; padding-inline-start: 0; }
+.p7 .fig__n {
+  margin: 0 0 var(--s4);
+  font-family: var(--mono); font-weight: var(--w-medium);
+  font-size: clamp(1.5rem, 2.6vw, 2.5rem); line-height: .95;
+  letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.p7 .fig__k {
+  margin: 0 0 var(--s3);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--cyan);
+}
+.p7 .fig__s { margin: 0; color: var(--ink-78); max-width: 26ch; }
+
+/* =========================================================================
+   04 · PROOF — three answers to one question
+
+   Who runs on it, what binds it, what it costs to find out. They share a part
+   because they answer one question — is this real — and three separate
+   sections would be the repeated-form failure ciridae-com records against
+   itself.
+
+   The customer names are set as type. There are no wordmark files, and a drawn
+   approximation of somebody else's mark is worse than their name (GI2).
+   ====================================================================== */
+.p7 .proof .h-2 { max-width: 30ch; margin-block-end: clamp(3rem, 8vh, 5rem); }
+.p7 .proof__grid {
+  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, .9fr);
+  gap: clamp(2rem, 4vw, 4rem);
+  border-block-start: 1px solid var(--cream-rule);
+  padding-block-start: clamp(2rem, 4vh, 3rem);
+}
+.p7 .proof__h {
+  margin: 0 0 var(--s5);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  color: var(--cream-2);
+}
+.p7 .brands, .p7 .binds, .p7 .terms, .p7 .tiers {
+  margin: 0; padding: 0; list-style: none;
+}
+.p7 .brands { columns: 2; column-gap: clamp(1rem, 2vw, 2rem); }
+.p7 .brands li {
+  break-inside: avoid; padding-block: var(--s3);
+  font-size: var(--t-body); color: var(--cream-ink);
+}
+.p7 .binds {
+  display: flex; flex-wrap: wrap; gap: var(--s3) var(--s5);
+  padding-block-end: var(--s5);
+  border-block-end: 1px solid var(--cream-rule);
+}
+.p7 .binds li {
+  font-family: var(--mono); font-weight: var(--w-medium);
+  font-size: var(--t-h3); letter-spacing: var(--ls-data);
+  color: var(--cream-ink);
+}
+.p7 .proof__b { margin: var(--s5) 0 0; color: var(--cream-2); max-width: 40ch; }
+.p7 .terms li {
+  position: relative; padding-inline-start: 1.35rem; padding-block: var(--s3);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--cream-2);
+}
+/* No colour on this ground at all. Orange on the cream measures 1.84:1 and
+   cyan 1.20:1 — neither survives the flip even as a mark, and a mark nobody
+   can see is not restraint, it is an absent layer. Rank here is carried by
+   the rule, as it is everywhere else on the paper parts (§4). */
+.p7 .terms li::before {
+  content: ''; position: absolute; inset-inline-start: 0; inset-block-start: 1.05em;
+  width: .7rem; height: 1px; background: var(--cream-ink); opacity: .55;
+}
+.p7 .tiers {
+  margin-block-start: var(--s6); padding-block-start: var(--s5);
+  border-block-start: 1px solid var(--cream-rule);
+  counter-reset: tier;
+}
+.p7 .tiers li {
+  counter-increment: tier;
+  display: flex; align-items: baseline; gap: var(--s4);
+  padding-block: var(--s3);
+  font-size: var(--t-body); color: var(--cream-ink);
+}
+.p7 .tiers li::before {
+  content: counter(tier, decimal-leading-zero);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-data); color: var(--cream-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================================
+   05 · THE ACTION — one control, and the page stops
+   ====================================================================== */
+.p7 .act__say {
+  margin: 0; max-width: 20ch;
+  font-size: var(--t-h1); font-weight: var(--w-display);
+  line-height: var(--lh-head); letter-spacing: var(--ls-head);
+}
+.p7 .act__row {
+  margin-block-start: clamp(3rem, 8vh, 5rem);
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  justify-content: space-between; gap: var(--s5) var(--s7);
+}
+.p7 .act__tel {
+  font-family: var(--mono); font-weight: var(--w-medium);
+  font-size: clamp(1.75rem, 3.4vw, 3rem); line-height: 1;
+  letter-spacing: var(--ls-data); font-variant-numeric: tabular-nums;
+  color: var(--ink); text-decoration: none;
+  border-block-end: 2px solid var(--orange); padding-block-end: var(--s2);
+  transition: color var(--d-1) var(--ease);
+}
+.p7 .act__tel:hover { color: var(--orange); }
+.p7 .act__login {
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  color: var(--ink-78); text-decoration: none;
+  border-block-end: 1px solid var(--cyan-line); padding-block-end: var(--s2);
+  transition: color var(--d-1) var(--ease), border-color var(--d-1) var(--ease);
+}
+.p7 .act__login:hover { color: var(--cyan); border-color: var(--cyan); }
+
+/* =========================================================================
+   THE FOOTER — the last mass, composed rather than left over (C12)
+   ====================================================================== */
+.p7 .foot {
+  width: var(--col); margin-inline: auto;
+  padding-block: clamp(3.5rem, 8vh, 6rem) var(--s7);
+  border-block-start: 1px solid var(--rule);
+}
+.p7 .foot__top {
+  display: grid; grid-template-columns: minmax(0, .8fr) repeat(4, minmax(0, 1fr));
+  gap: clamp(2rem, 4vw, 3.5rem);
+}
+.p7 .foot .mark { font-size: var(--t-h3); }
+.p7 .foot__col { display: grid; align-content: start; gap: var(--s3); }
+.p7 .foot__h {
+  margin: 0 0 var(--s2);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--ink-56);
+}
+.p7 .foot__col a {
+  color: var(--ink-78); text-decoration: none; font-size: var(--t-body);
+  transition: color var(--d-1) var(--ease);
+}
+.p7 .foot__col a:hover { color: var(--cyan); }
+.p7 .foot__q { margin: 0; color: var(--ink-56); font-size: var(--t-body); }
+.p7 .foot__tel {
+  font-family: var(--mono); letter-spacing: var(--ls-data);
+  font-variant-numeric: tabular-nums; color: var(--ink);
+}
+.p7 .foot__legal {
+  margin-block-start: clamp(3rem, 7vh, 5rem);
+  padding-block-start: var(--s5);
+  border-block-start: 1px solid var(--rule);
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s3) var(--s7);
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--ink-56);
+}
+.p7 .foot__legal p { margin: 0; }
+
+/* =========================================================================
+   THE BAR OVER THE CREAM
+
+   A fixed dark bar over a light ground is the one thing the alternation
+   breaks, so the bar is told which ground it is over. It is part of the
+   composition, not chrome laid on it (U10, DNA31).
+   ====================================================================== */
+.p7 .mh[data-ground='paper'] {
+  background: #EDE9E1E6;
+  border-color: var(--cream-rule);
+  color: var(--cream-ink);
+}
+.p7 .mh[data-ground='paper'] .mark { color: var(--cream-ink); }
+/* The cyan numeral does not survive the flip: #00ECFF on the cream measures
+   1.6:1, which is a decoration where a letter of the wordmark should be. On
+   this ground colour steps out of the mark entirely and identity is carried
+   by the letterforms, exactly as it is in the parts themselves (§4). */
+.p7 .mh[data-ground='paper'] .mark__n { color: var(--cream-ink); }
+.p7 .mh[data-ground='paper'] .mh__nav a,
+.p7 .mh[data-ground='paper'] .mh__tel { color: var(--cream-2); }
+.p7 .mh[data-ground='paper'] .mh__nav a:hover,
+.p7 .mh[data-ground='paper'] .mh__tel:hover { color: var(--cream-ink); }
+.p7 .mh[data-ground='paper'] .btn { color: var(--cream-ink); border-color: var(--cream-rule); }
+.p7 .mh[data-ground='paper'] .burger span { background: var(--cream-ink); }
+
+/* =========================================================================
+   REVEALS — the entrance, never the content
+
+   The un-hide outranks the hide by selector and not by luck: index5 shipped
+   with `.p5 [data-rise][data-in]` losing to `html[data-js] .p5 [data-rise]` on
+   one type selector, and nine blocks of content stayed at opacity 0 for the
+   life of the build with no error anywhere.
+   ====================================================================== */
+html[data-js] .p7 [data-rise] { opacity: 0; transform: translate3d(0, 16px, 0); }
+html[data-js] .p7 [data-rise][data-in] {
+  opacity: 1; transform: none;
+  transition: opacity .7s var(--ease), transform .7s var(--ease);
+  transition-delay: var(--delay, 0s);
+}
+
+/* =========================================================================
+   MOBILE — a recomposition, not a stack (DNA67)
+   ====================================================================== */
+@media (max-width: 62rem) {
+  .p7 .mh__tel { display: inline-flex; padding-block: var(--s3); }
+  .p7 .mh__act .btn { display: none; }
+  .p7 .mh__nav-login { display: block; }
+  .p7 a.mark { padding-block: var(--s3); }
+  .p7 .burger { min-width: 44px; min-height: 44px; }
+
+  /* the claim and the paragraph stop being a two-column argument and become
+     one, in reading order: claim, then evidence, then the control */
+  .p7 .statement__say { grid-template-columns: 1fr; align-items: start; }
+  .p7 .claim, .p7 .statement .body { grid-column: 1; }
+  .p7 .wordmark { font-size: clamp(4.5rem, 26vw, 9rem); }
+  .p7 .statement__ridge { bottom: -8%; height: 118%; }
+  .p7 .statement__ridge img { width: 148%; left: -24%; }
+
+  .p7 .record__head { grid-template-columns: 1fr; gap: var(--s6); }
+  /* three columns of nine fields on a phone is three columns of three, which
+     reads as a grid of unrelated things rather than as one list */
+  .p7 .plate { grid-template-columns: 1fr; }
+
+  .p7 .figs { grid-template-columns: 1fr; }
+  .p7 .fig {
+    border-inline-start: 0; padding-inline: 0;
+    padding-block: clamp(1.25rem, 3vh, 1.75rem);
+    border-block-end: 1px solid var(--rule);
+  }
+  .p7 .fig:last-child { border-block-end: 0; }
+  .p7 .fig__s { max-width: 46ch; }
+
+  .p7 .proof__grid { grid-template-columns: 1fr; gap: var(--s7); }
+  .p7 .brands { columns: 2; }
+
+  .p7 .act__row { flex-direction: column; align-items: flex-start; }
+  .p7 .act__tel { padding-block: var(--s2) var(--s3); }
+
+  .p7 .foot__top { grid-template-columns: 1fr 1fr; gap: var(--s7) var(--s5); }
+  .p7 .foot .mark { grid-column: 1 / -1; }
+  .p7 .foot__legal { flex-direction: column; gap: var(--s3); }
+}
+
+@media (max-width: 40rem) {
+  .p7 .brands { columns: 1; }
+  .p7 .foot__top { grid-template-columns: 1fr; gap: var(--s6); }
+}
+
+/* =========================================================================
+   REDUCED MOTION — an authored state, not a disabled one (DNA43)
+   ====================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html[data-js] .p7 [data-rise] { opacity: 1; transform: none; }
+}
+
+/* =========================================================================
+   MEASURED, on the composited render
+
+   The warm neutral is the only new colour in this project, so it is measured
+   rather than trusted. Every pair below is computed from the tokens above.
+
+     --cream-ink on --cream   14.94:1   needs 4.5
+     --cream-2   on --cream    5.74:1   needs 4.5
+     --cream-3   on --cream    4.71:1   needs 4.5 — captions only, and it is
+                                         the floor: nothing quieter exists
+     --orange    on --cream    1.84:1   NEVER USED on this ground
+     --cyan      on --cream    1.20:1   NEVER USED on this ground
+     --cream     on --bg      15.75:1   the ground change itself
+
+   The first three of those were written from an estimate on the first pass and
+   three of the five were wrong — one of them, the caption tone, by enough to
+   put 14px numbers under the AA floor at 3.96:1. They are computed now.
+
+   The two accents do not survive the flip as text, which is why part 02 and
+   part 04 carry no accent-coloured type at all and rank is carried by scale,
+   weight and rule instead.
+   ====================================================================== */

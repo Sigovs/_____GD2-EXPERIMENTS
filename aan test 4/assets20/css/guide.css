@@ -1,0 +1,187 @@
+/* =========================================================================
+   Scaffolding for the style guide page ONLY. Nothing here is part of the
+   system — it is the shelf the system is laid out on. It still resolves
+   every value to tokens.css, because a guide that breaks the rule it is
+   documenting is not a guide.
+   ====================================================================== */
+
+.g-head { padding-block: var(--s10) var(--s8); }
+.g-head .h-1 { max-width: 20ch; }
+
+.g-sec { padding-block: var(--s8) var(--s9); border-block-start: 1px solid var(--rule); }
+.g-sec > * + * { margin-block-start: var(--s6); }
+.g-sec__n { display: flex; align-items: baseline; gap: var(--s4); }
+.g-sec__n .num {
+  font-family: var(--mono); font-size: var(--t-xs); letter-spacing: var(--ls-label);
+  color: var(--ink-40); font-variant-numeric: tabular-nums;
+}
+
+.g-note { max-width: var(--measure); color: var(--ink-64); font-size: var(--t-sm); }
+
+/* a plain results grid — hairlines, never cards */
+.g-grid { display: grid; gap: var(--s5) var(--s6);
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
+
+/* A FIXED three-track grid, for sets whose count is a multiple of three.
+   auto-fill decides the column count from the available width, which is right
+   for an open-ended list and wrong for a set of six — it produced a five-up
+   row with one orphan below it. Applied only where the count is known. */
+.g-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 62rem) {
+  .g-grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* A nine-item set divides by three and not by two, so the tablet band leaves
+     one item alone in the left track. It takes the whole row instead — a full
+     final row reads as the end of a list; a lone item reads as a mistake. */
+  .g-grid--3 > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .g-grid--3 > :last-child:nth-child(odd) .sw__chip { height: 4rem; }
+}
+@media (max-width: 40rem) { .g-grid--3 { grid-template-columns: 1fr; } }
+
+/* colour specimen: the swatch is the evidence, the readout is the claim */
+.sw { display: grid; gap: var(--s3); }
+.sw__chip { height: 5.5rem; border-radius: var(--r-1); border: 1px solid var(--rule); }
+.sw__meta { display: grid; gap: var(--s1); }
+.sw__name { font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--ink); }
+.sw__val { font-family: var(--mono); font-size: var(--t-xs); color: var(--ink-56);
+  font-variant-numeric: tabular-nums; text-transform: uppercase; }
+.sw__ratio { font-family: var(--mono); font-size: var(--t-xs); font-variant-numeric: tabular-nums; }
+.pass { color: var(--cyan); }
+.fail { color: var(--orange); }
+
+/* A chip whose sample is a demonstration rather than a fill. Solid tokens keep
+   the fill — that is how they are used. Alpha tokens get the ground and the
+   thing the alpha actually does on it. */
+.sw__chip--demo { background: var(--bg); display: grid; place-items: center;
+  border-color: var(--rule); }
+/* ink is for text, so the sample is text — and the ladder is still legible,
+   because the last two steps are visibly hard to read, which is the point */
+.sw__chip--ink { background: var(--bg); display: grid; place-items: center;
+  font-size: var(--t-lead); font-weight: var(--w-strong); letter-spacing: var(--ls-head); }
+.sw__chip--ink small { display: block; font-size: var(--t-xs); font-weight: var(--w-body);
+  letter-spacing: 0; text-align: center; }
+
+/* the cyan wash in its real job: an active nav item, lifted from the masthead */
+.demo-pill { font-size: var(--t-xs); line-height: 1; padding: var(--s2) var(--s3);
+  border-radius: var(--r-pill); color: var(--ink);
+  background: var(--cyan-wash); box-shadow: inset 0 0 0 1px var(--cyan-line); }
+/* a line token in its real job: the edge of a control */
+.demo-edge { font-size: var(--t-xs); line-height: 1; padding: var(--s2) var(--s3);
+  border-radius: var(--r-1); color: var(--ink); background: none; border: 1px solid var(--rule); }
+.demo-edge--cyan   { border-color: var(--cyan-line); background: var(--cyan-wash); }
+.demo-edge--orange { border-color: var(--orange-line); }
+
+/* =========================================================================
+   THE BENCH — how a line, an edge or a surface is shown.
+
+   A filled rectangle is the wrong sample for a token whose whole job is to be
+   1px wide or barely there: at swatch size an 8% white hairline reads as a
+   grey block, which is the opposite of what it does. So the sample is the
+   token doing its job, and the readout sits beside it.
+   ====================================================================== */
+.lab {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(13rem, 19rem);
+  gap: var(--s5) var(--s7); align-items: center;
+  padding-block: var(--s6);
+  border-block-start: 1px solid var(--rule);
+}
+@media (max-width: 56rem) {
+  .lab { grid-template-columns: 1fr; align-items: start; gap: var(--s4); }
+}
+.lab__demo { min-width: 0; }
+.lab__meta { display: grid; gap: var(--s1); align-content: center; }
+
+/* the surface step: a region lifted off the ground, with no border at all —
+   the point is that it is the answer BEFORE a box */
+.bed { padding: var(--s5); border-radius: var(--r-1); background: var(--surface); }
+.bed--bare { background: none; padding-inline: 0; }
+
+/* glass has to be shown over something, or it is just a dark rectangle. Both
+   panels sit on ONE cropped plate so the difference between them is the only
+   variable in the frame. */
+.glassbed { position: relative; overflow: clip; border-radius: var(--r-2);
+  min-height: 15rem; display: flex; align-items: center;
+  background: var(--bg); }
+.glassbed > img { position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; }
+.glassbed__sky { object-position: 50% 60%; }
+/* the plate is a cut-out, so it is sized to sit low and wide with the lit
+   summit under the panels — the bright region is what makes the film visible */
+.glassbed__mtn { object-position: 50% 100%; object-fit: cover; opacity: .95; }
+.glassbed__row { position: relative; z-index: 1; display: flex; flex-wrap: wrap;
+  gap: var(--s4); padding: var(--s5); justify-content: center; width: 100%; }
+.gpanel {
+  padding: var(--s3) var(--s4); border-radius: var(--r-1);
+  border: 1px solid transparent;
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  display: grid; gap: 2px;
+}
+.gpanel b { font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  font-weight: var(--w-body); color: var(--ink); }
+.gpanel span { font-family: var(--mono); font-size: var(--t-xs); color: var(--ink-64);
+  font-variant-numeric: tabular-nums; }
+.gpanel--glass { background: var(--glass); }
+.gpanel--solid { background: var(--glass-solid); }
+.gpanel--edge  { background: var(--glass); border-color: var(--glass-edge); }
+
+/* the masthead, live. Production fixes it to the viewport; the stage
+   neutralises the fixing and nothing else, so the glass, blur, edge, shadow
+   and grid are all the shipped ones. */
+.mh-stage { position: relative; overflow: clip; border-radius: var(--r-2);
+  padding-block: var(--s6); }
+.mh-stage > img { position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: 50% 30%; }
+.mh-stage .mh { position: relative; top: auto; left: auto; transform: none;
+  width: min(100% - var(--s5) * 2, 1300px); margin-inline: auto; z-index: 1; }
+/* The stage's own inset makes the demo bar narrower than the shipped one at
+   the same viewport, so below the tablet band it is dropped: a demonstration
+   that squeezes the component harder than production misrepresents it. */
+@media (max-width: 48rem) {
+  .mh-stage { padding-inline: 0; }
+  .mh-stage .mh { width: 100%; }
+}
+
+/* A group heading inside a section. It needs a rule above and real air below,
+   or at grid gap distance it reads as a label on the first column instead of
+   a band across all of them. */
+.g-group {
+  padding-block: var(--s5) var(--s6);
+  border-block-start: 1px solid var(--rule);
+}
+.g-group + .g-cols { margin-top: 0; }
+
+/* a type specimen sits on its own row, with the token beside it */
+.spec { display: grid; grid-template-columns: minmax(8rem, 11rem) 1fr;
+  gap: var(--s4) var(--s6); align-items: baseline;
+  padding-block: var(--s5); border-block-start: 1px solid var(--rule); }
+.spec__k { font-family: var(--mono); font-size: var(--t-xs); line-height: var(--lh-tight);
+  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--ink-56); }
+.spec__k b { display: block; font-weight: var(--w-body); color: var(--ink-40);
+  font-variant-numeric: tabular-nums; letter-spacing: 0; text-transform: none; }
+.spec__v { min-width: 0; }
+
+/* A variant is a role wearing a different size or ink — not a rank of its own.
+   It hangs off the row above it with no rule between, so the seven primary
+   ranks stay countable down the left edge. */
+.spec--var { border-block-start: 0; padding-block: 0 var(--s5); }
+.spec--var .spec__k { color: var(--ink-40); }
+.spec--var .spec__k::before { content: "↳ "; color: var(--ink-24); }
+
+/* the space scale, drawn */
+.sp { display: grid; grid-template-columns: 4rem 1fr; gap: var(--s3) var(--s4);
+  align-items: center; }
+.sp__k { font-family: var(--mono); font-size: var(--t-xs); color: var(--ink-56);
+  font-variant-numeric: tabular-nums; }
+.sp__bar { height: 10px; background: var(--cyan); opacity: .5; border-radius: 2px; }
+
+.g-demo { padding: var(--s6); border: 1px solid var(--rule); border-radius: var(--r-2);
+  background: var(--surface); }
+.g-demo--plain { border: 0; background: none; padding: 0; }
+
+.g-cols { display: grid; gap: var(--s7);
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); }
+
+.g-foot { padding-block: var(--s8) var(--s10); border-block-start: 1px solid var(--rule);
+  color: var(--ink-56); font-size: var(--t-sm); }

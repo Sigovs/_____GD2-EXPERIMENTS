@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The deeper you go — GD2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../assets/css/tokens.css">
+<link rel="stylesheet" href="../assets/css/hero.css">
+<link rel="preload" as="image" href="../assets/img/mountain.avif" fetchpriority="high">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead__in">
+    <span class="wordmark">GD<b>2</b></span>
+    <nav aria-label="Main">
+      <a href="#">Products &amp; Services</a>
+      <a href="#">Grow your Business</a>
+      <a href="#">Compliance</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- АКТ 1 — ВЕРШИНА. Камера стоит, едут планы. -->
+  <section class="stage" id="summit">
+    <div class="plates" aria-hidden="true">
+      <div class="pw pw--sky"><img class="pl pl--sky" src="../assets/img/sky.avif" alt=""
+           width="2292" height="1415" fetchpriority="high"></div>
+      <div class="pw pw--mtn"><img class="pl pl--mtn" src="../assets/img/mountain.avif" alt=""
+           width="2292" height="1325" fetchpriority="high"></div>
+      <img class="pl pl--fg" src="../assets/img/overlay2.avif" alt="" width="2292" height="908">
+    </div>
+
+    <!-- Из index.html дословно: путь, три выноски, градиент. Ничего своего.
+         Работает это не формой линии, а обёрткой .hero__marks, которая ставит
+         систему координат маршрута на гору, и порядком слоёв — передний план
+         лежит выше линии и режет её сам. -->
+    <div class="hero__marks" aria-hidden="true">
+      <svg class="route" viewBox="0 0 300 600" fill="none" focusable="false">
+        <defs>
+          <linearGradient id="routeFade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0"    stop-color="#fff" stop-opacity="0"/>
+            <stop offset=".07"  stop-color="#fff" stop-opacity=".62"/>
+            <stop offset=".86"  stop-color="#fff" stop-opacity=".62"/>
+            <stop offset=".95"  stop-color="#fff" stop-opacity=".22"/>
+            <stop offset="1"    stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path id="route-p" class="route__p" d="M196 10 C 206 68, 176 96, 190 140
+                 C 204 186, 244 206, 236 254 C 229 296, 186 306, 170 340
+                 C 152 378, 158 410, 132 442 C 104 476, 62 486, 44 524
+                 C 30 554, 34 578, 26 598"/>
+        <g class="lead lead--0">
+          <path class="lead__l" d="M196 10 L228 -10 L292 -10"/>
+          <circle class="lead__a" cx="196" cy="10" r="2.6"/>
+        </g>
+        <g class="lead lead--1">
+          <path class="lead__l" d="M224.6 201.7 L252 178 L292 178"/>
+          <circle class="lead__a" cx="224.6" cy="201.7" r="2.6"/>
+        </g>
+        <g class="lead lead--2">
+          <path class="lead__l" d="M155.1 388.6 L188 372 L296 372"/>
+          <circle class="lead__a" cx="155.1" cy="388.6" r="2.6"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="copy">
+      <h1 class="display" id="h">The deeper you go,<br>the more you <span class="promise">know.</span></h1>
+      <p class="lede">From a single page view we identify 300+ data points on your
+         visitors — name, phone, email, address, income, home value, credit,
+         existing loans, social links. You also see which pages they looked at,
+         and when.</p>
+      <hr class="rule">
+    </div>
+
+    <div class="mark" id="mark-1" style="right:3vw; top:16%">
+      <p class="mark__k">Signal 001</p>
+      <p class="mark__v">600M+ consumer profiles, updated daily.</p>
+    </div>
+    <div class="mark" id="mark-2" style="right:3vw; top:52%">
+      <p class="mark__k">Profile built</p>
+      <p class="mark__v">Anonymous activity becomes actionable insight.</p>
+    </div>
+  </section>
+
+  <!-- ШОВ — ПЕРЕДАЧА. Ближняя скала поднимается и становится стеной. -->
+  <section class="seam" id="seam">
+    
+  </section>
+</main>
+
+<script type="module">
+  document.documentElement.classList.remove('no-js');
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const { gsap }          = await import('../assets/js/vendor/gsap/index.js');
+  const { ScrollTrigger } = await import('../assets/js/vendor/gsap/ScrollTrigger.js');
+  const { SplitText }     = await import('../assets/js/vendor/gsap/SplitText.js');
+  const { DrawSVGPlugin } = await import('../assets/js/vendor/gsap/DrawSVGPlugin.js');
+  const Lenis             = (await import('../assets/js/vendor/lenis/lenis.mjs')).default;
+
+  gsap.registerPlugin(ScrollTrigger, SplitText, DrawSVGPlugin);
+  window.__ST = ScrollTrigger; window.__gsap = gsap;   // для проверки
+
+  // Один тикер ведёт обоих. Два цикла — причина рваного скролла.
+  const lenis = new Lenis({ autoRaf: false });
+  // Метод передаётся стрелкой, а не голой ссылкой: без неё он теряет
+  // контекст и молча не срабатывает — страница едет, анимация стоит.
+  const sync = () => ScrollTrigger.update();
+  lenis.on('scroll', sync);
+  // И на родное событие тоже: якорь, клавиатура, поиск по странице и
+  // восстановление позиции при перезагрузке идут мимо Lenis.
+  addEventListener('scroll', sync, { passive: true });
+  gsap.ticker.add(t => lenis.raf(t * 1000));
+  gsap.ticker.lagSmoothing(0);
+  window.__lenis = lenis;                 // программный скролл идёт только сюда
+
+  gsap.context(() => {
+    if (reduce) {
+      // Состояние покоя — собранный кадр, а не выключенная анимация.
+      gsap.set(['.route__p', '.lead__l'], { drawSVG: '100%' });
+      gsap.set(['.lead__a', '#mark-1', '#mark-2'], { autoAlpha: 1, scale: 1 });
+      return;
+    }
+
+    // — вход: строки поднимаются, маршрут прочерчивается
+    // Маршрут не нарисован: его рисует читатель, скроллом.
+    gsap.set('.route__p', { drawSVG: '0%' });
+    gsap.set('.lead__l',  { drawSVG: '0%' });
+    gsap.set('.lead__a',  { autoAlpha: 0, scale: 0, transformOrigin: '50% 50%' });
+    gsap.set(['#mark-1', '#mark-2'], { autoAlpha: 0 });
+
+    const split = new SplitText('#h', { type: 'lines', linesClass: 'ln' });
+    gsap.set('.ln', { overflow: 'hidden' });
+    gsap.from(split.lines, {
+      yPercent: 108, opacity: 0, duration: .9,
+      stagger: .07, ease: 'power3.out', delay: .15
+    });
+    gsap.from('.rule', { scaleX: 0, transformOrigin: '0 50%', duration: .7, delay: .5, ease: 'power2.out' });
+
+    // — спуск: планы расходятся, ближний уходит в расфокус,
+    //   облака поднимаются навстречу. Проваливание сквозь слой.
+    const draw = gsap.timeline({
+      scrollTrigger: {
+        trigger: '#summit', start: 'top top', end: '+=100%',
+        scrub: .6, pin: true, pinSpacing: true, invalidateOnRefresh: true
+      }
+    })
+      // Мы идём вниз, поэтому мир поднимается. Скорости разные — это и есть глубина.
+      // Длительность у каждого твина задана явно: у скрабленного таймлайна
+      // умолчание в 0.5 делает его короче скролла, и последняя треть замирает.
+      .to('.pw--sky', { yPercent: -3,  ease: 'none', duration: 1 }, 0)
+      .to('.pw--mtn', { yPercent: -14, ease: 'none', duration: 1 }, 0)
+      // Передний план уходит ВВЕРХ, растёт и размывается в ноль: мы спускаемся,
+      // значит ближняя скала проходит мимо нас снизу вверх.
+      // Не прозрачность — размытие. Он остаётся плотным и уходит в blur,
+      // так что кадр не пустеет, а расфокусируется: следующей сцене есть
+      // из чего появиться.
+      // Подъём небольшой, рост большой: он наезжает и расфокусируется, но
+      // низ кадра не оголяет. Уезжал вверх — открывалась пустота, а на таком
+      // кадре посетитель может остановиться.
+      .to('.pl--fg',  { yPercent: -7, scale: 1.72, filter: 'blur(34px)',
+                        ease: 'none', duration: 1 }, 0)
+      // Слово уходит раньше остального: к середине спуска его уже нет.
+      .to('.copy',    { yPercent: -20, opacity: 0, ease: 'none', duration: .5 }, 0)
+      .to(['#mark-1', '#mark-2'], { opacity: 0, ease: 'none', duration: .2 }, .78)
+      // Маршрут гаснет ПОСЛЕДНИМ, когда он уже нарисован целиком и сцена уходит.
+      // Раньше он гас с первого кадра прокрутки — рисовался и тут же исчезал.
+      .to('.hero__marks', { opacity: 0, ease: 'none', duration: .18 }, .8);
+
+    // Линия рисуется скроллом. Якорь на доле f пути раскрывается на прогрессе f —
+    // сначала вершина, потом два события в том порядке, в каком спуск их встречает.
+    const A = .62;                      // доля таймлайна, за которую линия проходит путь
+    const at = f => A * f;
+    draw.to('.route__p', { drawSVG: '100%', duration: A, ease: 'none' }, 0)
+        .to('.lead--0 .lead__a', { autoAlpha: 1, scale: 1, duration: .05, ease: 'power2.out' }, .01)
+        .to('.lead--0 .lead__l', { drawSVG: '100%', duration: .07, ease: 'none' }, .03)
+        .to('#mark-1', { autoAlpha: 1, duration: .06 }, .06);
+
+    [{ n: 1, f: .30, mark: '#mark-1' }, { n: 2, f: .62, mark: '#mark-2' }].forEach(c => {
+      draw.to('.lead--' + c.n + ' .lead__a',
+              { autoAlpha: 1, scale: 1, duration: .05, ease: 'power2.out' }, at(c.f))
+          .to('.lead--' + c.n + ' .lead__l',
+              { drawSVG: '100%', duration: .07, ease: 'none' }, at(c.f) + .02)
+          .to(c.mark, { autoAlpha: 1, duration: .06 }, at(c.f) + .03);
+    });
+  });
+
+  // Пересчёт после того, как шрифты и картинки встали: без него триггер
+  // остаётся неизмеренным (end = null) и прогресс не двигается вовсе.
+  await document.fonts.ready.catch(() => {});
+  ScrollTrigger.refresh();
+  addEventListener('load', () => ScrollTrigger.refresh(), { once: true });
+</script>
+</body>
+</html>

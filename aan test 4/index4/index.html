@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- index4 — та же проба, вторая гора.
+
+     Отличается от index.html ровно тремя вставками: intro3d.css, importmap
+     и модуль intro3d.js. Убери их — и файл снова точная копия index.html.
+     Ни main.css, ни main.js, ни deep.* не изменены: скролл героя не тронут. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GD2 — 3D mountain trial B</title>
+<meta name="description" content="GD2 identifies over 600 data points on your website visitors from a single page view.">
+<meta name="theme-color" content="#0B0F1E">
+<link rel="icon" href="../favicon.ico" sizes="32x32">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="stylesheet" href="../assets20/css/tokens.css">
+<link rel="stylesheet" href="../assets20/css/ds.css">
+<link rel="stylesheet" href="../assets20/css/main.css">
+<link rel="stylesheet" href="../assets20/css/deep.css">
+<!-- intro-specific, добавка -->
+<link rel="stylesheet" href="../assets20/css/mountain3d.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="mh">
+  <a class="mark" href="#main" aria-label="GD2 — home">GD<span class="mark__n">2</span></a>
+
+  <nav class="mh__nav" id="mh-nav" aria-label="Primary">
+    <ul>
+      <li><a href="#main">Products &amp; Services</a></li>
+      <li><a href="#main">Grow your Business</a></li>
+      <li><a href="#main">Compliance</a></li>
+      <li><a href="#main">Contact</a></li>
+    </ul>
+  </nav>
+
+  <div class="mh__act">
+    <a class="mh__tel" href="tel:+18665917555">(866)&nbsp;591-7555</a>
+    <a class="btn" href="#main">Log in</a>
+  </div>
+
+  <button class="burger" type="button" aria-expanded="false" aria-controls="mh-nav" aria-label="Menu">
+    <span></span><span></span>
+  </button>
+</header>
+
+<main id="main">
+
+  <!-- ===================================================================
+       HERO — the peak.
+
+       Everything drawn on this screen is markup: the summit marker, the
+       route down to the offer, the cross. The only bitmap is the plate.
+       The route is an SVG path that is DRAWN as the reader scrolls, not a
+       dashed line that was always there.
+       ================================================================ -->
+  <div class="hero-track">
+    <section class="hero" aria-labelledby="hero-h">
+
+      <!-- three planes, one camera: sky furthest, mountain between, near
+           ground in front. All three are the same width, so they register
+           without fitting. -->
+      <!-- Every plane is a wrapper plus an inner element. The WRAPPER carries
+           scroll (ScrollTrigger writes to it); the INNER carries the pointer.
+           Two transforms, two owners, so neither overwrites the other. -->
+      <div class="hero__plate" aria-hidden="true">
+        <div class="pw pw--sky">
+          <img class="pl pl--sky" src="../assets20/img/sky.png" width="2292" height="1415"
+               alt="" fetchpriority="high">
+        </div>
+        <div class="pw pw--mtn">
+          <img class="pl pl--mtn" src="../assets20/img/mountain.png" width="2292" height="1325"
+               alt="" fetchpriority="high">
+        </div>
+      </div>
+
+      <!-- weather, drawn: three banks of cloud drifting across the sky at
+           different rates. They are kept to the sky right of the reading
+           column, because nothing may loop perpetually behind text. -->
+      <div class="hero__sky" aria-hidden="true">
+        <span class="cloud cloud--1"></span>
+        <span class="cloud cloud--2"></span>
+        <span class="cloud cloud--3"></span>
+      </div>
+
+      <div class="hero__in">
+        <div class="hero__say">
+          <!-- `.promise` is the semantic mark, not the tag: `em` alone is
+               ordinary emphasis and stays ink-coloured everywhere else -->
+          <h1 class="h-display" id="hero-h">The deeper<br>you go,<br>the more you<br><em class="promise">know.</em></h1>
+          <p class="body">From a single page view we identify 300+ data points on your visitors —
+            name, phone, email, address, income, home value, credit, existing loans, social links.
+            You also see which pages they looked at, and when.</p>
+          <span class="rule-o" aria-hidden="true"></span>
+        </div>
+
+        <!-- the route: summit marker, the line it draws, and what it reaches.
+             The signal and its readout belong to the mountain, so they take
+             the mountain's pointer offset, not their own. -->
+        <div class="hero__marks" aria-hidden="true">
+        <div class="marks-in">
+          <!-- Three segments, not one line. The gaps are where the terrain is
+               in front of the route: it goes behind a ridge and comes out
+               further along. That break is the depth cue — a continuous line
+               would sit flat on the photograph instead of in it. -->
+          <!-- one continuous descent from the summit, down the flank and out
+               across the near ground on the left; the breaks are cut into it
+               afterwards, at the places the plate is measured to be in front -->
+          <svg class="route" viewBox="0 0 300 600" fill="none" focusable="false">
+            <defs>
+              <!-- the route does not stop, it stops being visible: the stroke
+                   itself runs out into transparency at the foot, which is
+                   where the next scene takes over -->
+              <linearGradient id="routeFade" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0"    stop-color="#fff" stop-opacity="0"/><stop offset=".07" stop-color="#fff" stop-opacity=".62"/>
+                <stop offset=".86" stop-color="#fff" stop-opacity=".62"/>
+                <stop offset=".95" stop-color="#fff" stop-opacity=".22"/>
+                <stop offset="1"   stop-color="#fff" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path class="route__p" d="M196 10 C 206 68, 176 96, 190 140
+                     C 204 186, 244 206, 236 254 C 229 296, 186 306, 170 340
+                     C 152 378, 158 410, 132 442 C 104 476, 62 486, 44 524
+                     C 30 554, 34 578, 26 598"/>
+
+            <!-- Leaders branch FROM the route, in the route's own coordinates,
+                 so they cannot drift from it. A short diagonal, then a run to
+                 the text. Angular, never curved. -->
+            <!-- the anchors are the route's own points, read off the path at
+                 30% and 58% of its length, not placed by eye -->
+            <!-- SIGNAL 001 now has a real leader off the summit marker, in the
+                 route's own coordinates, instead of a rule parked beside the
+                 label. Two segments, shorter and quieter than the others. -->
+            <g class="lead lead--0">
+              <path class="lead__l" d="M196 10 L228 -10 L292 -10"/>
+              <circle class="lead__a" cx="196" cy="10" r="2.6"/>
+            </g>
+            <g class="lead lead--1">
+              <path class="lead__l" d="M224.6 201.7 L252 178 L292 178"/>
+              <circle class="lead__a" cx="224.6" cy="201.7" r="2.6"/>
+            </g>
+            <g class="lead lead--2">
+              <!-- moved up the route to 62% of its length: at 80% the anchor
+                   sat on a stretch that the near rocks cover, so the event
+                   could never be seen. Geometry of the route is unchanged. -->
+              <path class="lead__l" d="M155.1 388.6 L188 372 L296 372"/>
+              <circle class="lead__a" cx="155.1" cy="388.6" r="2.6"/>
+            </g>
+          </svg>
+
+          <!-- the readings are HTML, so they stay real horizontal text -->
+          <div class="callout callout--1">
+            <div class="callout__in">
+              <p class="callout__k"><svg class="ico" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M1 3.4V1.6h1.9M10.4 3.4V1.6H8.5M1 8.6v1.8h1.9M10.4 8.6v1.8H8.5"/><path d="M1 6h9.4"/><circle cx="5.7" cy="6" r="1.5"/></svg>Signal detected</p>
+              <p class="callout__s">Every visit begins with a trace.</p>
+            </div>
+          </div>
+          <div class="callout callout--2">
+            <div class="callout__in">
+              <p class="callout__k"><svg class="ico" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><circle cx="2.2" cy="9.4" r="1.4"/><circle cx="6" cy="4" r="1.4"/><circle cx="9.8" cy="8.2" r="1.4"/><path d="M3.3 8.5 4.9 5M7.1 4.8 8.9 7.2"/></svg>Behavior identified</p>
+              <p class="callout__s">Anonymous activity becomes actionable insight.</p>
+            </div>
+          </div>
+
+        </div>
+
+          <!-- the summit reading belongs to the route like the other two:
+               same group, same coordinate space, so it travels with them -->
+          <p class="summit-note">
+            <b><svg class="ico" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><ellipse cx="6" cy="2.6" rx="4.2" ry="1.7"/><path d="M1.8 2.6v3.1c0 .94 1.88 1.7 4.2 1.7s4.2-.76 4.2-1.7V2.6"/><path d="M1.8 5.9v3.1c0 .94 1.88 1.7 4.2 1.7s4.2-.76 4.2-1.7V5.9"/></svg>Signal 001</b>
+            <span>600M+ Consumer Profiles</span>
+            <span>Updated Daily</span>
+          </p>
+        </div>
+
+        
+        <!-- the pit stop: the route reaches it and it opens. A real button, so
+             the three lines are reachable by keyboard and are simply present
+             where there is no pointer to hover with. -->
+        <!-- the near ground: its own layer, above the route. The camera holds
+             still and this rises, because the reader is descending into the
+             valley — near things climb, the distant mountain barely moves.
+             The route passing behind it is the depth, not a drawn break. -->
+        <!-- one wrapper, one job:
+             .hero__fg    the permanent base position, CSS only
+             .fg-scroll   the scroll rise, GSAP only
+             .fg-in       the pointer, GSAP only
+             img          size and natural aspect only -->
+        <div class="hero__fg" aria-hidden="true">
+          <div class="fg-scroll">
+            <div class="fg-in">
+              <img src="../assets20/img/overlay2.png" width="2292" height="908" alt="" loading="eager">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+  </div>
+
+  <!-- ===================================================================
+       SCENE 2 — THE DEEP.
+
+       What is under the line the hero descends to. It keeps the .after class
+       because the hero's phase C lifts .after over the still-pinned hero:
+       that cover is the transition between the two scenes.
+
+       The plate is the only thing built so far. The pieces that land in
+       .deep__in — the two wings that part on scroll, the character that moves
+       between them, and the copy — each get their own layer, and the order
+       they take is written down at the top of deep.css so they cannot end up
+       fighting each other for depth.
+       ================================================================ -->
+  <section class="after deep" aria-labelledby="deep-h">
+
+    <!-- One viewport of water, held still while the section scrolls past. It
+         sits BEHIND the hero, already running, and the hero dissolves off it.
+
+         aria-hidden moved OFF the stage and onto the two decorative layers
+         inside it. The stage now carries the section's heading and its
+         controls, and a hidden ancestor takes everything under it out of the
+         accessibility tree with it. -->
+    <div class="deep__stage">
+      <div class="deep__media" aria-hidden="true">
+        <!-- The poster is the master's EXACT first frame, so the loop opens on
+             the picture that was already on screen — no fish, light or
+             exposure jump at the swap, and nothing to fall back to if the
+             loop never runs.
+
+             No source is attached in the markup: deep.js adds them a screen
+             early, and under reduced motion never at all, in which case this
+             element simply paints its poster and the scene is that still. -->
+        <!-- No `autoplay`: scroll decides WHEN it starts, deep.js calls play()
+             once the water is the scene. After that it runs on its own clock
+             and loops — the wheel never touches the playback position. -->
+        <video class="deep__video" width="1920" height="1482"
+               muted loop playsinline preload="none"
+               poster="../assets20/video/ocean-back-poster.jpg"
+               data-src-webm="assets20/video/ocean-back-final.webm"
+               data-src-mp4="assets20/video/ocean-back-final.mp4"></video>
+      </div>
+
+      <!-- THE ROUTE, CONTINUED.
+
+           Not a second device — the same one. The hero's line descends the
+           mountain while the copy says "the deeper you go", and it stops at
+           the waterline only because that is where the hero stops. This picks
+           it up below and keeps going down, drawn by the reader exactly as
+           the first half was.
+
+           It sits outside .deep__media so the water's entrance mask does not
+           eat it, and inside .deep__stage so it stays locked to the frame
+           while the water does. -->
+      <div class="deep__marks" aria-hidden="true">
+        <svg class="deep__route" viewBox="0 0 100 1000" fill="none"
+             preserveAspectRatio="none" focusable="false">
+          <defs>
+            <!-- the line does not start and it does not stop, it becomes
+                 visible and stops being visible — the same trick the hero's
+                 route uses so neither end is an event -->
+            <!-- userSpaceOnUse, and it has to be. The default is
+                 objectBoundingBox, and this path is a plumb line: its bounding
+                 box is ZERO PIXELS WIDE. A bbox gradient on a zero-width box is
+                 undefined, so the browser drops the stroke entirely and the
+                 line simply never appears — which is exactly what happened the
+                 moment the route was straightened from the hero's curve. -->
+            <linearGradient id="deepFade" gradientUnits="userSpaceOnUse"
+                            x1="0" y1="24" x2="0" y2="972">
+              <stop offset="0"   stop-color="#fff" stop-opacity="0"/>
+              <stop offset=".08" stop-color="#fff" stop-opacity=".58"/>
+              <stop offset=".88" stop-color="#fff" stop-opacity=".58"/>
+              <stop offset="1"   stop-color="#fff" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- straight, and vertical. The hero's route wanders because it is
+               drawn ON something — it follows a slope that exists in the
+               photograph. There is no slope here to follow: this is open
+               water, and a line that meanders through it is decoration
+               pretending to be terrain. A plumb line is what a descent
+               through water actually looks like. -->
+          <path class="deep__route-p" d="M50 24 L50 972"/>
+        </svg>
+      </div>
+
+      <!-- THE COPY.
+
+           Placed where the footage will hold it rather than where a grid
+           would put it. Measured over a full pass of the loop: the right
+           column sits at 20.6:1 for white and drifts 0.0008, the darkest and
+           by far the steadiest part of the frame, so the argument goes there.
+           The rift and its light are left of centre and stay open.
+
+           The row of three sits along the foot, which measures 10.5:1 at its
+           brightest moment — enough for the ink ladder without putting
+           anything over the water. -->
+      <div class="deep__in">
+        <div class="deep__say">
+          <p class="eyebrow">GD2 Visitor Intelligence</p>
+          <h2 class="h-1" id="deep-h">Know who&rsquo;s shopping.<br>Act while it matters.</h2>
+          <p class="body">GD2 turns anonymous website activity into actionable buyer
+            intelligence&nbsp;&mdash; without forms or sign-ups.</p>
+        </div>
+
+        <!-- A list, because it is one: three items of the same kind. Each
+             header is a real button so it is reachable by keyboard and
+             announces its own state; the description it controls is named by
+             aria-controls and toggled by aria-expanded.
+
+             All three start OPEN in the markup. That is the no-JS state — if
+             the script never runs, every description is simply readable —
+             and deep.js closes two of them on init. -->
+        <ul class="feats">
+          <li class="feat">
+            <span class="feat__ring" aria-hidden="true"></span>
+            <button class="feat__btn" type="button" aria-expanded="true" aria-controls="feat-1">
+              <span class="feat__n">01</span>
+              <span class="feat__t">Active visitor analytics</span>
+            </button>
+            <div class="feat__slot">
+              <div class="feat__body" id="feat-1">
+                <p>Identify high-intent shoppers and see the vehicles, pages, and
+                  behaviors driving their interest.</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="feat">
+            <span class="feat__ring" aria-hidden="true"></span>
+            <button class="feat__btn" type="button" aria-expanded="true" aria-controls="feat-2">
+              <span class="feat__n">02</span>
+              <span class="feat__t">Actionable buyer profiles</span>
+            </button>
+            <div class="feat__slot">
+              <div class="feat__body" id="feat-2">
+                <p>Turn 600+ visitor signals into a clear picture of each shopper
+                  and their intent.</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="feat">
+            <span class="feat__ring" aria-hidden="true"></span>
+            <button class="feat__btn" type="button" aria-expanded="true" aria-controls="feat-3">
+              <span class="feat__n">03</span>
+              <span class="feat__t">Reach them at the right moment</span>
+            </button>
+            <div class="feat__slot">
+              <div class="feat__body" id="feat-3">
+                <p>Connect by email, text, or phone while the opportunity is
+                  still warm.</p>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<script src="../assets20/vendor/gsap.min.js"></script>
+<script src="../assets20/vendor/ScrollTrigger.min.js"></script>
+<script src="../assets20/vendor/SplitText.min.js"></script>
+<script src="../assets20/vendor/DrawSVGPlugin.min.js"></script>
+<!-- The scroll bus: the page's scroll state, published as CSS custom
+     properties. One writer (the hero timeline), many readers. Infrastructure,
+     not a scene, so it precedes both — see the header of bus.js. -->
+<script src="../assets20/js/bus.js"></script>
+<script src="../assets20/js/main.js"></script>
+<script src="../assets20/js/deep.js"></script>
+
+<!-- 3D-интро. Модуль, поэтому грузится после разбора документа и после того,
+     как main.js построил свой ScrollTrigger — интро только держит скролл на 0
+     до передачи управления. -->
+<script type="importmap">
+{"imports":{"three":"./assets20/vendor/three.module.js","three/addons/":"./assets20/vendor/jsm/"}}
+</script>
+<!-- the only thing that differs from index3: which mountain, and where the
+     camera rests on it. Everything below is the same module. -->
+<script>
+window.M3D = {
+  model: 'assets20/models/mountain92-web.glb',
+  rest:  { yaw: 104.5, pitch: 7, dist: 1.05, fov: 35, tx: 0.24, ty: 0.00 },
+  openYaw: -22, scrollYaw: 14, faceOffset: 52, reach: 0.33, sway: 0.07
+};
+</script>
+<script type="module" src="../assets20/js/mountain3d.js"></script>
+</body>
+</html>

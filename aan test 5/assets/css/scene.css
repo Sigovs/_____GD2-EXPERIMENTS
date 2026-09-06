@@ -1,0 +1,180 @@
+/* GD2 — index1
+   ONE continuous shot. There is a single pinned frame; the mountain layers and
+   the water layer live inside it together, so there is no section boundary to
+   cut on. Everything below is composition and depth order — the choreography is
+   in assets/js/scene.js. */
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--ink-000)}
+body{
+  margin:0;background:var(--ink-000);color:var(--fg-100);
+  font-family:var(--display);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+img,video{display:block;max-width:100%}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--fg-100);outline-offset:3px}
+.skip{position:absolute;left:-9999px;top:0}
+.skip:focus{left:12px;top:12px;z-index:99;background:var(--ink-100);padding:10px 14px}
+
+/* ---------- masthead ---------- */
+.masthead{position:fixed;inset:0 0 auto 0;z-index:40;padding:18px var(--pad);
+  display:flex;align-items:center;justify-content:space-between;gap:24px;
+  mix-blend-mode:normal;pointer-events:none}
+.masthead > *{pointer-events:auto}
+.wordmark{font-weight:800;font-size:17px;letter-spacing:-.045em;display:inline-flex;align-items:center;gap:9px}
+.wordmark b{font-weight:800;color:var(--fg-060)}
+.wordmark i{display:block;width:26px;height:2px;background:var(--warm);font-style:normal}
+.masthead nav{display:flex;gap:26px;font-size:13.5px;color:var(--fg-060)}
+.masthead nav a{text-decoration:none}
+.masthead nav a:hover{color:var(--fg-100)}
+@media (max-width:860px){.masthead nav{display:none}}
+
+/* ---------- the film: one pinned frame ---------- */
+.film{position:relative;height:760vh}
+.frame{position:sticky;top:0;height:100vh;overflow:hidden;background:var(--ink-000);
+  contain:paint}
+
+/* every plate is a full-bleed layer; only transform/opacity/filter animate */
+.layer{position:absolute;inset:0;will-change:transform,opacity,filter}
+.layer img{position:absolute;left:50%;top:50%;width:auto;height:auto;
+  transform:translate(-50%,-50%);max-width:none}
+
+/* sky — furthest, moves least */
+.l-sky img{min-width:118%;min-height:118%;object-fit:cover;opacity:.95}
+/* mountain — the subject */
+.l-mtn img{min-width:104%;min-height:100%;}
+/* near ridge — the foreground that later takes the frame over.
+   It sits ABOVE the route, so it cuts the route itself: occlusion by
+   compositing, not by a mask. */
+.l-fg{z-index:14}
+.l-fg img{left:50%;top:auto;bottom:-2%;transform:translate(-50%,0);
+  min-width:120%;transform-origin:50% 88%}
+
+/* a thin band of air between the mountain and the near ridge */
+.l-air{z-index:12;background:
+  radial-gradient(120% 60% at 50% 92%, rgba(150,175,210,.14), rgba(150,175,210,0) 62%);
+  mix-blend-mode:screen;opacity:.9}
+
+/* the exposure the intro lifts */
+.l-exposure{z-index:30;background:var(--ink-000);opacity:.62;pointer-events:none}
+
+/* ---------- the route ---------- */
+.marks{position:absolute;inset:0;z-index:13;pointer-events:none;overflow:hidden}
+/* The route is sized by EXACTLY the same rules as the mountain plate and shares
+   its viewBox, so a vertex authored on a given piece of rock stays on that rock
+   at every viewport size. This is what stops the line reading as a decoration
+   lying on top of a photograph. */
+.route{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  min-width:104%;min-height:100%;overflow:visible}
+.route--deep{min-width:100%;min-height:100%}
+.route .seg{fill:none;stroke:var(--route);stroke-width:2.1;
+  stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+/* a dark halo under the line so it holds on snow and on sky without a scrim */
+.route .seg.halo{stroke:rgba(4,7,14,.62);stroke-width:6;filter:blur(2px)}
+.route .anchor{fill:var(--fg-100);stroke:rgba(4,7,14,.7);stroke-width:5;paint-order:stroke;
+  vector-effect:non-scaling-stroke}
+.route .leader{fill:none;stroke:var(--route-dim);stroke-width:1.2;vector-effect:non-scaling-stroke}
+
+.callout{position:absolute;z-index:20;width:min(30ch,30vw);opacity:0;left:0;top:0}
+.callout .k{margin:0;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--fg-060)}
+.callout .v{margin:6px 0 0;font-size:14px;line-height:1.5;color:var(--fg-080);
+  text-shadow:0 1px 20px rgba(5,7,12,.85)}
+.callout .n{font-variant-numeric:tabular-nums;color:var(--fg-100);font-weight:500}
+
+/* ---------- hero copy ---------- */
+/* the wrapper does the centring so a GSAP transform on .copy can never
+   clobber a CSS translate(-50%) — that collision silently drops elements
+   half a viewport down */
+.copy-wrap{position:absolute;z-index:22;left:var(--pad);top:0;height:100%;
+  display:flex;align-items:center;pointer-events:none}
+.copy{max-width:min(46ch,42vw);pointer-events:auto}
+.copy h1{margin:0;font-size:clamp(34px,5.1vw,74px);line-height:1.0;letter-spacing:-.045em;
+  font-weight:600;text-wrap:balance}
+.copy h1 .ln{display:block;overflow:hidden}
+.copy h1 .ln > span{display:block;will-change:transform}
+.copy h1 .promise{color:var(--warm)}
+.copy .lede{margin:22px 0 0;max-width:42ch;font-size:15px;line-height:1.62;color:var(--fg-080);
+  text-shadow:0 1px 22px rgba(5,7,12,.8)}
+.copy .rule{margin:26px 0 0;border:0;height:2px;width:120px;background:var(--warm);
+  transform-origin:0 50%}
+
+/* ---------- the water ---------- */
+/* The water lives in the same frame as the mountain and is revealed from inside
+   the near ridge's blur. It is never a second section fading in. */
+.l-water{z-index:16;opacity:0;visibility:hidden}
+.l-water video,.l-water .poster{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:50% 50%}
+.l-water .poster{z-index:1}
+.l-water video{z-index:2;opacity:0}
+.l-water.is-playing video{opacity:1}
+.l-water .grade{position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:linear-gradient(180deg, rgba(5,7,12,.55) 0%, rgba(5,7,12,0) 26%,
+             rgba(5,7,12,0) 62%, rgba(5,7,12,.62) 100%)}
+
+.deep-marks{position:absolute;inset:0;z-index:18;pointer-events:none;opacity:0}
+.deep-wrap{position:absolute;z-index:24;right:var(--pad);top:0;height:100%;
+  display:flex;align-items:center;pointer-events:none}
+.deep-copy{max-width:min(38ch,34vw);opacity:0;pointer-events:auto}
+.deep-copy .eyebrow{margin:0 0 14px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--fg-060)}
+.deep-copy h2{margin:0;font-size:clamp(26px,3.5vw,48px);line-height:1.06;
+  letter-spacing:-.04em;font-weight:600;text-wrap:balance}
+.deep-copy p{margin:18px 0 0;font-size:15px;line-height:1.6;color:var(--fg-080)}
+
+/* ---------- scroll cue ---------- */
+.cue{position:absolute;z-index:26;left:50%;bottom:26px;transform:translateX(-50%);
+  font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--fg-040)}
+
+/* ---------- mobile is composed separately, not scaled down ---------- */
+@media (max-width:820px){
+  .film{height:620vh}
+  /* portrait: the mountain is cropped to its right flank and pushed low,
+     the copy owns the top third — the landscape framing does not survive here */
+  .l-mtn img{min-width:210%;min-height:78%;top:66%;left:62%}
+  .l-sky img{min-width:190%;min-height:112%}
+  .l-fg img{min-width:230%;bottom:-4%}
+  .copy-wrap{left:var(--pad);right:var(--pad);align-items:flex-start;padding-top:13vh}
+  .copy{max-width:none}
+  .copy h1{font-size:clamp(30px,8.4vw,46px)}
+  .copy .lede{font-size:14px;max-width:36ch}
+  .callout{width:min(30ch,74vw)}
+  /* portrait: the route rides the same rock, the plate is just cropped harder */
+  .route{min-width:210%;min-height:78%;top:66%;left:62%}
+  .route--deep{min-width:150%;min-height:100%;top:50%;left:50%}
+  .deep-wrap{left:var(--pad);right:var(--pad);align-items:flex-end;padding-bottom:12vh}
+  .deep-copy{max-width:none}
+  .deep-copy h2{font-size:clamp(24px,7.2vw,34px)}
+}
+
+/* ---------- reduced motion: two authored stills, no scrub, no pin ---------- */
+@media (prefers-reduced-motion:reduce){
+  .film{height:auto}
+  .frame{position:relative;height:100vh}
+  .l-exposure{opacity:0}
+  .cue{display:none}
+}
+.rm-still{display:none}
+@media (prefers-reduced-motion:reduce){
+  .rm-still{display:block;position:relative;height:100vh;overflow:hidden;background:var(--ink-000)}
+  .rm-water{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%}
+  .rm-grade{position:absolute;inset:0;background:linear-gradient(90deg,
+    rgba(5,7,12,0) 38%, rgba(5,7,12,.72) 74%, rgba(5,7,12,.9) 100%)}
+  .rm-copy{position:absolute;right:var(--pad);top:50%;translate:0 -50%;
+    width:min(38ch,34vw);z-index:2}
+  .rm-copy .eyebrow{margin:0 0 14px;font-family:var(--mono);font-size:10.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--fg-060)}
+  .rm-copy h2{margin:0;font-size:clamp(26px,3.5vw,48px);line-height:1.06;
+    letter-spacing:-.04em;font-weight:600;text-wrap:balance}
+  .rm-copy p{margin:18px 0 0;font-size:15px;line-height:1.6;color:var(--fg-080)}
+  @media (max-width:820px){
+    .rm-grade{background:linear-gradient(180deg, rgba(5,7,12,0) 30%, rgba(5,7,12,.88) 72%)}
+    .rm-copy{right:var(--pad);left:var(--pad);width:auto;top:auto;bottom:10vh;translate:none}
+  }
+}
+
+/* the page still reads with no JavaScript at all */
+.no-js .l-exposure{opacity:0}
+.no-js .callout,.no-js .deep-copy{opacity:1}

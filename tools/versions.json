@@ -1,0 +1,427 @@
+{
+  "_": [
+    "THE ROOT LIST. One source, two consumers: shoot.mjs takes a preview of",
+    "every entry that needs one, build-hub.mjs writes ../index.html from the",
+    "same entries. Add a variation by adding a row and running both.",
+    "",
+    "Same rule as 'aan test 4/tools/versions.json', which this file follows:",
+    "`what` and `settles` are NOT written from memory. Every line is lifted",
+    "from a document Alex wrote or from the page's own header comment, and",
+    "`source` names where. A made-up description on an index page is worse",
+    "than an empty one, because it reads as authoritative.",
+    "",
+    "`opens` is a fact about the page, established by reading it, not a wish:",
+    "  file    - double-click works; the page has no cross-origin dependency",
+    "  server  - needs START.bat. External `<script type=module src=...>`,",
+    "            bare specifiers behind Vite, or Astro's root-absolute paths",
+    "            are all blocked or unresolvable on a file:// origin.",
+    "",
+    "`shoot` is where the shooter loads it from. `reuse` instead means the",
+    "preview already exists and is copied, not re-taken - 'aan test 4' and",
+    "'aan test 6' already shot theirs at 1440x900 and there is no reason to",
+    "make Chrome do it twice."
+  ],
+
+  "groups": [
+    {
+      "id": "root",
+      "title": "Root",
+      "blurb": "The one page that carries its own everything - opens anywhere, needs nothing."
+    },
+    {
+      "id": "test2",
+      "title": "aan test 2 — the concept page",
+      "blurb": "The page this whole shelf grew out of, plus the concept document it was argued from."
+    },
+    {
+      "id": "test4",
+      "title": "aan test 4 — one hero, ten arguments",
+      "blurb": "Each version says the same things and only disagrees about how. Content never changes; index4 is the reference for copy, figures and links. Descriptions from aan test 4/docs/EXPERIMENT.md."
+    },
+    {
+      "id": "test5",
+      "title": "aan test 5 — the Aperture",
+      "blurb": "A restart that rejected travel as the subject and proposed resolution instead. Implementation is stopped; index3 was rejected in full and is kept only as a failed experiment."
+    },
+    {
+      "id": "test1",
+      "title": "aan test 1 — the terrain lab",
+      "blurb": "Not a design. A reusable Three.js / GSAP pipeline for a heavy terrain asset, plus throwaway presentation experiments on top of it. One Vite entry routes all nine by query parameter, so no mode pays for another's code."
+    },
+    {
+      "id": "test6",
+      "title": "aan test 6 — Montfort mirror",
+      "blurb": "An offline 1:1 copy of mont-fort.com kept for studying its architecture, and the variant overlays built against it."
+    },
+    {
+      "id": "test3",
+      "title": "aan test 3 — GD_LAB_TEST",
+      "blurb": "Its own git repository, one commit deep. Nothing has been built in it yet."
+    }
+  ],
+
+  "entries": [
+    {
+      "slug": "index1_1",
+      "group": "root",
+      "name": "index1_1",
+      "file": "index1_1.html",
+      "shoot": "file",
+      "opens": "file",
+      "what": "The aan test 2 page built into a single 2.0 MB file — CSS, GSAP 3.15, Lenis, five AVIF plates and seventeen font faces all inlined as data URIs.",
+      "settles": "Whether the page can be handed to someone as one file that needs no server and no network. It can: zero requests leave the document.",
+      "source": "built 2026-09-03 from aan test 2 by tools/ in the scratchpad",
+      "note": "was GD2-concept-page.html until the hub took the index name"
+    },
+
+    {
+      "slug": "t2-index",
+      "group": "test2",
+      "name": "aan test 2 / hero",
+      "file": "aan test 2/hero.html",
+      "shoot": "http://127.0.0.1:8820/aan%20test%202/hero.html",
+      "opens": "server",
+      "what": "Summit act on AVIF plates, pinned for one viewport. Sky and mountain rise at differing rates; the near plate grows into a 34px blur instead of travelling out. Route drawn by scroll, two callouts opening at the fractions the descent meets them.",
+      "settles": "The source of index1_1 and of aan test 4/index9 — the version whose near-plane defocus was carried into both.",
+      "source": "aan test 2/index.html header comments",
+      "note": "loads GSAP by relative dynamic import, so file:// refuses it — index1_1 is this page made portable. Was aan test 2/index.html until that folder grew a portal of its own on 2026-09-03; the page itself is unchanged."
+    },
+    {
+      "slug": "t2-concept",
+      "group": "test2",
+      "name": "aan test 2 / concept-page",
+      "file": "aan test 2/concept-page.html",
+      "shoot": "http://127.0.0.1:8820/aan%20test%202/concept-page.html",
+      "opens": "file-online",
+      "what": "The 40 KB concept document rendered in the browser through marked.",
+      "settles": "Not a version — the written argument the versions are answers to.",
+      "source": "aan test 2/CONCEPT.md",
+      "note": "pulls marked from cdnjs, so it needs the network but not a server"
+    },
+
+    {
+      "slug": "t4-index1",
+      "group": "test4",
+      "name": "index1",
+      "file": "aan test 4/index1.html",
+      "shoot": "reuse:aan test 4/previews/index1.jpg",
+      "opens": "server",
+      "what": "The production page. PNG hero, scrolled route, scene 2 in water.",
+      "settles": "The baseline. The design system was extracted from this one.",
+      "source": "aan test 4/docs/EXPERIMENT.md",
+      "note": "was index.html until aan test 4's own hub took that name"
+    },
+    {
+      "slug": "t4-hero-v2",
+      "group": "test4",
+      "name": "hero-v2",
+      "file": "aan test 4/hero-v2.html",
+      "shoot": "reuse:aan test 4/previews/hero-v2.jpg",
+      "opens": "server",
+      "what": "index with three AVIF sources, nothing else.",
+      "settles": "What the AVIF plates cost the picture.",
+      "source": "aan test 4, commit 1cfb067"
+    },
+    {
+      "slug": "t4-index2",
+      "group": "test4",
+      "name": "index2",
+      "file": "aan test 4/index2.html",
+      "shoot": "reuse:aan test 4/previews/index2.jpg",
+      "opens": "file",
+      "what": "index with the v2 footage cut.",
+      "settles": "Which ocean grade to ship.",
+      "source": "aan test 4/docs/EXPERIMENT.md"
+    },
+    {
+      "slug": "t4-index3",
+      "group": "test4",
+      "name": "index3",
+      "file": "aan test 4/index3.html",
+      "shoot": "reuse:aan test 4/previews/index3.jpg",
+      "opens": "server",
+      "what": "3D mountain, full WebGL, route drawn on the terrain.",
+      "settles": "Can the PNG hero become real geometry without losing the scroll?",
+      "source": "aan test 4/docs/EXPERIMENT.md",
+      "note": "the only captured route that is on the rock at every frame, and the only one that disappears and reappears"
+    },
+    {
+      "slug": "t4-index4",
+      "group": "test4",
+      "name": "index4",
+      "file": "aan test 4/index4.html",
+      "shoot": "reuse:aan test 4/previews/index4.jpg",
+      "opens": "server",
+      "what": "Same as index3 with the second mountain (92-mountain).",
+      "settles": "Which of the two models carries the shot.",
+      "source": "aan test 4/docs/EXPERIMENT.md",
+      "note": "identical module, different mesh, zero occlusion events — the route's quality is a property of the mesh, not the algorithm"
+    },
+    {
+      "slug": "t4-index5",
+      "group": "test4",
+      "name": "index5",
+      "file": "aan test 4/index5.html",
+      "shoot": "reuse:aan test 4/previews/index5.jpg",
+      "opens": "file",
+      "what": "No canvas at all. Chaptered editorial, five acts, one pinned act.",
+      "settles": "Whether the page needs 3D to be good, or whether composition is enough.",
+      "source": "aan test 4/docs/EXPERIMENT.md"
+    },
+    {
+      "slug": "t4-index6",
+      "group": "test4",
+      "name": "index6",
+      "file": "aan test 4/index6.html",
+      "shoot": "reuse:aan test 4/previews/index6.jpg",
+      "opens": "file",
+      "what": "Scene 2 as a 2.5D ocean: flat plates over the real footage, depth from differing parallax rates.",
+      "settles": "Whether the WebGL diver is worth 900KB of three plus a 3.3MB rig.",
+      "source": "aan test 4/docs/EXPERIMENT.md"
+    },
+    {
+      "slug": "t4-index7",
+      "group": "test4",
+      "name": "index7",
+      "file": "aan test 4/index7.html",
+      "shoot": "reuse:aan test 4/previews/index7.jpg",
+      "opens": "file",
+      "what": "The vault reading. Navy alternating with a warm neutral, one governing event on the first screen, the record published as a plate. No canvas, no video, no scroll-driven anything.",
+      "settles": "Whether the direction holds when every structural decision has to name the vault entry it comes from — and whether the page still has to be dark.",
+      "source": "aan test 4/docs/EXPERIMENT.md",
+      "note": "the only version that broke free of the client comp's metaphor"
+    },
+    {
+      "slug": "t4-index8",
+      "group": "test4",
+      "name": "index8",
+      "file": "aan test 4/index8.html",
+      "shoot": "reuse:aan test 4/previews/index8.jpg",
+      "opens": "file",
+      "what": "index without the diver. Ships no three.js and no 3.3MB rig at all.",
+      "settles": "Whether the swimmer in scene 2 ever earned the frame.",
+      "source": "aan test 4/index8.html header + commit 82f3af3",
+      "note": "its header records the previous author's judgement: \"index is the strongest of the seven\""
+    },
+    {
+      "slug": "t4-index9",
+      "group": "test4",
+      "name": "index9",
+      "file": "aan test 4/index9.html",
+      "shoot": "reuse:aan test 4/previews/index9.jpg",
+      "opens": "file",
+      "what": "The GD_LAB_TEST hero brought in whole — its own palette, its own tokens, Lenis under the scroll. The near plate leaves by growing into blur instead of travelling out.",
+      "settles": "Whether a near plane should defocus rather than leave: the frame goes soft instead of emptying, so the next scene has something to emerge from.",
+      "source": "mirrored from sigovs.github.io/GD_LAB_TEST",
+      "note": "self-contained in assets9/, fonts repointed to the local faces"
+    },
+    {
+      "slug": "t4-ds",
+      "group": "test4",
+      "name": "Design system",
+      "file": "aan test 4/ds.html",
+      "shoot": "reuse:aan test 4/previews/ds.jpg",
+      "opens": "file",
+      "what": "The tokens, the seven type ranks and the measured contrast table, computed from the live CSS at load.",
+      "settles": "Not a version — the rulebook every version above is judged against.",
+      "source": "aan test 4/CLAUDE.md"
+    },
+
+    {
+      "slug": "t5-index1",
+      "group": "test5",
+      "name": "index1",
+      "file": "aan test 5/index1.html",
+      "shoot": "http://127.0.0.1:8820/aan%20test%205/index1.html",
+      "opens": "file",
+      "what": "First build of the Aperture architecture: intro, mountain hold, path to summit, callouts, ridge occlusion, then the takeover into water.",
+      "settles": "Whether resolution rather than travel can carry the scroll story.",
+      "source": "aan test 5/docs/checkpoints/index1/ — fourteen captured states"
+    },
+    {
+      "slug": "t5-index2",
+      "group": "test5",
+      "name": "index2",
+      "file": "aan test 5/index2.html",
+      "shoot": "http://127.0.0.1:8820/aan%20test%205/index2.html",
+      "opens": "file",
+      "what": "Second pass, captured in two states — clean, and with the path drawn.",
+      "settles": "Whether the path belongs on this composition at all. The with-path variant is filed REJECTED.",
+      "source": "aan test 5/docs/checkpoints/index2-clean, index2-with-path, index2-with-path-REJECTED"
+    },
+    {
+      "slug": "t5-index3",
+      "group": "test5",
+      "name": "index3",
+      "file": "aan test 5/index3.html",
+      "shoot": "http://127.0.0.1:8820/aan%20test%205/index3.html",
+      "opens": "file",
+      "what": "Rejected in full as a visual direction. Kept only as a failed experiment — not to be polished, re-parameterised, renamed, or used as a base.",
+      "settles": "Grounds recorded verbatim: a white cable over a mountain instead of a path integrated with terrain; oversized dots resembling editing handles; disconnected route fragments; random callout placement; blur concealing weak composition; two scene panels with a visible boundary; a technical implementation more developed than its visual judgement.",
+      "source": "aan test 5/docs/AI_HANDOFF.md §0",
+      "rejected": true
+    },
+    {
+      "slug": "t5-hero-proof",
+      "group": "test5",
+      "name": "proto / hero-proof",
+      "file": "aan test 5/proto/hero-proof.html",
+      "shoot": "http://127.0.0.1:8820/aan%20test%205/proto/hero-proof.html",
+      "opens": "file-online",
+      "what": "H1/H2 hero proof on a 700vh spacer. Type lives in the negative space, never on the peak.",
+      "settles": "Where the headline can sit once the peak owns the centre of the frame.",
+      "source": "aan test 5/proto/hero-proof.html header",
+      "note": "pulls its faces from Google Fonts, so it wants the network"
+    },
+
+    {
+      "slug": "t1-inspection",
+      "group": "test1",
+      "name": "/ — inspection viewer",
+      "file": null,
+      "url": "http://localhost:5173/",
+      "shoot": "http://localhost:5173/",
+      "opens": "server",
+      "what": "Neutral technical viewer — OrbitControls, debug readout, wireframe toggle, Top/Oblique/Low cameras. The reference for judging the asset itself.",
+      "settles": "The terrain as delivered: 227,799 vertices, 450,000 triangles, normalised to a 20-unit span.",
+      "source": "aan test 1/LAB-NOTES.md"
+    },
+    {
+      "slug": "t1-cinematic",
+      "group": "test1",
+      "name": "?cinematic=1",
+      "file": null,
+      "url": "http://localhost:5173/?cinematic=1",
+      "shoot": "http://localhost:5173/?cinematic=1",
+      "opens": "server",
+      "what": "300vh scroll, pinned WebGL stage, one scrubbed GSAP timeline driving the whole camera move, HTML typography over the canvas.",
+      "settles": "Temporary motion study. Its scrim strength is derived from measured contrast against the terrain's brightest region, not chosen by eye.",
+      "source": "aan test 1/LAB-NOTES.md"
+    },
+    {
+      "slug": "t1-typelab",
+      "group": "test1",
+      "name": "?typeLab=1",
+      "file": null,
+      "url": "http://localhost:5173/?typeLab=1",
+      "shoot": "http://localhost:5173/?typeLab=1",
+      "opens": "server",
+      "what": "Giant \"GD\" as real TextGeometry placed onto the terrain by raycasting. Three treatments (Inlay / Monolith / Beacon), full control panel, slow auto camera.",
+      "settles": "Whether type can sit in the landscape as geometry rather than over it as HTML.",
+      "source": "aan test 1/LAB-NOTES.md",
+      "note": "its typeface JSON is generated from a licensed system font and must be regenerated from an OFL face before anything ships"
+    },
+    {
+      "slug": "t1-mountainlab",
+      "group": "test1",
+      "name": "?mountainLab=1",
+      "file": null,
+      "url": "http://localhost:5173/?mountainLab=1",
+      "shoot": "http://localhost:5173/?mountainLab=1",
+      "opens": "server",
+      "what": "Loads the 12 Unreal-derived mountains from one GLB with named nodes, arranges them as a foreground/midground/background corridor, plays a 2.5s assembly on load, then hands the camera to scroll.",
+      "settles": "The approved 12-mountain composition. No clouds, no ocean, no diver, no colour grading.",
+      "source": "aan test 1/src/mountainlab.js header"
+    },
+    {
+      "slug": "t1-mountainlabv2",
+      "group": "test1",
+      "name": "?mountainLabV2=1",
+      "file": null,
+      "url": "http://localhost:5173/?mountainLabV2=1",
+      "shoot": "http://localhost:5173/?mountainLabV2=1",
+      "opens": "server",
+      "what": "A deliberate break from V1, not a patch on it. Real scanned ground: the 450k-triangle photogrammetry landscape with 2K albedo/normal/AO, used instead of V1's procedural plane.",
+      "settles": "Whether real erosion and albedo variation fix the white carpet that every attempt to patch V1's floor produced.",
+      "source": "aan test 1/src/mountainlabv2.js header",
+      "note": "V1 is untouched at ?mountainLab=1"
+    },
+    {
+      "slug": "t1-materialtest",
+      "group": "test1",
+      "name": "?mountainMaterialTest=1",
+      "file": null,
+      "url": "http://localhost:5173/?mountainMaterialTest=1",
+      "shoot": "http://localhost:5173/?mountainMaterialTest=1",
+      "opens": "server",
+      "what": "Shows the approved 12-mountain composition and switches between the borrowed Unreal materials baked into the GLB and a new world-space triplanar rock/snow material.",
+      "settles": "Whether the borrowed materials can be replaced. No man, no route, no landing copy, no ocean.",
+      "source": "aan test 1/src/mountainmaterialtest.js header",
+      "note": "does not currently run: it reads CFG.scene.key.direction, and mountain-composition.js now describes the key light as azimuth/elevation. Verified 2026-09-03 — the preview is the loading state, which is as far as the page gets."
+    },
+    {
+      "slug": "t1-manscroll",
+      "group": "test1",
+      "name": "?manScroll=1",
+      "file": null,
+      "url": "http://localhost:5173/?manScroll=1",
+      "shoot": "http://localhost:5173/?manScroll=1",
+      "opens": "server",
+      "what": "One feeling: you were standing beside this person, and then you found out how big the world around him is. GSAP owns one scrubbed value driving camera, look-at and FOV; the rig owns bones on frame delta. GSAP never touches a bone.",
+      "settles": "The mechanical baseline for the character reveal.",
+      "source": "aan test 1/src/manscroll.js header"
+    },
+    {
+      "slug": "t1-manscrollart",
+      "group": "test1",
+      "name": "?manScrollArt=1",
+      "file": null,
+      "url": "http://localhost:5173/?manScrollArt=1",
+      "shoot": "http://localhost:5173/?manScrollArt=1",
+      "opens": "server",
+      "what": "Art-direction experiment on the same mechanics. Everything reusable is imported, never edited — loadTerrain, CharacterRig, the placement and the scrub pattern.",
+      "settles": "What art direction alone changes, with the mechanics held identical to manScroll.",
+      "source": "aan test 1/src/manscrollart.js header"
+    },
+    {
+      "slug": "t1-mantest",
+      "group": "test1",
+      "name": "?manTest=1",
+      "file": null,
+      "url": "http://localhost:5173/?manTest=1",
+      "shoot": "http://localhost:5173/?manTest=1",
+      "opens": "server",
+      "what": "Drops the Fab \"Survival Character FREE\" onto the normalised terrain to judge visual quality, scale and pose. Transforms split three ways — placement, facing, and the rig's own bones — so a camera pass and the idle can never overwrite each other.",
+      "settles": "Human scale against the terrain. Not part of any design.",
+      "source": "aan test 1/src/mantest.js header"
+    },
+
+    {
+      "slug": "t6-original",
+      "group": "test6",
+      "name": "Оригинал Montfort",
+      "file": null,
+      "url": "http://localhost:4321/",
+      "shoot": "reuse:aan test 6/previews/original.jpeg",
+      "opens": "server",
+      "what": "Untouched mirror of mont-fort.com. 33 pages, ~260 MB, URL structure kept 1:1 so every /_astro/ and /assets/ path resolves without rewriting.",
+      "settles": "The base every variant is an overlay on.",
+      "source": "aan test 6/README.md"
+    },
+    {
+      "slug": "t6-proba",
+      "group": "test6",
+      "name": "Проба пера",
+      "file": null,
+      "url": "http://localhost:4322/",
+      "shoot": "reuse:aan test 6/previews/01-proba.jpeg",
+      "opens": "server",
+      "what": "First variant — palette work. A variant is an overlay, not a copy: only changed files live in variants/01-proba/, the rest is served from the base.",
+      "settles": "Whether the mirror's architecture survives being re-coloured.",
+      "source": "aan test 6/README.md"
+    },
+
+    {
+      "slug": "t3-scaffold",
+      "group": "test3",
+      "name": "GD_LAB_TEST",
+      "file": "aan test 3/GD_LAB_TEST/index.html",
+      "shoot": "none",
+      "opens": "server",
+      "what": "Vite's own starter template, untouched \u2014 the counter button and the Vite and JavaScript logos. three and gsap are in package.json; nothing imports them.",
+      "settles": "not recorded",
+      "source": "aan test 3/GD_LAB_TEST/src/main.js and its single commit, 6ad6e2e \"Initialize Vite 3D lab\"",
+      "note": "no node_modules and no preview: it cannot be served without an npm install, and it is a scaffold rather than a version. Not the published GD_LAB_TEST that aan test 4/index9 was mirrored from."
+    }
+  ]
+}

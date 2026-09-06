@@ -1,0 +1,157 @@
+/* =============================================================================
+   GD2 — index2 · two scenes, one vertical space
+
+   There is no route line and no callouts in this file. The generated polyline
+   that was here has been withdrawn: as a picture it was a pale line lassoing a
+   mountain, and under water it was a large bright zigzag along the edge of the
+   frame that destroyed the depth of the footage. A frame with nothing in it but
+   landscape is worth more than a frame with a line that explains the movement.
+
+   What is left is the thing the frames were always carrying: a mountain, air,
+   one line of type, and a camera that goes down.
+
+   Here the two environments are two panels of a single tall column, the water
+   panel physically BELOW the mountain panel. The camera descends by moving the
+   column upward. The mountain leaves through the top of the frame because it is
+   above; the water arrives from the bottom because it is below. At the halfway
+   point both are on screen at once, separated by nothing but the edge between
+   them — there is no moment where one is dissolving into the other.
+
+   The near foreground is deliberately NOT in the column. It is a nearer object
+   with its own parallax: it comes at the lens, grows, loses focus, and leaves
+   through the top faster than the world behind it. That difference in rate is
+   what makes it read as passing close to the camera.
+   ========================================================================== */
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--ink-000)}
+body{margin:0;background:var(--ink-000);color:var(--fg-100);
+  font-family:var(--display);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,video{display:block;max-width:100%}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--fg-100);outline-offset:3px}
+.skip{position:absolute;left:-9999px;top:0}
+.skip:focus{left:12px;top:12px;z-index:99;background:var(--ink-100);padding:10px 14px}
+
+/* ---------- masthead ---------- */
+.masthead{position:fixed;inset:0 0 auto 0;z-index:60;padding:18px var(--pad);
+  display:flex;align-items:center;justify-content:space-between;gap:24px;pointer-events:none}
+.masthead > *{pointer-events:auto}
+.wordmark{font-weight:800;font-size:17px;letter-spacing:-.045em;display:inline-flex;align-items:center;gap:9px}
+.wordmark b{color:var(--fg-060)}
+.wordmark i{display:block;width:26px;height:2px;background:var(--warm);font-style:normal}
+.masthead nav{display:flex;gap:26px;font-size:13.5px;color:var(--fg-060)}
+.masthead nav a{text-decoration:none}
+.masthead nav a:hover{color:var(--fg-100)}
+@media (max-width:860px){.masthead nav{display:none}}
+
+/* ---------- the frame and the column ---------- */
+.film{position:relative;height:940vh}
+.frame{position:sticky;top:0;height:100vh;overflow:hidden;background:var(--ink-000)}
+
+/* two viewport-heights of world, stacked. Moving this up IS the camera. */
+.col{position:absolute;left:0;right:0;top:0;height:200vh;will-change:transform}
+.panel{position:absolute;left:0;right:0;height:100vh;overflow:hidden}
+.panel--mtn{top:0}
+.panel--water{top:100vh;background:var(--ink-000)}
+
+.layer{position:absolute;inset:0;will-change:transform,opacity,filter}
+.layer img{position:absolute;left:50%;top:50%;width:auto;height:auto;
+  transform:translate(-50%,-50%);max-width:none}
+.l-sky img{min-width:126%;min-height:126%;opacity:.95}
+/* the mountain is the subject of the first screen, so it is scaled to own it:
+   the summit sits high in the frame and the mass reaches both edges */
+.l-mtn img{min-width:122%;min-height:120%;top:44%}
+
+/* the world's own floor: darker and lower than the near ground, and part of
+   the column rather than a nearer object */
+.l-base{z-index:8}
+/* the rock has to reach the panel's own bottom edge, or the descent shows a
+   flat band of panel background where the two worlds meet */
+.l-base img{left:50%;top:auto;bottom:-2%;transform:translateX(-50%);
+  min-width:210%;filter:saturate(.9)}
+/* and the seam itself is a soft fall into dark rather than a cut, so the
+   mountain world's floor and the canyon's own dark ceiling meet as one tone */
+.panel--mtn::after{content:"";position:absolute;left:0;right:0;bottom:0;height:34%;
+  z-index:20;pointer-events:none;
+  background:linear-gradient(180deg,rgba(5,7,12,0) 0%,rgba(5,7,12,.55) 55%,var(--ink-000) 100%)}
+.panel--water::before{content:"";position:absolute;left:0;right:0;top:0;height:16%;
+  z-index:9;pointer-events:none;
+  background:linear-gradient(180deg,var(--ink-000) 0%,rgba(5,7,12,0) 100%)}
+
+/* ---------- the near foreground: a nearer object, not part of the column --- */
+.fg{position:absolute;left:0;right:0;bottom:0;height:100vh;z-index:30;
+  pointer-events:none;will-change:transform,filter;transform-origin:50% 86%}
+.fg img{position:absolute;left:50%;bottom:-17%;transform:translateX(-50%);
+  width:auto;height:auto;min-width:128%;max-width:none}
+
+/* ---------- hero copy ---------- */
+.copy-wrap{position:absolute;z-index:26;left:var(--pad);top:0;height:100%;
+  width:min(52vw,620px);display:flex;align-items:center;pointer-events:none}
+.copy{width:100%;pointer-events:auto}
+/* each .ln holds exactly one visual line, so the column has to be wide enough
+   for the longest of them — a clipped reveal over a wrapping line eats words */
+.copy h1{margin:0;font-size:clamp(26px,3.15vw,46px);line-height:1.06;letter-spacing:-.04em;
+  font-weight:600;text-wrap:balance}
+.copy h1 .ln{display:block;overflow:hidden;white-space:nowrap}
+.copy h1 .ln > span{display:block;will-change:transform}
+.copy h1 .promise{color:var(--warm);font-style:normal}
+.copy .lede{margin:22px 0 0;max-width:38ch;font-size:15px;line-height:1.62;color:var(--fg-080);
+  text-shadow:0 1px 22px rgba(5,7,12,.85)}
+.copy .rule{margin:26px 0 0;border:0;height:2px;width:118px;background:var(--warm);
+  transform-origin:0 50%}
+
+/* ---------- the water panel ---------- */
+/* The footage is composed as a canyon on the left with an open dark field on
+   the right. That field is where the content goes — it is negative space the
+   asset already contains, so nothing needs a scrim laid over the picture. */
+.water-media{position:absolute;left:0;top:0;bottom:0;width:min(62%,980px);overflow:hidden}
+.water-media .poster,.water-media video{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:24% 30%}
+.water-media video{opacity:0}
+.water-media.is-playing video{opacity:1}
+.water-media::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(5,7,12,0) 62%,var(--ink-000) 99%)}
+
+.deep-wrap{position:absolute;right:var(--pad);top:0;height:100%;z-index:8;
+  display:flex;align-items:center;pointer-events:none;width:min(34ch,30vw)}
+.deep-copy{opacity:0;pointer-events:auto}
+.deep-copy .eyebrow{margin:0 0 14px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--fg-060)}
+.deep-copy h2{margin:0;font-size:clamp(26px,3.4vw,46px);line-height:1.06;
+  letter-spacing:-.04em;font-weight:600;text-wrap:balance}
+.deep-copy p{margin:18px 0 0;font-size:15px;line-height:1.6;color:var(--fg-080)}
+
+/* the copy layer sits above the near ground */
+.hud{position:absolute;inset:0;z-index:40;pointer-events:none}
+.hud > *{pointer-events:auto}
+
+/* ---------- exposure and cue ---------- */
+.exposure{position:absolute;inset:0;z-index:50;background:var(--ink-000);opacity:.6;pointer-events:none}
+.cue{position:absolute;z-index:52;left:50%;bottom:26px;transform:translateX(-50%);
+  font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--fg-040)}
+
+/* ---------- mobile: composed separately ---------- */
+@media (max-width:820px){
+  .film{height:760vh}
+  .l-mtn img{min-width:230%;min-height:88%;top:64%;left:60%}
+  .l-sky img{min-width:190%;min-height:112%}
+  .fg img{min-width:240%}
+  .l-base img{min-width:260%;bottom:-34%}
+  /* the explicit desktop column width must not survive into portrait */
+  .copy-wrap{left:var(--pad);right:var(--pad);width:auto;align-items:flex-start;padding-top:12vh}
+  .copy{max-width:none}
+  .copy h1{font-size:clamp(30px,8.2vw,44px)}
+  .copy .lede{font-size:14px;max-width:34ch}
+  /* portrait: the canyon takes the upper frame, the words sit under it */
+  .water-media,/* ---------- reduced motion: authored stills, no pin, no scrub ---------- */
+@media (prefers-reduced-motion:reduce){
+  .film{height:auto}
+  .frame{position:relative;height:100vh}
+  .col{position:relative;height:auto}
+  .panel{position:relative;top:auto;height:100vh}
+  .panel--water{top:auto}
+  .fg{position:absolute}
+  .exposure,.cue{display:none}
+}

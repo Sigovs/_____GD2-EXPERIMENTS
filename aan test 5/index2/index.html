@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GD2 — The deeper you go (index2)</title>
+<meta name="description" content="From a single page view GD2 identifies 300+ data points on an anonymous visitor.">
+<link rel="icon" href="../assets/img/favicon.svg">
+<link rel="stylesheet" href="../assets/css/tokens.css">
+<link rel="stylesheet" href="../assets/css/scene2.css">
+<link rel="preload" as="image" href="../assets/img/mountain.avif" fetchpriority="high">
+<link rel="preload" as="image" href="../assets/img/sky.avif">
+<link rel="preload" as="font" type="font/woff2" href="../assets/fonts/inter-tight-600.woff2" crossorigin>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <span class="wordmark">GD<b>2</b><i></i></span>
+  <nav aria-label="Main">
+    <a href="#">Products &amp; Services</a><a href="#">Grow your Business</a>
+    <a href="#">Compliance</a><a href="#">Contact</a>
+  </nav>
+</header>
+
+<main id="main">
+<section class="film" id="film">
+  <div class="frame" id="frame">
+
+    <!-- TWO VIEWPORT-HEIGHTS OF WORLD. Moving this up is the camera descending.
+         The water is not layered over the mountain — it is below it. -->
+    <div class="col" id="col">
+
+      <!-- ============ panel 1 : the mountain ============ -->
+      <div class="panel panel--mtn">
+        <div class="layer l-sky" id="lSky" aria-hidden="true">
+          <picture><source srcset="../assets/img/sky.avif" type="image/avif">
+            <img src="../assets/img/sky.webp" alt="" width="2292" height="1415" fetchpriority="high"></picture>
+        </div>
+        <div class="layer l-mtn" id="lMtn" aria-hidden="true">
+          <picture><source srcset="../assets/img/mountain.avif" type="image/avif">
+            <img src="../assets/img/mountain.webp" alt="" width="2292" height="1325" fetchpriority="high"></picture>
+        </div>
+
+        <!-- The floor of the mountain world. It belongs to the column, so it
+             travels up with it and is what fills the upper band while the water
+             is rising — without it the crossover shows the black underside of
+             the panel and the frame empties out. -->
+        <div class="layer l-base" aria-hidden="true">
+          <picture><source srcset="../assets/img/ridge-near.avif" type="image/avif">
+            <img src="../assets/img/ridge-near.webp" alt="" width="2292" height="908"></picture>
+        </div>
+
+
+      </div>
+
+      <!-- ============ panel 2 : the canyon, one viewport below ============ -->
+      <div class="panel panel--water">
+        <div class="water-media" id="waterMedia">
+          <img class="poster" src="../assets/video/canyon-a-poster.jpg" alt="" width="1920" height="1080">
+          <video id="canyon" muted playsinline loop preload="none"
+                 poster="../assets/video/canyon-a-poster.jpg" width="1920" height="1080">
+            <source src="../assets/video/canyon-a.webm" type="video/webm">
+            <source src="../assets/video/canyon-a.mp4" type="video/mp4">
+          </video>
+        </div>
+
+
+        <div class="deep-wrap"><div class="deep-copy" id="deepCopy">
+          <p class="eyebrow">GD2 &middot; Visitor intelligence</p>
+          <h2>Know who&rsquo;s shopping. Act while it matters.</h2>
+          <p>You also see which pages they looked at, and when.</p>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- The hero copy and the three moments sit ABOVE the near ground, outside
+         the column. They are finished before the descent begins, so they gain
+         nothing from travelling with it and would otherwise be painted over by
+         the foreground plate. -->
+    <div class="hud" id="hud">
+      <div class="copy-wrap"><div class="copy" id="copy">
+        <h1>
+          <span class="ln"><span>The deeper you go,</span></span>
+          <span class="ln"><span>the more you <em class="promise">know.</em></span></span>
+        </h1>
+        <p class="lede">From a single page view we identify 300+ data points on your visitors —
+          name, phone, email, address, income, home value, credit, existing loans, social links.</p>
+        <hr class="rule">
+      </div></div>
+
+    </div>
+
+    <!-- THE NEAR GROUND. Outside the column on purpose: it is a nearer object,
+         it moves faster, and it leaves through the top ahead of the world. -->
+    <div class="fg" id="fg" aria-hidden="true">
+      <picture><source srcset="../assets/img/ridge-near.avif" type="image/avif">
+        <img src="../assets/img/ridge-near.webp" alt="" width="2292" height="908"></picture>
+    </div>
+
+    <div class="exposure" id="exposure" aria-hidden="true"></div>
+    <p class="cue" id="cue">Scroll</p>
+  </div>
+</section>
+</main>
+
+<script src="../assets/vendor/gsap.min.js"></script>
+<script src="../assets/vendor/ScrollTrigger.min.js"></script>
+<script src="../assets/js/scene2.js"></script>
+</body>
+</html>

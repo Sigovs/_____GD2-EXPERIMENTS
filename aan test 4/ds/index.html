@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GD2 — Design System</title>
+<meta name="description" content="The token layer, type roles, devices and controls extracted from the GD2 hero.">
+<meta name="theme-color" content="#0B0F1E">
+<link rel="icon" href="../favicon.ico" sizes="32x32">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="stylesheet" href="../assets20/css/tokens.css">
+<link rel="stylesheet" href="../assets20/css/ds.css">
+<link rel="stylesheet" href="../assets20/css/guide.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<main id="main" class="section">
+
+  <header class="g-head stack">
+    <p class="eyebrow">GD2 · Design System v1</p>
+    <h1 class="h-1">Measured off the <span class="promise">hero</span>, not invented for it.</h1>
+    <p class="body">The hero is the only screen this brand has built, so it is the only evidence
+      the system has. Every token is either a value the hero proved or is marked AUTHORED with the
+      job it does.</p>
+    <p class="body">Contrast figures are computed from the live tokens as the page loads, so the
+      numbers follow the CSS rather than a note someone forgot to update. <b>What they check is
+      flat ink on flat ground.</b> Type over photography, glass, blur or a gradient is not covered
+      — those are solved per instance, against the worst region the run actually overlaps.</p>
+    <span class="rule-o"></span>
+  </header>
+
+  <!-- ================================================================== -->
+  <section class="g-sec">
+    <div class="g-sec__n"><span class="num">01</span><h2 class="h-2">Ground and ink</h2></div>
+    <p class="g-note">One ground for the whole site — a second one is what produced the horizontal
+      seam the hero had to be repaired for. The ink ladder is measured over it, and
+      <b>--ink-48</b> is the last step that can carry information.</p>
+    <div class="g-grid g-grid--3" data-swatches="ink"></div>
+  </section>
+
+  <!-- ================================================================== -->
+  <section class="g-sec">
+    <div class="g-sec__n"><span class="num">02</span><h2 class="h-2">Two accents. Two jobs.</h2></div>
+    <div class="g-cols">
+      <div class="stack">
+        <p class="eyebrow" style="color:var(--orange)">Orange — the promise</p>
+        <p class="body">What the visitor gets, and the control that reaches it. In the hero: the
+          word <span class="promise">know.</span>, the rule under the paragraph, the plus that
+          opens the offer. Not annotation, not chrome.</p>
+      </div>
+      <div class="stack">
+        <p class="eyebrow">Cyan — the instrument</p>
+        <p class="body">Signal, data, annotation, focus, active state, chrome. In the hero: the
+          numeral in the wordmark, every leader and anchor on the route, the readouts, the log-in
+          edge. Not the promise.</p>
+      </div>
+    </div>
+    <div class="g-grid g-grid--3" data-swatches="accent"></div>
+    <p class="g-note">Neither hue carries meaning on its own — each is also carried by position and
+      by a label. The two solid values are shown as fills because that is how they are used; the
+      alpha values are shown doing their job, because a wash rendered as a block is a colour this
+      system does not contain.</p>
+  </section>
+
+  <!-- ================================================================== -->
+  <section class="g-sec">
+    <div class="g-sec__n"><span class="num">03</span><h2 class="h-2">Lines and surfaces</h2></div>
+    <p class="g-note">The escalation order is the whole anti-box policy:
+      <b>air → hairline → surface shift → a bordered box.</b> The box is the fourth answer.
+      None of these tokens is a colour — each is a line, an edge or a film, so each is shown
+      doing that rather than filled into a square.</p>
+
+    <!-- --rule ------------------------------------------------------------ -->
+    <div class="lab">
+      <div class="lab__demo bed--bare">
+        <p class="caption">Rows separated by air and a hairline.</p>
+        <hr class="divider" style="margin-block:var(--s5)">
+        <p class="caption">Nothing is boxed to achieve this.</p>
+      </div>
+      <div class="lab__meta" data-token="--rule"
+           data-job="Decorative hairline. Never a control edge — at 1.47:1 a pointer cannot find it."></div>
+    </div>
+
+    <!-- --rule-ui --------------------------------------------------------- -->
+    <div class="lab">
+      <div class="lab__demo">
+        <div class="actions">
+          <span class="field" style="flex:1 1 14rem">
+            <label for="g-rule-ui">Domain</label>
+            <input id="g-rule-ui" type="text" placeholder="company.com">
+          </span>
+          <button class="burger" type="button" style="display:grid" aria-label="Menu demonstration">
+            <span></span><span></span>
+          </button>
+        </div>
+      </div>
+      <div class="lab__meta" data-token="--rule-ui" data-need="3"
+           data-job="The edge of anything a pointer can act on. Both borders here are it."></div>
+    </div>
+
+    <!-- --surface --------------------------------------------------------- -->
+    <div class="lab">
+      <div class="lab__demo">
+        <div class="bed">
+          <p class="eyebrow eyebrow--quiet">Lifted, not boxed</p>
+          <p class="caption" style="margin-top:var(--s2)">A region separated from the ground by
+            1.06:1 and no border at all. This is step three, before a box is reached for.</p>
+        </div>
+      </div>
+      <div class="lab__meta" data-token="--surface"
+           data-job="A region lifted off the ground. The step before a border."></div>
+    </div>
+
+    <!-- --glass / --glass-solid / --glass-edge ----------------------------- -->
+    <div class="lab">
+      <div class="lab__demo">
+        <!-- the hero's own stack, sky behind the plate: a glass film over a
+             cut-out with nothing behind it is a film over the page ground,
+             which is the one thing this demo must not show -->
+        <div class="glassbed">
+          <img class="glassbed__sky" src="../assets20/img/sky.png" alt="">
+          <img class="glassbed__mtn" src="../assets20/img/mountain.png" alt="The hero's summit plate, used here as the ground under three glass panels.">
+          <div class="glassbed__row">
+            <div class="gpanel gpanel--glass"><b>Glass</b><span data-value="--glass"></span></div>
+            <div class="gpanel gpanel--solid"><b>Solid</b><span data-value="--glass-solid"></span></div>
+            <div class="gpanel gpanel--edge"><b>Edge</b><span data-value="--glass-edge"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="lab__meta">
+        <span class="sw__name">--glass · --glass-solid · --glass-edge</span>
+        <span class="sw__val" style="text-transform:none;color:var(--ink-64)">One plate under all
+          three, so the film is the only variable. Glass carries the masthead at rest; solid takes
+          over once the bar folds and a dropped panel needs to hold its own type; the edge is a
+          1px line, never a fill.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================== -->
+  <section class="g-sec">
+    <div class="g-sec__n"><span class="num">04</span><h2 class="h-2">Type — two voices, seven ranks</h2></div>
+    <p class="g-note">A new role gets a size and a weight, not a new typeface. The mono earns its
+      place because fixed-advance figures make a readout scan as a ledger — something the
+      grotesque cannot do at any weight.</p>
+    <p class="g-note">Seven ranks, countable down the left edge. <b>Lead</b> and <b>Quiet label</b>
+      are variants — the same rank wearing a different size or ink — and they hang off the rank
+      they belong to rather than claiming one of their own.</p>
+
+    <div>
+      <div class="spec">
+        <p class="spec__k">1 · Display<b>--t-display · 36→88 · 800</b></p>
+        <div class="spec__v"><p class="h-display">The deeper you <span class="promise">know.</span></p></div>
+      </div>
+      <div class="spec">
+        <p class="spec__k">2 · H1<b>--t-h1 · 32→60 · 800</b></p>
+        <div class="spec__v"><p class="h-1">Every visit begins with a trace</p></div>
+      </div>
+      <div class="spec">
+        <p class="spec__k">3 · H2<b>--t-h2 · 26→42 · 600</b></p>
+        <div class="spec__v"><p class="h-2">Anonymous activity becomes actionable insight</p></div>
+      </div>
+      <div class="spec">
+        <p class="spec__k">4 · H3<b>--t-h3 · 20→28 · 600</b></p>
+        <div class="spec__v"><p class="h-3">600 million consumer profiles, updated daily</p></div>
+      </div>
+      <div class="spec spec--var">
+        <p class="spec__k">Lead — variant in the H3 band<b>--t-lead · 20→32 · 400</b></p>
+        <div class="spec__v"><p class="h-lead">The H3 band set unweighted for reading — 400 rather
+          than 600, running a little longer at full width. A paragraph wearing a heading’s size,
+          not a rank of its own.</p></div>
+      </div>
+      <div class="spec">
+        <p class="spec__k">5 · Body<b>--t-body · 15→17 · 400</b></p>
+        <div class="spec__v"><p class="body">Name, phone, email, address, income, home value, credit,
+          existing loans, social links. You also see which pages they looked at, and when. Body copy
+          is capped at 56 characters of measure — wide viewports get margin, not longer lines.</p></div>
+      </div>
+      <div class="spec">
+        <p class="spec__k">6 · Caption<b>--t-sm · 14→15 · 400</b></p>
+        <div class="spec__v"><p class="caption">Supporting detail and metadata, one step down in
+          size and one step down in ink.</p></div>
+      </div>
+      <div class="spec">
+        <p class="spec__k">7 · Micro<b>--t-xs · 14 fixed · mono</b></p>
+        <div class="spec__v"><p class="eyebrow">Signal detected</p></div>
+      </div>
+      <div class="spec spec--var">
+        <p class="spec__k">Quiet — variant of Micro<b>--t-xs · 14 fixed · mono</b></p>
+        <div class="spec__v"><p class="eyebrow eyebrow--quiet">Updated daily</p></div>
+      </div>
+    </div>
+
+    <p class="g-note"><b>14px is the floor.</b> Navigation, the phone number and the log-in label
+      sat at 13 and 13.5px in the first build; all three carry information, so all three were
+      raised. Below the floor, type is decoration — and decoration carries nothing.</p>
+  </section>
+
+  <!-- ================================================================== -->
+  <section class="g-sec">
+    <div class="g-sec__n"><span class="num">05</span><h2 class="h-2">Space — 4px base, one scale</h2></div>
+    <p class="g-note">Internal gaps are always smaller than the gap to the next block. That
+      relationship is the grouping; a uniform gap deletes it.</p>
+    <div class="sp" data-space></div>
+    <p class="g-note">Gutter <b>--gut</b> never falls below 24px. Page measure <b>--col</b> caps at
+      1560px, the masthead one step in at 1300px. Sections are bottom-heavy, roughly 1:1.3, at
+      every width — reading runs downward, so a block leans into the space below it.</p>
+  </section>
+
+  <!-- ================================================================== -->
+  <section class="g-sec">
+    <div class="g-sec__n"><span class="num">06</span><h2 class="h-2">Primitives and components</h2></div>
+    <p class="g-note">Two levels, and the difference is whether the thing can be taken apart.
+      A <b>primitive</b> is a mark — it has no smaller parts. A <b>component</b> is built from
+      primitives and type, and owns a job on the page.</p>
+    <p class="g-note">Adding to either level is a decision, not a reflex: name the job the existing
+      set cannot do, and say it out loud. That is a bar to clear, not a door that is closed.</p>
+
+    <!-- ---- PRIMITIVES ------------------------------------------------- -->
+    <div class="g-group">
+      <p class="eyebrow">Primitives</p>
+    </div>
+
+    <div class="g-cols">
+
+      <div class="stack">
+        <p class="eyebrow eyebrow--quiet">.ico — icons</p>
+        <p class="body">One set. A 12-unit box, 1px stroke, no fill, <b>currentColor</b>, sized to
+          the cap height of the type beside it. An icon never carries meaning the label does not
+          also carry.</p>
+        <div class="g-demo g-demo--plain">
+          <p class="annot__k">
+            <svg class="ico" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><ellipse cx="6" cy="2.6" rx="4.2" ry="1.7"/><path d="M1.8 2.6v3.1c0 .94 1.88 1.7 4.2 1.7s4.2-.76 4.2-1.7V2.6"/><path d="M1.8 5.9v3.1c0 .94 1.88 1.7 4.2 1.7s4.2-.76 4.2-1.7V5.9"/></svg>Records
+            <svg class="ico" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><circle cx="2.2" cy="9.4" r="1.4"/><circle cx="6" cy="4" r="1.4"/><circle cx="9.8" cy="8.2" r="1.4"/><path d="M3.3 8.5 4.9 5M7.1 4.8 8.9 7.2"/></svg>Behaviour
+          </p>
+        </div>
+      </div>
+
+      <div class="stack">
+        <p class="eyebrow eyebrow--quiet">.rule-o / .divider — rules</p>
+        <p class="body">Two rules, two jobs. The orange one closes a claim; it does not separate
+          things. Separation is the neutral hairline, and it is the answer before a box.</p>
+        <div class="g-demo g-demo--plain">
+          <span class="rule-o"></span>
+          <hr class="divider" style="margin-top:var(--s6)">
+        </div>
+      </div>
+
+      <div class="stack">
+        <p class="eyebrow eyebrow--quiet">.marker — markers</p>
+        <p class="body">A signal point. It ships on every anchor where a leader meets the route,
+          and the wordmark's cyan numeral is the same idea set in type. The promise variant sits
+          in a field of its own wash.</p>
+        <div class="g-demo g-demo--plain">
+          <p class="annot__k" style="gap:var(--s5)">
+            <span><span class="marker"></span>&nbsp; Signal</span>
+            <span style="color:var(--orange)"><span class="marker marker--promise"></span>&nbsp; Promise</span>
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ---- COMPONENTS ------------------------------------------------- -->
+    <div class="g-group">
+      <p class="eyebrow">Components</p>
+    </div>
+
+    <div class="g-cols">
+
+      <div class="stack">
+        <p class="eyebrow eyebrow--quiet">.annot — annotation</p>
+        <p class="body">Binds a claim to the point it is about. In the hero, through a drawn
+          leader; in a page, through proximity. No box — a container would make it a card
+          instead of a reading.</p>
+        <div class="g-demo">
+          <div class="annot">
+            <p class="annot__k"><svg class="ico" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M1 3.4V1.6h1.9M10.4 3.4V1.6H8.5M1 8.6v1.8h1.9M10.4 8.6v1.8H8.5"/><path d="M1 6h9.4"/><circle cx="5.7" cy="6" r="1.5"/></svg>Signal detected</p>
+            <p class="annot__s">Every visit begins with a trace.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <p class="eyebrow eyebrow--quiet">.plate — data plate</p>
+        <p class="body">A set of facts read as a record. Mono keys subordinate, values forming the
+          reading line, hairlines between rows. Not a bordered table and not zebra — those say
+          “widget”; rules say “record”.</p>
+        <div class="g-demo g-demo--plain">
+          <dl class="plate">
+            <dt>Data points</dt><dd>300+</dd>
+            <dt>Profiles</dt><dd>600,000,000</dd>
+            <dt>Refresh</dt><dd>Daily</dd>
+            <dt>Match rate</dt><dd>38–52%</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="stack">
+        <p class="eyebrow eyebrow--quiet">.stat — stat</p>
+        <p class="body">One figure that outranks its own label. Mono and tabular, because a figure
+          that must be compared has to hold its column.</p>
+        <div class="g-demo g-demo--plain">
+          <div class="stat-row">
+            <div class="stat"><span class="stat__v">600M+</span><span class="stat__k">Consumer profiles</span></div>
+            <div class="stat"><span class="stat__v">300+</span><span class="stat__k">Data points</span></div>
+            <div class="stat"><span class="stat__v">24h</span><span class="stat__k">Refresh cycle</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <p class="eyebrow eyebrow--quiet">.media — media treatment</p>
+        <p class="body">An image and the type that has to survive it. Legibility is solved at the
+          background layer, per instance, against the worst region the run actually overlaps.
+          Shown at work in <b>08</b>.</p>
+      </div>
+
+      <div class="stack">
+        <p class="eyebrow eyebrow--quiet">.btn / .field — controls</p>
+        <p class="body">Three ranks of action and one field geometry, so a control and an input
+          read as the same instrument. Shown at work in <b>07</b>.</p>
+      </div>
+
+      <div class="stack">
+        <p class="eyebrow eyebrow--quiet">.mh — masthead</p>
+        <p class="body">One glass instrument, permanently on screen and therefore counted in the
+          composition rather than added to it. Dark, small in the frame, one bright element: the
+          single action. It folds on scroll — nothing is removed, only folded.</p>
+      </div>
+
+    </div>
+
+    <!-- the masthead, live: the shipped component over the hero's own plate,
+         with only its fixed positioning neutralised -->
+    <div class="mh-stage">
+      <img src="../assets20/img/sky.png" alt="A crop of the hero sky, used here as the ground under the masthead.">
+      <header class="mh">
+        <a class="mark" href="#main" aria-label="GD2 — home">GD<span class="mark__n">2</span></a>
+        <nav class="mh__nav" aria-label="Masthead demonstration">
+          <ul>
+            <li><a href="#main" aria-current="page">Products &amp; Services</a></li>
+            <li><a href="#main">Grow your Business</a></li>
+            <li><a href="#main">Compliance</a></li>
+            <li><a href="#main">Contact</a></li>
+          </ul>
+        </nav>
+        <div class="mh__act">
+          <a class="mh__tel" href="tel:+18665917555">(866)&nbsp;591-7555</a>
+          <a class="btn" href="#main">Log in</a>
+        </div>
+        <button class="burger" type="button" aria-expanded="false" aria-label="Menu">
+          <span></span><span></span>
+        </button>
+      </header>
+    </div>
+    <p class="g-note">The live component, not a picture of one — the glass, blur, edge, shadow and
+      grid are the shipped values. Only the fixed positioning is neutralised so it can sit in the
+      page. The first item carries <b>aria-current</b>, which is the cyan active state.</p>
+  </section>
+
+  <!-- ================================================================== -->
+  <section class="g-sec">
+    <div class="g-sec__n"><span class="num">07</span><h2 class="h-2">Controls</h2></div>
+    <p class="g-note">Three ranks, <b>one primary per view.</b> Gradients are kept off controls
+      deliberately: a flat surface gives each control one stable value to be read against, which
+      keeps rank legible across the set and keeps the contrast check meaningful. Focus is a 2px
+      cyan ring — try tabbing through this row.</p>
+    <div class="g-demo">
+      <div class="actions">
+        <a class="btn btn--primary" href="#main">Get my visitors</a>
+        <a class="btn" href="#main">Log in</a>
+        <a class="btn btn--ghost" href="#main">Talk to us</a>
+        <a class="link" href="#main">See how it works
+          <svg class="ico" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M1.5 6h9M6.6 2.2 10.4 6l-3.8 3.8"/></svg>
+        </a>
+      </div>
+      <div class="actions" style="margin-top:var(--s6)">
+        <a class="btn btn--primary btn--lg" href="#main">Get my visitors</a>
+        <a class="btn btn--lg" href="#main">Log in</a>
+      </div>
+    </div>
+
+    <div class="g-cols">
+      <div class="field">
+        <label for="g-email">Work email</label>
+        <input id="g-email" type="email" placeholder="you@company.com">
+      </div>
+      <div class="field">
+        <label for="g-site">Website</label>
+        <input id="g-site" type="url" placeholder="company.com">
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================== -->
+  <section class="g-sec">
+    <div class="g-sec__n"><span class="num">08</span><h2 class="h-2">Rows, and text over an image</h2></div>
+    <p class="g-note">Rows are separated by a hairline, not by a card each. Legibility over an
+      image is fixed at the <b>background</b> layer, solved against the worst pixel the run actually
+      overlaps — never by weighting the type, never with a text shadow.</p>
+    <div class="g-cols">
+      <ul class="rows">
+        <li><p class="eyebrow">Identify</p><p class="body">Name, phone, email, postal address.</p></li>
+        <li><p class="eyebrow">Qualify</p><p class="body">Income, home value, credit, existing loans.</p></li>
+        <li><p class="eyebrow">Observe</p><p class="body">Pages viewed, and when.</p></li>
+      </ul>
+      <figure class="media" style="margin:0;aspect-ratio:4/3">
+        <img src="../assets20/img/mountain.png" alt="The summit plate used by the hero scene.">
+        <figcaption class="media__say">
+          <p class="eyebrow">Scrim solved, not dialled</p>
+          <p class="caption">Worst pixel behind this run measured, then the ground raised until
+            every line cleared 4.5:1.</p>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ================================================================== -->
+  <section class="g-sec">
+    <div class="g-sec__n"><span class="num">09</span><h2 class="h-2">Time and layers</h2></div>
+    <div class="g-cols">
+      <div class="stack">
+        <p class="eyebrow eyebrow--quiet">Duration</p>
+        <dl class="plate">
+          <dt>--d-1 · .18s</dt><dd>Hover and focus — a state change</dd>
+          <dt>--d-2 · .30s</dt><dd>A component folding or opening</dd>
+          <dt>--d-3 · .45s</dt><dd>A deliberate gesture</dd>
+          <dt>--d-4 · .70s</dt><dd>An entrance</dd>
+          <dt>--ease</dt><dd>cubic-bezier(.22, 1, .36, 1)</dd>
+        </dl>
+      </div>
+      <div class="stack">
+        <p class="eyebrow eyebrow--quiet">Layer</p>
+        <dl class="plate">
+          <dt>--z-plate · −1</dt><dd>Scene plates, behind everything</dd>
+          <dt>--z-scene · 0</dt><dd>Weather, reading copy</dd>
+          <dt>--z-fg · 1</dt><dd>Near ground, the following section</dd>
+          <dt>--z-content · 2</dt><dd>Readouts and controls in the scene</dd>
+          <dt>--z-cover · 3</dt><dd>A section lifted over a pinned hero</dd>
+          <dt>--z-bar · 40</dt><dd>The masthead</dd>
+        </dl>
+      </div>
+    </div>
+    <p class="g-note"><b>One primary temporal idea per viewport.</b> In the hero that is the route
+      drawing; the copy leaving is transport and ranks below it; the weather is atmosphere and
+      ranks below that. Every one of them has an authored still, not a disabled animation.</p>
+  </section>
+
+  <!-- ================================================================== -->
+  <section class="g-sec">
+    <div class="g-sec__n"><span class="num">10</span><h2 class="h-2">The rules, in nine lines</h2></div>
+    <p class="g-note">Foundations, not commandments. Each one is here because the hero paid for it;
+      each can be revised the same way — by evidence, in writing, with the reason recorded.</p>
+    <ol class="rows" style="counter-reset:r">
+      <li><p class="body">Hierarchy is legible before a word is read. Two ranks are never near-identical.</p></li>
+      <li><p class="body">Every text/background pair is measured, and the ratio is stated. Text over an image is fixed at the background layer.</p></li>
+      <li><p class="body">Functional text is never below 14px, at any width.</p></li>
+      <li><p class="body">Every value resolves to a token. The exceptions are 1px hairlines, 0, 100%-class values, and drawn-mark geometry.</p></li>
+      <li><p class="body">Internal gaps are smaller than external. Space never collapses to zero.</p></li>
+      <li><p class="body">Orange is the promise; cyan is the instrument. Neither does the other's job.</p></li>
+      <li><p class="body">Air, then a hairline, then a surface shift, then a box. The box is the fourth answer.</p></li>
+      <li><p class="body">A shadow is a claim about elevation, and it must be true. Only genuinely floating layers cast one.</p></li>
+      <li><p class="body">Every animation has an authored still, and no route is discoverable by hover alone.</p></li>
+    </ol>
+  </section>
+
+  <footer class="g-foot">
+    <p>Contrast figures on this page are computed at load from the live token values, so a token
+      that drops below its threshold turns orange here before it reaches a visitor.</p>
+    <p style="margin-top:var(--s4)"><b>What the check covers:</b> one flat ink composited over one
+      flat ground. <b>What it does not:</b> type over photography, over glass, behind blur, or on a
+      gradient — where the value varies across the run and the only honest measurement is against
+      the worst region it actually overlaps. Those are solved per instance, and the hero's scrim
+      numbers are the record of one such solution.</p>
+  </footer>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var root = getComputedStyle(document.documentElement);
+  var tok = function (n) { return root.getPropertyValue(n).trim(); };
+
+  /* ---- colour maths, done on the live tokens ------------------------- */
+  function parse(c) {
+    c = c.trim();
+    var m = c.match(/^#([0-9a-f]{6})([0-9a-f]{2})?$/i);
+    if (m) {
+      var h = m[1];
+      return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16),
+              m[2] ? parseInt(m[2],16)/255 : 1];
+    }
+    var r = c.match(/rgba?\(([^)]+)\)/);
+    if (r) { var p = r[1].split(/[,\s/]+/).filter(Boolean).map(Number); return [p[0],p[1],p[2], p.length>3?p[3]:1]; }
+    return [0,0,0,1];
+  }
+  function lin(v) { v /= 255; return v <= 0.04045 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); }
+  function lum(c) { return 0.2126*lin(c[0]) + 0.7152*lin(c[1]) + 0.0722*lin(c[2]); }
+  function over(fg, bg) {
+    var a = fg[3];
+    return [fg[0]*a + bg[0]*(1-a), fg[1]*a + bg[1]*(1-a), fg[2]*a + bg[2]*(1-a), 1];
+  }
+  function ratio(a, b) { var l1 = lum(a), l2 = lum(b);
+    return (Math.max(l1,l2) + 0.05) / (Math.min(l1,l2) + 0.05); }
+
+  var BG = parse(tok('--bg'));
+
+  /* the measured ratio of a token composited over the ground, or — when the
+     token is a film rather than an ink — of --ink read ON that film */
+  function measure(name, onName) {
+    var flat = over(parse(tok(name)), BG);
+    if (!onName) return ratio(flat, BG);
+    return ratio(over(parse(tok(onName)), flat), flat);
+  }
+  function fmt(r) { return (Math.round(r * 100) / 100).toFixed(2) + ':1'; }
+  function ratioSpan(r, need, tail) {
+    if (!need) return '<span class="sw__ratio" style="color:var(--ink-40)">' +
+      fmt(r) + ' · ' + (tail || 'not text') + '</span>';
+    return '<span class="sw__ratio ' + (r >= need ? 'pass' : 'fail') + '">' +
+      fmt(r) + ' · needs ' + need + '</span>';
+  }
+  function metaRows(name, raw, r, need, job, tail) {
+    return '<span class="sw__name">' + name + '</span>' +
+           '<span class="sw__val">' + raw + '</span>' +
+           ratioSpan(r, need, tail) +
+           '<span class="sw__val" style="text-transform:none;color:var(--ink-64)">' + job + '</span>';
+  }
+
+  /* ---- 01 · ground and ink -------------------------------------------
+     An ink is a text colour, so the sample is text on the real ground. The
+     ladder still reads as a ladder — and the bottom of it is visibly hard to
+     read, which is the whole argument for the --ink-48 floor. */
+  var INK = [
+    ['--ink',     'Display, headings, values',    4.5],
+    ['--ink-78',  'Body copy',                    4.5],
+    ['--ink-64',  'Captions, metadata',           4.5],
+    ['--ink-56',  'Quiet labels',                 4.5],
+    ['--ink-48',  'The floor for readable text',  4.5],
+    ['--ink-40',  '≥24px text, icons, control edges', 3],
+    ['--ink-24',  'Decoration only — carries nothing', 0],
+    ['--bg',      'The ground, everywhere',       0, 'ground'],
+    ['--bg-deep', 'The glass bar’s own base',     0, 'ground']
+  ];
+
+  var ACCENT = [
+    ['--orange',      'The promise',                        4.5],
+    ['--cyan',        'The instrument',                     4.5],
+    ['--orange-line', 'Orange as a control edge',           3,
+      '<span class="demo-edge demo-edge--orange">Edge</span>'],
+    ['--cyan-line',   'The log-in edge',                    3,
+      '<span class="demo-edge demo-edge--cyan">Log in</span>'],
+    ['--orange-wash', 'The field a signal marker sits in',  0,
+      '<span class="marker marker--promise" style="font-size:1.6rem"></span>'],
+    ['--cyan-wash',   'Active and focus state',             0,
+      '<span class="demo-pill">Active</span>']
+  ];
+
+  function renderSwatches(host, rows, kind) {
+    if (!host) return;
+    rows.forEach(function (row) {
+      var name = row[0], job = row[1], need = row[2], extra = row[3];
+      var raw = tok(name);
+      var r = measure(name);
+      var chip;
+
+      if (kind === 'ink' && extra === 'ground') {
+        chip = '<div class="sw__chip" style="background:' + raw + '"></div>';
+      } else if (kind === 'ink') {
+        chip = '<div class="sw__chip sw__chip--ink" style="color:' + raw + '">Aa' +
+               '<small>the quick brown fox</small></div>';
+      } else if (extra) {
+        chip = '<div class="sw__chip sw__chip--demo">' + extra + '</div>';
+      } else {
+        chip = '<div class="sw__chip" style="background:' + raw + '"></div>';
+      }
+
+      var el = document.createElement('div');
+      el.className = 'sw';
+      el.innerHTML = chip + '<div class="sw__meta">' +
+        metaRows(name, raw, r, need, job, extra === 'ground' ? 'a ground' : 'not text') +
+        '</div>';
+      host.appendChild(el);
+    });
+  }
+
+  renderSwatches(document.querySelector('[data-swatches="ink"]'), INK, 'ink');
+  renderSwatches(document.querySelector('[data-swatches="accent"]'), ACCENT, 'accent');
+
+  /* ---- 03 · lines and surfaces ----------------------------------------
+     No swatch grid here: each token is shown doing its job, and this fills in
+     the readout beside it from the same live values. */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-token]'), function (el) {
+    var name = el.getAttribute('data-token');
+    var need = parseFloat(el.getAttribute('data-need')) || 0;
+    var on   = el.getAttribute('data-on') || '';
+    var job  = el.getAttribute('data-job') || '';
+    var r    = measure(name, on);
+    el.innerHTML = metaRows(name, tok(name), r, need, job,
+      on ? on + ' read on it' : 'not text');
+  });
+
+  /* the glass panels print their own value, measured in place */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-value]'), function (el) {
+    var name = el.getAttribute('data-value');
+    el.textContent = tok(name);
+  });
+
+  /* ---- the space scale, drawn from the tokens ------------------------ */
+  var sp = document.querySelector('[data-space]');
+  if (sp) {
+    for (var i = 1; i <= 11; i++) {
+      var n = '--s' + i, v = tok(n);
+      if (!v) continue;
+      var px = parseFloat(v) * 16;
+      var k = document.createElement('span'); k.className = 'sp__k'; k.textContent = n + ' · ' + px;
+      var b = document.createElement('span'); b.className = 'sp__bar'; b.style.width = px + 'px';
+      sp.appendChild(k); sp.appendChild(b);
+    }
+  }
+})();
+</script>
+</body>
+</html>

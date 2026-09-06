@@ -1,0 +1,255 @@
+/* =========================================================================
+   GD2 — TOKEN LAYER
+   The single source of every value in this system. Nothing below this file
+   may introduce a raw number; nothing above it may redefine one.
+
+   Extracted from the hero (index.html), not invented for it. Where a token had
+   no precedent in the hero it is marked AUTHORED and its job is stated —
+   an unmarked token is a value the hero already proved.
+
+   CONTRAST — every ink and every line below was composited over --bg and
+   measured in the browser, not estimated. The ratio is printed beside the
+   token and it is the reason the token exists at that value.
+   ====================================================================== */
+
+/* ---- VOICES ------------------------------------------------------------
+   Two voices, and the second one has a job the first structurally cannot do:
+   the mono carries fixed-advance figures, so readouts scan as a ledger
+   (typography I8). A third voice would need to name a job neither can do,
+   and there isn't one. */
+
+@font-face { font-family: 'Inter Tight'; font-weight: 400; font-style: normal;
+  font-display: swap; src: url(../fonts/inter-tight-400.woff2) format('woff2'); }
+@font-face { font-family: 'Inter Tight'; font-weight: 500; font-style: normal;
+  font-display: swap; src: url(../fonts/inter-tight-500.woff2) format('woff2'); }
+@font-face { font-family: 'Inter Tight'; font-weight: 600; font-style: normal;
+  font-display: swap; src: url(../fonts/inter-tight-600.woff2) format('woff2'); }
+@font-face { font-family: 'Inter Tight'; font-weight: 800; font-style: normal;
+  font-display: swap; src: url(../fonts/inter-tight-800.woff2) format('woff2'); }
+@font-face { font-family: 'Plex Mono'; font-weight: 400; font-style: normal;
+  font-display: swap; src: url(../fonts/plex-mono-400.woff2) format('woff2'); }
+/* the file was already on disk and unreferenced: mono 500 is the emphasis cut
+   for a figure that must outrank the label beside it */
+@font-face { font-family: 'Plex Mono'; font-weight: 500; font-style: normal;
+  font-display: swap; src: url(../fonts/plex-mono-500.woff2) format('woff2'); }
+
+:root {
+  /* ======================================================================
+     1 · GROUND AND INK
+
+     One ground for the whole site. The hero's plates, the section below it
+     and every panel resolve to the same navy, which is what lets a scene
+     end without a seam — a second ground colour is what produced the
+     horizontal cut the hero had to be repaired for.
+     ================================================================== */
+  --bg:        #0B0F1E;   /* the ground, everywhere */
+  --bg-deep:   #070D1B;   /* AUTHORED · the glass bar's own base, one step under */
+
+  /* the ink ladder — measured over --bg, ratio stated, tier stated.
+     Below --ink-48 nothing may carry information (color I1). */
+  --ink:       #FFFFFF;   /* 19.07:1  display, headings, values          */
+  --ink-78:    #FFFFFFc7; /* 11.64:1  body copy, secondary readings      */
+  --ink-64:    #FFFFFFa3; /*  8.11:1  captions, metadata                 */
+  --ink-56:    #FFFFFF8f; /*  6.39:1  quiet labels                       */
+  --ink-48:    #FFFFFF7a; /*  4.97:1  THE FLOOR for anything readable    */
+  --ink-40:    #FFFFFF66; /*  3.81:1  ≥24px text, icons, control edges   */
+  --ink-24:    #FFFFFF3d; /*  2.13:1  DECORATION ONLY — carries nothing  */
+
+  /* ======================================================================
+     2 · THE TWO ACCENTS — and the law that separates them
+
+     ORANGE is the promise: what the visitor gets, and the control that
+     reaches it. In the hero it is the word "know.", the rule under the
+     paragraph, and the plus that opens the offer.
+
+     CYAN is the instrument: signal, data, annotation, system chrome,
+     focus, active state. In the hero it is the wordmark's numeral, every leader
+     and anchor on the route, the readout type, the log-in edge.
+
+     They are never swapped and never used for each other's job. Each is
+     also carried by position and label, so no meaning rests on hue alone
+     (color I2).
+     ================================================================== */
+  --orange:      #FF9300;             /*  8.56:1 on --bg                     */
+  --orange-ink:  #0B0F1E;             /*  8.56:1 on solid orange             */
+  --orange-line: #FF93008c;           /*  3.27:1 — orange as a control edge  */
+  --orange-wash: #FF930014;           /* AUTHORED · a field, never text      */
+
+  --cyan:        #00ECFF;             /* 13.11:1 on --bg                     */
+  --cyan-ink:    #04121A;             /* AUTHORED · on a solid cyan fill     */
+  --cyan-line:   #00ECFF8c;           /*  4.59:1 — the log-in edge, measured */
+  --cyan-wash:   #00ECFF0f;           /*  the log-in fill                    */
+  --cyan-glow:   0 0 10px 2px #00ECFFb3;
+
+  /* ======================================================================
+     3 · LINES AND SURFACES
+
+     The order of escalation is fixed: air → hairline → surface shift →
+     an actual bordered box. A box is the fourth answer, never the first.
+     ================================================================== */
+  --rule:      #FFFFFF24;  /* 1.47:1 · decorative hairline. NOT a control edge */
+  --rule-ui:   var(--ink-40);   /* 3.81:1 · anything a pointer can act on      */
+  --surface:   #FFFFFF08;  /* AUTHORED · 1.06:1 lift. The step before a box   */
+
+  /* the glass instrument — the masthead, and any panel that genuinely floats */
+  --glass:        #070d1b94;   /* .58 over --bg */
+  --glass-solid:  #070d1bbd;   /* .74 — the compact bar and dropped panels */
+  --glass-edge:   #FFFFFF17;
+  --glass-blur:   blur(18px) saturate(125%);
+
+  /* A shadow is a claim about elevation. It is allowed on the masthead and
+     on temporary layers because those genuinely float; it is allowed
+     nowhere else (anti-patterns U9, D3). */
+  --shadow-float: 0 18px 44px -18px #000000b8, inset 0 1px 0 #FFFFFF12;
+
+  /* ======================================================================
+     4 · TYPE
+
+     Two voices, five weights, eight sizes, and a role for each. A new role
+     gets a size and a weight from this list; it does not get a new voice.
+     ================================================================== */
+  --sans: 'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'Plex Mono', ui-monospace, Consolas, monospace;
+
+  --w-body:    400;
+  --w-medium:  500;   /* controls, nav, labels                    */
+  --w-strong:  600;   /* section headings                         */
+  --w-display: 800;   /* the display voice and the wordmark only  */
+
+  /* 14px is the floor. Nothing below it may carry information — below the
+     floor type is decoration, and decoration says nothing (typography I7). */
+  --t-xs:      .875rem;                                     /* 14      */
+  --t-sm:      clamp(.875rem, .2vw + .84rem, .9375rem);     /* 14 → 15 */
+  --t-body:    clamp(.9375rem, .28vw + .88rem, 1.0625rem);  /* 15 → 17 */
+  --t-lead:    clamp(1.25rem, 1.3vw + .85rem, 2rem);        /* 20 → 32 */
+  --t-sub:     var(--t-lead);        /* the hero's own name for it, kept live */
+  /* AUTHORED · the hero jumps 32 → 88 with nothing between, because it has
+     one headline. A site needs the interior steps; the ratio between them
+     is the hero's own (≈1.45 at the top, easing to ≈1.35 at the bottom). */
+  --t-h3:      clamp(1.25rem, 1vw + .95rem, 1.75rem);       /* 20 → 28 */
+  --t-h2:      clamp(1.625rem, 2vw + .9rem, 2.625rem);      /* 26 → 42 */
+  --t-h1:      clamp(2rem, 3.2vw + .8rem, 3.75rem);         /* 32 → 60 */
+  --t-display: clamp(2.25rem, 4.8vw + .6rem, 5.5rem);       /* 36 → 88 */
+
+  /* optical correction is encoded, not remembered: large type tightens as
+     it grows, small type opens (typography I3) */
+  --lh-display: .94;
+  --lh-head:   1.06;
+  --lh-lead:   1.2;
+  --lh-body:   1.7;
+  --lh-tight:  1.25;
+
+  --ls-display: -.035em;
+  --ls-head:    -.02em;
+  --ls-body:     0;
+  --ls-label:    .16em;   /* mono uppercase micro-label   */
+  --ls-data:     .14em;   /* mono uppercase readout       */
+  --ls-mark:     .04em;   /* the wordmark                 */
+
+  --measure:      56ch;   /* body: the hero's own cap  */
+  --measure-lead: 44rem;  /* display and lead stacks   */
+
+  /* ======================================================================
+     5 · SPACE — 4px base, one scale, no exceptions
+     ================================================================== */
+  --s1:  .25rem;   /*   4  icon gaps, hairline nudges        */
+  --s2:  .5rem;    /*   8  inside small controls             */
+  --s3:  .75rem;   /*  12  label → field                     */
+  --s4:  1rem;     /*  16  paragraph rhythm                  */
+  --s5:  1.5rem;   /*  24  component padding, mobile gutter  */
+  --s6:  2rem;     /*  32  stack gaps                        */
+  --s7:  3rem;     /*  48  sub-block separation              */
+  --s8:  4rem;     /*  64  section padding, mobile           */
+  --s9:  6rem;     /* AUTHORED ·  96  section padding, desktop */
+  --s10: 8rem;     /* AUTHORED · 128  major section break      */
+  --s11: 12rem;    /* AUTHORED · 192  chapter break            */
+
+  --gut: clamp(1.5rem, 4.5vw, 5.5rem);          /* never below 24px */
+  --col: min(1560px, 100% - var(--gut) * 2);    /* the page measure */
+  --col-bar: min(1300px, 100% - var(--gut) * 2);/* the masthead, one step in */
+
+  /* AUTHORED · sections read downward, so a section leans into the space
+     below it. Bottom exceeds top, ≈1:1.3, at every width. */
+  --sec-pt: clamp(4rem, 9vh, 6rem);
+  --sec-pb: clamp(5rem, 12vh, 8rem);
+
+  /* ======================================================================
+     6 · CONTROLS
+     ================================================================== */
+  --ctl-h:     38px;      /* the hero's log-in height  */
+  --ctl-h-lg:  46px;      /* AUTHORED · page-level actions and fields */
+  --ctl-px:    1.15rem;
+  --ctl-px-lg: 1.6rem;
+
+  /* the masthead's own dimensions — a bar height is a control dimension,
+     not a spacing step, so it has its own three values and no more */
+  --bar-h:         70px;
+  --bar-h-compact: 58px;
+  --bar-h-narrow:  62px;
+  --menu-w:       232px;
+  /* The wordmark is fixed: it is a logo, not text. Raised from 1.0625rem when
+     the mark went from thirteen characters to three — a short lockup at the
+     size tuned for a long one loses the left anchor of the bar. */
+  --t-mark:    1.375rem;
+
+  --r-1:    10px;   /* controls, fields, small panels */
+  --r-2:    16px;   /* bars and floating panels       */
+  --r-pill: 999px;  /* the nav pill only              */
+
+  /* ======================================================================
+     7 · TIME
+
+     One easing for everything that settles, one for everything that leaves.
+     Four durations. A value not on this list is a value nobody chose.
+     ================================================================== */
+  --ease:     cubic-bezier(.22, 1, .36, 1);
+  --ease-in:  cubic-bezier(.4, 0, 1, 1);
+
+  --d-1: .18s;   /* hover and focus — a state change   */
+  --d-2: .3s;    /* a component folding or opening     */
+  --d-3: .45s;   /* a deliberate gesture               */
+  --d-4: .7s;    /* an entrance                        */
+
+  /* ======================================================================
+     8 · LAYERS — named, because a persistent layer is part of the
+     composition and an unnamed z-index is how it stops being one (U10).
+     ================================================================== */
+  --z-plate:   -1;   /* the scene's plates, behind everything */
+  --z-scene:    0;   /* weather, reading copy                 */
+  --z-fg:       1;   /* near ground, the following section    */
+  --z-content:  2;   /* readouts and controls in the scene    */
+  --z-cover:    3;   /* the section lifted over a pinned hero */
+  --z-bar:     40;   /* the masthead                          */
+  --z-skip:    99;   /* the skip link                         */
+
+  /* ======================================================================
+     9 · THE SCROLL BUS — where the page is, as a value.
+
+     Scroll state is composition state, so it belongs here with the colours
+     and the spacing rather than inside whichever script happened to compute
+     it. bus.js writes these every frame; every stylesheet and every scene
+     reads them. Nothing else may write them.
+
+     The values below are the STILL — what a page with no JavaScript, or a
+     reader with reduced motion, gets. They are the authored resting state,
+     not placeholders: chapter 0, nothing in transition.
+     ================================================================== */
+  --chapter:     0;    /* 0 the mountain · 1 the water          */
+  --phase:       0;    /* 0..1 through the hero's pinned scroll */
+  --transition:  0;    /* 0..1 through the handover between them */
+
+  /* The breakpoint, as a value. THIS IS THE SOURCE — bus.js builds its media
+     query from it, so no script contains the number any more. A media query
+     cannot read a custom property, so the literal still appears in main.css
+     and deep.css; both carry a note pointing here, and the bus warns at load
+     if the two have drifted apart. */
+  --bp-wide: 62rem;
+  --bp-wide-active: 0;   /* raised to 1 by the literal in main.css */
+
+  /* The handover's length on screen. deep.css used to hardcode a figure
+     derived from the pin and the phase split by hand; bus.js now computes it
+     from the geometry that actually shipped and publishes it here. The
+     fallback is the wide value, so the stylesheet is correct before the bus
+     has run and correct without it. */
+  --hero-fade: 76svh;
+}

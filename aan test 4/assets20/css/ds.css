@@ -1,0 +1,510 @@
+/* =========================================================================
+   GD2 — SYSTEM LAYER
+   Everything the site owns outside the hero scene: the base, the masthead,
+   the type roles, the controls, and the six devices the hero established.
+
+   Requires tokens.css. Contains no raw values except 1px hairlines, 0,
+   and 100%-class values.
+
+   THE DEVICE BUDGET — six devices, one job each. A seventh needs a job
+   none of these can do, and the page must say what it is.
+
+     .annot   a fact tied to the thing it is about, by a drawn leader
+     .plate   a set of facts read as a record — mono keys, hairline rows
+     .stat    one figure that outranks its own label
+     .rule-o  the orange mark that closes a claim
+     .mh      one glass instrument, permanently on screen
+     .ico     the 12-unit cartographic glyph set
+   ====================================================================== */
+
+/* ---- base -------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+body { margin: 0; }
+img { max-width: 100%; height: auto; display: block; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: var(--s4); top: var(--s4); z-index: var(--z-skip);
+  background: var(--orange); color: var(--orange-ink); padding: var(--s3) var(--s5); }
+
+/* the ring is cyan because cyan is the instrument colour: focus is the
+   system telling you where it is, which is the same job as the leaders */
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; }
+
+/* =========================================================================
+   TYPE ROLES
+
+   Two voices serve nine roles. Rank is carried by size, weight and ink —
+   never by introducing a face (typography I8).
+   ====================================================================== */
+.h-display {
+  margin: 0;
+  font-weight: var(--w-display);
+  font-size: var(--t-display);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+  text-wrap: balance;
+}
+/* The signature: one word of the headline in orange, because the word is the
+   promise. One per headline — a second one ranks nothing.
+
+   It is a SEMANTIC MARK, not typographic emphasis. `em` stays `em`: italic,
+   inherited colour. A page that turns every emphasis orange has spent the
+   accent on grammar, and the accent stops meaning anything.
+
+   `.promise` sits on a `<span>` where the word is purely a signal, or on an
+   `<em>` where it is genuinely both — as in the hero's "know." */
+.promise { font-style: normal; color: var(--orange); }
+
+.h-1, .h-2, .h-3 {
+  margin: 0;
+  font-weight: var(--w-strong);
+  line-height: var(--lh-head);
+  letter-spacing: var(--ls-head);
+  text-wrap: balance;
+}
+.h-1 { font-size: var(--t-h1); font-weight: var(--w-display); }
+.h-2 { font-size: var(--t-h2); }
+.h-3 { font-size: var(--t-h3); }
+
+/* NOT `.lead` — the hero's route leaders already own that class name on
+   their SVG groups, and a type role that silently restyles a drawn line is
+   exactly the collision a token layer exists to prevent. */
+.h-sub, .h-lead {
+  margin: 0;
+  font-size: var(--t-lead);
+  font-weight: var(--w-body);
+  line-height: var(--lh-lead);
+  letter-spacing: var(--ls-head);
+  max-width: var(--measure-lead);
+  text-wrap: pretty;
+}
+
+.body {
+  margin: 0;
+  max-width: var(--measure);
+  color: var(--ink-78);
+  text-wrap: pretty;
+}
+.body a { color: var(--ink); text-underline-offset: .2em; text-decoration-thickness: 1px; }
+.body a:hover { color: var(--cyan); }
+
+.caption { margin: 0; font-size: var(--t-sm); line-height: var(--lh-tight);
+  color: var(--ink-64); }
+
+/* the micro-label. It reads as metadata because of family, case and
+   tracking — not because it is small. It sits on the 14px floor. */
+.eyebrow {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  font-weight: var(--w-body);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+.eyebrow--quiet { color: var(--ink-56); }
+
+/* =========================================================================
+   LAYOUT
+
+   .section  the page shell — gutters, measure, bottom-heavy padding
+   .stack    a text block whose gaps are decided, not inherited
+   ====================================================================== */
+.section {
+  width: var(--col);
+  margin-inline: auto;
+  padding-block: var(--sec-pt) var(--sec-pb);
+}
+.section--tight { padding-block: var(--s7) var(--s8); }
+.section--major { padding-block: var(--s9) var(--s11); }
+
+/* internal gaps are smaller than the gap to the next block, always: that
+   relationship IS the grouping, and a uniform gap deletes it (spacing I1) */
+.stack > * + *              { margin-block-start: var(--s4); }
+.stack > .eyebrow + *       { margin-block-start: var(--s3); }
+.stack > .h-display + *,
+.stack > .h-1 + *,
+.stack > .h-2 + *           { margin-block-start: var(--s5); }
+.stack > .h-lead + *,
+.stack > .h-sub + *         { margin-block-start: var(--s6); }
+.stack > * + .rule-o        { margin-block-start: var(--s6); }
+.stack > * + .actions       { margin-block-start: var(--s7); }
+
+.measure      { max-width: var(--measure); }
+.measure-lead { max-width: var(--measure-lead); }
+
+/* =========================================================================
+   DEVICE 4 · THE ORANGE RULE
+   3px, short, orange. It closes a claim — it does not separate two things.
+   Separation is the hairline below.
+   ====================================================================== */
+.rule-o { display: block; width: clamp(10rem, 16vw, 15rem); height: 3px;
+  background: var(--orange); border: 0; }
+
+/* the neutral separator: a hairline, never a box. Escalation order is
+   air → hairline → surface → box, and the box is the fourth answer. */
+.divider { border: 0; border-block-start: 1px solid var(--rule); margin: 0; }
+
+/* ---- PRIMITIVE · the marker --------------------------------------------
+   A signal point. It ships on every anchor where a leader meets the route, and
+   the wordmark's cyan numeral is the same idea set in type. Sized in `em` so it
+   scales with whatever type it sits in. */
+.marker {
+  display: inline-block; vertical-align: middle;
+  width: .5em; height: .5em; border-radius: 50%;
+  background: var(--cyan); box-shadow: var(--cyan-glow);
+}
+/* the promise variant: the wash becomes the field the marker sits in, which
+   is the only job --orange-wash has */
+.marker--promise { background: var(--orange); box-shadow: 0 0 0 .35em var(--orange-wash); }
+
+/* =========================================================================
+   DEVICE 6 · THE GLYPH SET
+   One set. 12-unit box, 1px stroke, no fill, currentColor, sized to the
+   cap height of the type beside it rather than to a nominal box. An icon
+   never carries a meaning the label does not also carry.
+   ====================================================================== */
+.ico {
+  width: 11px; height: 11px; flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor; stroke-width: 1;
+  stroke-linecap: round; stroke-linejoin: round;
+  opacity: .82;
+}
+.ico--lg { width: 15px; height: 15px; }
+
+/* =========================================================================
+   DEVICE 1 · THE ANNOTATION
+   A cyan mono key, and a line of plain body under it. Its job is to bind a
+   claim to the point it is about — in the hero, through a drawn leader; in
+   the page, through proximity to the thing it annotates.
+
+   No box. The register is carried by the key, and a container would make
+   it a card instead of a reading.
+   ====================================================================== */
+.annot { margin: 0; max-width: 22ch; }
+.annot__k {
+  margin: 0;
+  display: inline-flex; align-items: center; gap: var(--s2);
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+.annot__s { margin: .4em 0 0; font-size: var(--t-xs); line-height: 1.45;
+  color: var(--ink-78); }
+
+/* =========================================================================
+   DEVICE 2 · THE SPEC PLATE
+   Facts as a record: mono keys subordinate, values forming the reading
+   line, hairlines between rows. Never a bordered table, never zebra —
+   those say "widget"; rules say "record".
+   ====================================================================== */
+.plate { display: grid; grid-template-columns: minmax(9rem, 15rem) 1fr;
+  column-gap: var(--s6); row-gap: 0; margin: 0; }
+.plate dt, .plate dd {
+  padding-block: var(--s3);
+  border-block-start: 1px solid var(--rule);
+  margin: 0;
+}
+.plate dt {
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  line-height: var(--lh-tight);
+  color: var(--ink-56);
+  align-self: center;
+}
+.plate dd { font-size: var(--t-sm); color: var(--ink); font-variant-numeric: tabular-nums; }
+@media (max-width: 40rem) {
+  .plate { grid-template-columns: 1fr; }
+  .plate dd { border-block-start: 0; padding-block-start: 0; }
+}
+
+/* =========================================================================
+   DEVICE 3 · THE READOUT
+   One figure and what it is. The figure is mono because a figure that must
+   be compared has to hold its column (typography I5); it outranks its own
+   label by weight and ink, not by a second typeface.
+   ====================================================================== */
+.stat { display: grid; gap: var(--s1); }
+.stat__v {
+  font-family: var(--mono); font-weight: var(--w-medium);
+  font-size: var(--t-h3); line-height: 1;
+  letter-spacing: var(--ls-data);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.stat__k {
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  line-height: var(--lh-tight);
+  color: var(--ink-56);
+}
+.stat-row { display: grid; gap: var(--s6) var(--s7);
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
+
+/* =========================================================================
+   CONTROLS
+
+   Three ranks, one primary per view. No gradient on any of them: a
+   control's label must clear AA against the whole of its own background,
+   and a gradient makes that unverifiable.
+
+     primary    solid orange, dark ink   — the promise
+     secondary  cyan hairline, ink label — the instrument
+     ghost      ink only                 — the way back
+   ====================================================================== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--s2);
+  height: var(--ctl-h); padding: 0 var(--ctl-px);
+  font-family: var(--sans); font-size: var(--t-xs); font-weight: var(--w-medium);
+  letter-spacing: .02em; line-height: 1;
+  color: var(--ink); text-decoration: none;
+  border: 1px solid var(--cyan-line); border-radius: var(--r-1);
+  background: var(--cyan-wash);
+  cursor: pointer;
+  transition: background var(--d-1) var(--ease), border-color var(--d-1) var(--ease),
+              color var(--d-1) var(--ease);
+}
+.btn:hover { background: #00ECFF26; border-color: var(--cyan); }
+
+.btn--primary {
+  background: var(--orange); border-color: var(--orange); color: var(--orange-ink);
+  font-weight: var(--w-strong);
+}
+.btn--primary:hover { background: #FFA426; border-color: #FFA426; }
+
+.btn--ghost { background: none; border-color: transparent; color: var(--ink-78); }
+.btn--ghost:hover { background: none; border-color: transparent; color: var(--ink); }
+
+.btn--lg { height: var(--ctl-h-lg); padding-inline: var(--ctl-px-lg);
+  font-size: var(--t-sm); }
+
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4); }
+
+/* an inline text action — the third rank, where a button would be too loud */
+.link {
+  display: inline-flex; align-items: center; gap: var(--s2);
+  color: var(--cyan); text-decoration: none;
+  font-size: var(--t-sm); font-weight: var(--w-medium);
+  transition: color var(--d-1) var(--ease), gap var(--d-1) var(--ease);
+}
+.link:hover { gap: var(--s3); }
+
+/* ---- fields ------------------------------------------------------------
+   AUTHORED · the hero has no form, and a product that identifies visitors
+   will have one on every page. Built on the control geometry above so a
+   field and a button read as the same instrument. */
+.field { display: grid; gap: var(--s2); }
+.field label {
+  font-family: var(--mono); font-size: var(--t-xs);
+  letter-spacing: var(--ls-label); text-transform: uppercase;
+  color: var(--ink-56);
+}
+.field input, .field textarea, .field select {
+  height: var(--ctl-h-lg); padding: 0 var(--s4);
+  font-family: var(--sans); font-size: var(--t-sm); color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule-ui); border-radius: var(--r-1);
+  transition: border-color var(--d-1) var(--ease), background var(--d-1) var(--ease);
+}
+.field textarea { height: auto; padding: var(--s3) var(--s4); line-height: var(--lh-body); resize: vertical; }
+.field input::placeholder, .field textarea::placeholder { color: var(--ink-48); }
+.field input:hover, .field textarea:hover { border-color: var(--ink-56); }
+.field input:focus-visible, .field textarea:focus-visible { border-color: var(--cyan); }
+
+/* =========================================================================
+   MEDIA
+
+   Legibility over an image is fixed at the BACKGROUND layer, solved against
+   the worst pixel the run actually overlaps — never by weighting the type
+   and never with a text shadow (color I4).
+
+   Set --scrim-to and --scrim-from per instance from the measurement, the
+   way the hero's own scrim was solved. The defaults below are the hero's
+   vertical case.
+   ====================================================================== */
+.media { position: relative; isolation: isolate; overflow: clip; border-radius: var(--r-2); }
+.media > img, .media > video { width: 100%; height: 100%; object-fit: cover; }
+.media--bleed { border-radius: 0; }
+.media::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(to top,
+    var(--scrim-to, #0B0F1Ef0) 0%,
+    var(--scrim-mid, #0B0F1E8c) 46%,
+    var(--scrim-from, #0B0F1E00) 88%);
+}
+.media__say { position: absolute; inset: auto 0 0 0; z-index: 2;
+  padding: var(--s6); display: grid; gap: var(--s3); }
+
+/* ---- lists -------------------------------------------------------------
+   Rows separated by a hairline, not by a card each. */
+.rows { list-style: none; margin: 0; padding: 0; }
+.rows > li { padding-block: var(--s5); border-block-start: 1px solid var(--rule);
+  display: grid; gap: var(--s2); }
+.rows > li:last-child { border-block-end: 1px solid var(--rule); }
+
+/* =========================================================================
+   DEVICE 5 · THE MASTHEAD
+
+   The one element permanently on screen, so it is counted in the
+   composition rather than added to it: it is dark, small in the frame, and
+   its only bright element is the single action. The phone number and the
+   action are the means of the visitor's task and nothing ever moves them.
+   ====================================================================== */
+.mh {
+  /* fixed, not absolute: a bar that folds on scroll has to still be there
+     when the reader has scrolled */
+  position: fixed; top: var(--s5); left: 50%; transform: translateX(-50%);
+  z-index: var(--z-bar);
+  transition: top var(--d-2) var(--ease), min-height var(--d-2) var(--ease),
+              background-color var(--d-2) var(--ease);
+  width: var(--col-bar);
+  min-height: var(--bar-h);
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center;
+  gap: clamp(1rem, 2.4vw, 2.25rem);
+  padding: 0 clamp(1rem, 1.8vw, 1.75rem);
+  border-radius: var(--r-2);
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  /* the bar genuinely floats above the scene, so the shadow is telling the
+     truth about the layer order (U9) */
+  box-shadow: var(--shadow-float);
+}
+
+/* one line of bold text, not a stacked lockup */
+.mark {
+  position: relative;
+  font-weight: var(--w-display); font-size: var(--t-mark); line-height: 1;
+  letter-spacing: var(--ls-mark); white-space: nowrap;
+  text-decoration: none; color: var(--ink);
+}
+/* The numeral is the identity's own instance of the signal colour — the job
+   the cyan dot over the I used to do in the longer wordmark. Colour alone
+   carries it: a glow here would be a decorative shadow on type. */
+.mark__n { color: var(--cyan); }
+
+.mh__nav ul { display: flex; gap: clamp(1.25rem, 2vw, 2.25rem); list-style: none;
+  margin: 0; padding: 0; justify-content: center; }
+/* the item takes a pill on hover rather than growing a rule under it: an
+   underline means "inline link inside prose" and says the wrong thing in a
+   row the eye should scan as a set */
+.mh__nav a {
+  position: relative; display: block;
+  color: var(--ink-78); text-decoration: none;
+  font-size: var(--t-xs); letter-spacing: .01em; line-height: 1;
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-pill);
+  transition: color var(--d-1) var(--ease), background-color var(--d-1) var(--ease),
+              box-shadow var(--d-1) var(--ease);
+  white-space: nowrap;
+}
+.mh__nav a:hover,
+.mh__nav a:focus-visible,
+.mh__nav a[aria-current="page"] {
+  color: var(--ink);
+  background: #00ECFF1a;
+  box-shadow: inset 0 0 0 1px #00ECFF47;
+}
+
+.mh__act { display: flex; align-items: center; gap: clamp(.875rem, 1.5vw, 1.5rem); }
+.mh__tel {
+  color: var(--ink-78); text-decoration: none;
+  font-size: var(--t-xs); letter-spacing: .01em; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  transition: color var(--d-1) var(--ease);
+}
+.mh__tel:hover { color: var(--cyan); }
+
+/* the trigger lives inside the same bar, so the bar is never broken up */
+.burger {
+  display: none; width: var(--ctl-h); height: var(--ctl-h); padding: 0;
+  background: none; border: 1px solid var(--rule-ui); border-radius: var(--r-1);
+  cursor: pointer;
+  place-items: center; gap: 5px;
+}
+.burger span { display: block; width: 16px; height: 1.5px; background: var(--ink); }
+.burger:hover { border-color: var(--cyan-line); }
+
+/* ---- compact -----------------------------------------------------------
+   Once the reader has left the top the bar contracts to what is still
+   needed. Nothing is removed, only folded — a route that disappears on
+   scroll is a route that does not exist (U12). */
+.mh[data-compact] { min-height: var(--bar-h-compact); top: var(--s3); background: var(--glass-solid); }
+.mh[data-compact] .mh__nav {
+  position: absolute; top: calc(100% + var(--s3)); right: 0;
+  min-width: var(--menu-w);
+  display: none;
+  padding: var(--s2);
+  border-radius: var(--r-2);
+  background: var(--glass-solid);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow-float);
+}
+.mh[data-compact] .mh__nav[data-open="true"] { display: block; }
+.mh[data-compact] .mh__nav ul { flex-direction: column; gap: .15rem; align-items: stretch; }
+.mh[data-compact] .burger { display: grid; }
+
+/* Placed AFTER the compact rules on purpose: at equal specificity the later
+   rule wins, which is why the desktop bar was still folding into a trigger
+   at 1920. Above 1100px, compact changes the bar's size and nothing else. */
+@media (min-width: 1100px) {
+  .mh[data-compact] .mh__nav {
+    position: static; display: block; padding: 0; min-width: 0;
+    background: none; border: 0; box-shadow: none;
+  }
+  .mh[data-compact] .mh__nav ul {
+    flex-direction: row; gap: clamp(1.25rem, 2vw, 2.25rem); align-items: center;
+  }
+  .mh[data-compact] .burger { display: none; }
+}
+
+/* narrower desktops: close the gaps before touching the type size — the
+   14px floor is not what gets spent to make a row fit */
+@media (max-width: 78rem) {
+  .mh { gap: var(--s4); padding-inline: var(--s4); }
+  .mh__nav ul { gap: 1.1rem; }
+  .mh__tel { display: none; }
+}
+
+@media (max-width: 62rem) {
+  .mh { grid-template-columns: auto 1fr auto; min-height: var(--bar-h-narrow); top: var(--s4); }
+  .mh__nav { grid-column: 1 / -1; grid-row: 2; display: none; padding-bottom: var(--s4); }
+  .mh__nav[data-open="true"] { display: block; }
+  .mh__nav ul { flex-direction: column; gap: var(--s1); }
+  .mh__act { grid-column: 2; justify-self: end; }
+  .burger { display: grid; grid-column: 3; }
+}
+
+/* =========================================================================
+   REDUCED MOTION — the static path is authored, not merely disabled.
+   Every animation in this system has a designed still.
+   ====================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}

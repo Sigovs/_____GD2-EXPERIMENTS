@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GD2 — The deeper you go</title>
+<meta name="description" content="From a single page view GD2 identifies 300+ data points on an anonymous visitor.">
+<link rel="icon" href="../assets/img/favicon.svg">
+<link rel="stylesheet" href="../assets/css/tokens.css">
+<link rel="stylesheet" href="../assets/css/scene.css">
+<link rel="preload" as="image" href="../assets/img/mountain.avif" fetchpriority="high">
+<link rel="preload" as="image" href="../assets/img/sky.avif">
+<link rel="preload" as="font" type="font/woff2" href="../assets/fonts/inter-tight-600.woff2" crossorigin>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <span class="wordmark">GD<b>2</b><i></i></span>
+  <nav aria-label="Main">
+    <a href="#">Products &amp; Services</a>
+    <a href="#">Grow your Business</a>
+    <a href="#">Compliance</a>
+    <a href="#">Contact</a>
+  </nav>
+</header>
+
+<main id="main">
+
+<!-- ============================================================
+     ONE SHOT. The mountain layers and the water layer are inside the
+     same sticky frame. There is no section boundary between scene 1
+     and scene 2 — the near ridge hands the frame over.
+     ============================================================ -->
+<section class="film" id="film">
+  <div class="frame" id="frame">
+
+    <!-- sky : furthest plane -->
+    <div class="layer l-sky" id="lSky" aria-hidden="true">
+      <picture><source srcset="../assets/img/sky.avif" type="image/avif">
+        <img src="../assets/img/sky.webp" alt="" width="2292" height="1415" fetchpriority="high"></picture>
+    </div>
+
+    <!-- mountain : the subject -->
+    <div class="layer l-mtn" id="lMtn" aria-hidden="true">
+      <picture><source srcset="../assets/img/mountain.avif" type="image/avif">
+        <img src="../assets/img/mountain.webp" alt="" width="2292" height="1325" fetchpriority="high"></picture>
+    </div>
+
+    <!-- the water, revealed from inside the ridge's blur (z 16, above the mountain,
+         below the ridge, so the ridge is still in front of it while it arrives) -->
+    <div class="layer l-water" id="lWater" aria-hidden="true">
+      <img class="poster" src="../assets/video/canyon-poster.jpg" alt="" width="1920" height="1080">
+      <video id="canyon" muted playsinline preload="none" loop
+             poster="../assets/video/canyon-poster.jpg" width="1920" height="1080">
+        <source src="../assets/video/canyon.webm" type="video/webm">
+        <source src="../assets/video/canyon.mp4" type="video/mp4">
+      </video>
+      <div class="grade"></div>
+    </div>
+
+    <!-- air : a band of light between the mountain and the near ridge -->
+    <div class="layer l-air" aria-hidden="true"></div>
+
+    <!-- The route. Its coordinate system is the MOUNTAIN IMAGE ITSELF
+         (viewBox 2292x1325 = the plate's native pixels) and the svg is sized by
+         exactly the same rules as the plate, so every vertex stays welded to the
+         same piece of rock at any viewport size. It sits UNDER the near ridge
+         (z 13 < 14), so the ridge cuts it — occlusion by compositing. -->
+    <div class="marks" id="marks" aria-hidden="true">
+      <svg class="route" viewBox="0 0 2292 1325" preserveAspectRatio="xMidYMid slice" focusable="false">
+        <!-- A : the summit, down the lit ridge, to where the shoulder crosses -->
+        <path class="seg halo" d="M1290 395 L1272 440 L1240 468 L1252 512 L1210 552 L1196 596"/>
+        <path class="seg" id="segA" d="M1290 395 L1272 440 L1240 468 L1252 512 L1210 552 L1196 596"/>
+        <!-- B : gone behind the shoulder, picked up lower on a new bearing -->
+        <path class="seg halo" d="M1148 662 L1104 700 L1116 742 L1052 782 L1030 826"/>
+        <path class="seg" id="segB" d="M1148 662 L1104 700 L1116 742 L1052 782 L1030 826"/>
+        <!-- C : the last leg into the near ground, where the ridge plate cuts it -->
+        <path class="seg halo" d="M966 888 L920 930 L936 972 L866 1016 L838 1064 L762 1112 L730 1170 L648 1236"/>
+        <path class="seg" id="segC" d="M966 888 L920 930 L936 972 L866 1016 L838 1064 L762 1112 L730 1170 L648 1236"/>
+
+        <g id="ldA"><path class="leader" data-co="#coA" d="M1290 395 L1392 336 L2150 336"/><circle class="anchor" cx="1290" cy="395" r="7"/></g>
+        <g id="ldB"><path class="leader" data-co="#coB" d="M1116 742 L1236 690 L2150 690"/><circle class="anchor" cx="1116" cy="742" r="7"/></g>
+        <g id="ldC"><path class="leader" data-co="#coC" d="M866 1016 L1006 962 L2150 962"/><circle class="anchor" cx="866" cy="1016" r="7"/></g>
+      </svg>
+    </div>
+
+    <!-- near ridge : the foreground, and later the transition device -->
+    <div class="layer l-fg" id="lFg" aria-hidden="true">
+      <picture><source srcset="../assets/img/ridge-near.avif" type="image/avif">
+        <img src="../assets/img/ridge-near.webp" alt="" width="2292" height="908"></picture>
+    </div>
+
+    <!-- hero copy -->
+    <div class="copy-wrap"><div class="copy" id="copy">
+      <h1>
+        <span class="ln"><span>The deeper you go,</span></span>
+        <span class="ln"><span>the more you <em class="promise">know.</em></span></span>
+      </h1>
+      <p class="lede">From a single page view we identify 300+ data points on your visitors —
+        name, phone, email, address, income, home value, credit, existing loans, social links.</p>
+      <hr class="rule">
+    </div></div>
+
+    <!-- callouts : real product facts, each anchored to a real point on the route -->
+    <div class="callout" id="coA" style="right:var(--pad);top:5.5%">
+      <p class="k">Signal</p>
+      <p class="v"><span class="n">600,000,000</span> consumer profiles, matched against anonymous visits to your site.</p>
+    </div>
+    <div class="callout" id="coB" style="right:var(--pad);top:36%">
+      <p class="k">Resolved</p>
+      <p class="v"><span class="n">300+</span> data points from a single page view. No form, no sign-up, nothing to accept.</p>
+    </div>
+    <div class="callout" id="coC" style="right:var(--pad);top:61%">
+      <p class="k">Kept current</p>
+      <p class="v"><span class="n">100,000,000</span> records updated daily — the file does not go stale between the visit and the call.</p>
+    </div>
+
+    <!-- the route continues underwater. Same stroke, same weight, same colour,
+         same direction of travel — it is one line, not a second SVG. -->
+    <div class="deep-marks" id="deepMarks" aria-hidden="true">
+      <svg class="route route--deep" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" focusable="false">
+        <path class="seg halo" d="M527 -80 L560 90 L505 210 L545 350 L480 480 L520 620 L455 760 L495 900 L430 1090"/>
+        <path class="seg" id="segD" d="M527 -80 L560 90 L505 210 L545 350 L480 480 L520 620 L455 760 L495 900 L430 1090"/>
+        <g id="ldD"><path class="leader" data-co="#deepCopy" d="M520 620 L700 566 L1420 566"/><circle class="anchor" cx="520" cy="620" r="7"/></g>
+      </svg>
+    </div>
+
+    <div class="deep-wrap"><div class="deep-copy" id="deepCopy">
+      <p class="eyebrow">GD2 · Visitor intelligence</p>
+      <h2>Know who&rsquo;s shopping. Act while it matters.</h2>
+      <p>You also see which pages they looked at, and when — so the call happens while the
+        opportunity is still warm.</p>
+    </div></div>
+
+    <!-- exposure : the intro lifts this, it is not a loader -->
+    <div class="layer l-exposure" id="lExp" aria-hidden="true"></div>
+
+    <p class="cue" id="cue">Scroll</p>
+  </div>
+</section>
+
+<!-- Reduced motion gets a second finished authored still: the canyon,
+     established, with its content already in place. Real markup, not a clone —
+     it is a composed frame in its own right. Hidden entirely unless the reader
+     has asked for reduced motion. -->
+<section class="rm-still">
+  <img class="rm-water" src="../assets/video/canyon-poster.jpg" alt="" width="1920" height="1080">
+  <div class="rm-grade" aria-hidden="true"></div>
+  <div class="rm-copy">
+    <p class="eyebrow">GD2 &middot; Visitor intelligence</p>
+    <h2>Know who&rsquo;s shopping. Act while it matters.</h2>
+    <p>You also see which pages they looked at, and when &mdash; so the call happens
+       while the opportunity is still warm.</p>
+  </div>
+</section>
+
+</main>
+
+<script src="../assets/vendor/gsap.min.js"></script>
+<script src="../assets/vendor/ScrollTrigger.min.js"></script>
+<script src="../assets/vendor/DrawSVGPlugin.min.js"></script>
+<script src="../assets/js/scene.js"></script>
+</body>
+</html>
