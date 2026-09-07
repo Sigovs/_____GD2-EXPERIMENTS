@@ -1,0 +1,70 @@
+<!doctype html><meta charset="utf-8"><title>Диагностика — отчёт уходит автоматически</title>
+<style>
+ body{font:14px/1.6 ui-monospace,Consolas,monospace;background:#11151a;color:#dfe6ee;margin:0;padding:30px}
+ h1{font-size:16px;color:#7fb2d8;letter-spacing:.08em;text-transform:uppercase;margin:0 0 20px}
+ #status{font-size:20px;padding:20px 24px;background:#161c23;border-left:4px solid #ffc65f;max-width:900px}
+ #status.done{border-left-color:#5fd39a;color:#5fd39a}
+ #status.fail{border-left-color:#ff6b6b;color:#ff6b6b}
+ #bar{height:5px;background:#222a33;max-width:900px;margin:14px 0 0}
+ #fill{height:100%;width:0;background:#7fb2d8;transition:width .3s linear}
+ pre{background:#161c23;padding:12px 14px;max-width:900px;overflow-x:auto;white-space:pre-wrap;font-size:12px;color:#8b98a6}
+ iframe{position:fixed;left:-9999px;top:0;width:1600px;height:1000px;border:0}
+</style>
+<h1>Диагностика зеркала</h1>
+<div id="status">Гружу сайт и собираю данные… подожди 12 секунд, ничего не нажимай.</div>
+<div id="bar"><div id="fill"></div></div>
+<pre id="peek"></pre>
+<iframe id="fr" src="/_____GD2-EXPERIMENTS/aan%20test%206/proba/"></iframe>
+<script>
+const st=document.getElementById('status'), fill=document.getElementById('fill'), peek=document.getElementById('peek')
+const fr=document.getElementById('fr')
+const events=[]
+const SECS=12
+let t0=Date.now()
+const tick=setInterval(()=>{
+  const p=Math.min(100,(Date.now()-t0)/(SECS*1000)*100); fill.style.width=p+'%'
+},200)
+
+const hook=()=>{ try{
+  const w=fr.contentWindow; if(!w||w.__hooked) return; w.__hooked=1
+  w.addEventListener('error',e=>{
+    if(e.target&&e.target!==w&&e.target.tagName) events.push({t:'resource-fail',tag:e.target.tagName,url:(e.target.src||e.target.href||'').slice(0,200)})
+    else events.push({t:'error',msg:e.message,file:(e.filename||'').slice(0,160),line:e.lineno+':'+e.colno,stack:(e.error&&e.error.stack||'').slice(0,900)})
+  },true)
+  w.addEventListener('unhandledrejection',e=>events.push({t:'rejection',msg:String(e.reason&&(e.reason.message||e.reason)).slice(0,300),stack:(e.reason&&e.reason.stack||'').slice(0,900)}))
+  for(const lvl of ['error','warn']){ const o=w.console[lvl]
+    w.console[lvl]=function(){ events.push({t:'console.'+lvl,msg:[...arguments].map(a=>{try{return a&&a.stack||String(a)}catch(e){return '?'}}).join(' ').slice(0,300)}); return o.apply(this,arguments) } }
+}catch(e){} }
+hook(); const hv=setInterval(hook,15)
+
+setTimeout(async ()=>{
+  clearInterval(tick); clearInterval(hv); fill.style.width='100%'
+  const r={when:new Date().toISOString(), ua:navigator.userAgent, screen:{w:innerWidth,h:innerHeight,dpr:devicePixelRatio}}
+  try{
+    const d=fr.contentDocument, w=fr.contentWindow
+    const wrap=d.querySelector('#canvas-wrapper'), cv=wrap&&wrap.querySelector('canvas')
+    r.dom={
+      wrapper: !!wrap, canvas: !!cv,
+      canvasPx: cv? cv.width+'x'+cv.height : null,
+      canvasCss: cv? Math.round(cv.getBoundingClientRect().width)+'x'+Math.round(cv.getBoundingClientRect().height) : null,
+      elements: d.querySelectorAll('*').length,
+      bodyHeight: d.body?d.body.scrollHeight:0,
+      fonts: d.fonts?d.fonts.status:'?',
+      hiddenCount: [...d.querySelectorAll('body *')].filter(el=>{const s=w.getComputedStyle(el);return s.opacity==='0'||s.visibility==='hidden'}).length,
+      readyState: d.readyState
+    }
+    if(cv){ try{ const g=cv.getContext('webgl2')||cv.getContext('webgl'); r.dom.glContext = g? (g.drawingBufferWidth+'x'+g.drawingBufferHeight) : 'НЕТ' }catch(e){ r.dom.glContext='err: '+e.message } }
+    // ресурсы, не отдавшиеся сервером
+    const res=w.performance.getEntriesByType('resource')
+    r.resources={total:res.length, zeroSize:res.filter(x=>x.transferSize===0&&x.decodedBodySize===0).map(x=>x.name.replace(location.origin,'')).slice(0,40)}
+  }catch(e){ r.domError=String(e) }
+  r.events=events.slice(0,200)
+  r.eventCount=events.length
+  peek.textContent=JSON.stringify({dom:r.dom,eventCount:r.eventCount,firstEvents:events.slice(0,6)},null,1)
+  try{
+    const resp=await fetch('/_report',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(r)})
+    if(resp.ok){ st.className='done'; st.textContent='ГОТОВО. Отчёт отправлен — напиши мне «готово», я его прочитаю.' }
+    else { st.className='fail'; st.textContent='Сервер не принял отчёт (HTTP '+resp.status+'). Скинь скриншот текста ниже.' }
+  }catch(e){ st.className='fail'; st.textContent='Не смог отправить отчёт: '+e.message+'. Скинь скриншот текста ниже.' }
+},SECS*1000)
+</script>

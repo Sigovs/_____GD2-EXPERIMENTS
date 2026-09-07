@@ -1,155 +1,60 @@
 <!doctype html>
-<html lang="en">
-<head>
-<!-- Собрано tools/build.mjs из tools/versions.json. Руками не править:
-     следующая сборка перезапишет. Что версия ЕСТЬ и что она РЕШАЕТ —
-     перенесено из документа, который уже существовал; versions.json
-     называет источник каждой строки. -->
-<meta charset="utf-8">
+<html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>aan test 6 — every version</title>
-<meta name="theme-color" content="#0B0F1E">
-<link rel="stylesheet" href="../_shelf/tokens.css">
-<link rel="stylesheet" href="../_shelf/hub.css">
+<title>Montfort — версии</title>
 <style>
-/* Only what a shelf spanning six labs needs on top of hub.css. Cyan, never
-   orange: DESIGN-SYSTEM.md §4 reserves orange for a promise to a visitor, and
-   an index of build variants is system chrome from top to bottom. */
-
-.grp { margin-bottom: var(--s10); }
-.grp:last-of-type { margin-bottom: 0; }
-
-.grp__h {
-  margin: 0 0 var(--s3);
-  padding-top: var(--s5);
-  border-top: 1px solid var(--rule);
-  font-size: var(--t-h3);
-  font-weight: var(--w-strong);
-  line-height: var(--lh-tight);
-  letter-spacing: var(--ls-head);
-}
-
-.grp__blurb {
-  max-width: var(--measure);
-  margin: 0 0 var(--s7);
-  font-size: var(--t-sm);
-  color: var(--ink-64);
-}
-
-/* How the page opens is a fact about it, not a warning: half of these need a
-   server and finding that out by clicking is the worst way to learn it. */
-.card__opens {
-  margin: var(--s3) 0 0;
-  /* pinned to the foot of the card, so a row of them draws one line across
-     the shelf. The alternative — stretching the description block instead —
-     aligns the rule above it but opens a void in every card beside a long one,
-     and index3 alone is seven lines of verbatim rejection grounds. */
-  margin-top: auto;
-  padding-top: var(--s4);
-  font-family: var(--mono);
-  font-size: var(--t-xs);
-  letter-spacing: var(--ls-label);
-  text-transform: uppercase;
-  color: var(--ink-48);
-}
-
-.card__flag {
-  margin-left: var(--s2);
-  padding: .1em .5em;
-  border: 1px solid var(--ink-40);
-  border-radius: var(--r-pill);
-  font-size: .85em;
-  letter-spacing: var(--ls-label);
-  /* the name is typed as written, but this is a label about the name */
-  text-transform: uppercase;
-  color: var(--ink-64);
-}
-
-/* THE NAME IS TYPED, NOT SHOUTED. hub.css uppercases it, which is right for
-   a micro-label and wrong here: nine of these names are query parameters, and
-   a query parameter is case-sensitive. A card reading ?MOUNTAINLABV2=1 sends
-   anyone who retypes it to the default mode instead. */
-.card__name {
-  text-transform: none;
-  letter-spacing: var(--ls-mark);
-}
-
-/* The settles rule is a drawn line, so it has to land at one height across a
-   row — ragged, it reads as three different components rather than three of
-   the same. The card stretches to its grid track and the what-block takes up
-   the slack. */
-.card { height: 100%; }
-
-/* Notes here are sentences, not readouts. hub.css sets them in the mono, which
-   is right for the fragments aan test 4 had ("was index.html until…") and wrong
-   for a note that runs to three lines — mono at that length is a wall, and it
-   stacks straight onto the mono chip below it. Kept subordinate by size and
-   ink, not by voice. */
-.card__note {
-  font-family: var(--sans);
-  letter-spacing: var(--ls-body);
-  line-height: 1.5;
-}
-
-.hub__lede code {
-  font-family: var(--mono);
-  font-size: .9em;
-  padding: .15em .45em;
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--ink);
-}
-
-/* A rejected direction stays on the shelf — it is evidence — but it is not
-   offered at the same weight as a live one. */
-.card--rejected .card__shot { opacity: .55; }
-.card--rejected:hover .card__shot { opacity: 1; }
-.card--rejected .card__name { color: var(--ink-64); }
-
-/* A page that throws before it draws gets the same demotion, for a different
-   reason. Its preview is a truthful photograph of a loading screen that never
-   advances — and an almost-black rectangle in a grid of pictures reads as a
-   failure of THIS page, not of the one behind it. The flag beside the name is
-   what tells them apart; the dimming only stops the eye stopping there. */
-.card--broken .card__shot { opacity: .55; }
-.card--broken:hover .card__shot { opacity: 1; }
-.card--broken .card__name { color: var(--ink-64); }
-</style>
-</head>
-<body>
-
-<main class="wrap">
-
-  <p class="hub__eyebrow">aan test 6</p>
-  <h1 class="hub__h">2 versions in this folder.</h1>
-  <p class="hub__lede">An offline 1:1 copy of mont-fort.com kept for studying its architecture, and the variant overlays built against it.</p>
-  <p class="hub__lede">Each card opens one version. <a href="../all/">All six labs</a>.</p>
-
-  <section class="grp">
-    <ul class="shelf">
-      <li>
-        <a class="card" href="original/">
-          <div class="card__shot"><img src="../previews/t6-original.jpeg" alt="" width="1440" height="900" loading="lazy" decoding="async"></div>
-          <p class="card__name">Оригинал Montfort</p>
-          <p class="card__what">Untouched mirror of mont-fort.com. 33 pages, ~260 MB, URL structure kept 1:1 so every /_astro/ and /assets/ path resolves without rewriting.</p>
-          <p class="card__settles">The base every variant is an overlay on.</p>
-          <p class="card__opens" title="Blocked on a file:// origin — start the server named below.">needs a server</p>
-        </a>
-      </li>
-      <li>
-        <a class="card" href="proba/">
-          <div class="card__shot"><img src="../previews/t6-proba.jpeg" alt="" width="1440" height="900" loading="lazy" decoding="async"></div>
-          <p class="card__name">Проба пера</p>
-          <p class="card__what">First variant — palette work. A variant is an overlay, not a copy: only changed files live in variants/01-proba/, the rest is served from the base.</p>
-          <p class="card__settles">Whether the mirror's architecture survives being re-coloured.</p>
-          <p class="card__opens" title="Blocked on a file:// origin — start the server named below.">needs a server</p>
-        </a>
-      </li>
-    </ul>
-  </section>
-
-  <p class="hub__foot"><span class="hub__stamp">tools/versions.json · 2026-09-06</span></p>
-
-</main>
-</body>
-</html>
+ :root{--bg:#0d1116;--card:#151b22;--line:#232c36;--tx:#dfe6ee;--dim:#8b98a6;--ac:#7fb2d8;--ok:#5fd39a;--off:#4a5560}
+ *{box-sizing:border-box}
+ body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",sans-serif;padding:40px 32px 60px}
+ header{max-width:1240px;margin:0 auto 32px}
+ h1{font:600 13px/1 ui-monospace,Consolas,monospace;letter-spacing:.22em;text-transform:uppercase;color:var(--ac);margin:0 0 10px}
+ .sub{color:var(--dim);font-size:14px;margin:0;max-width:60ch}
+ .grid{max-width:1240px;margin:0 auto;display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+ .card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;text-decoration:none;color:inherit;transition:border-color .18s,transform .18s}
+ .card:hover{border-color:var(--ac);transform:translateY(-2px)}
+ .shot{position:relative;aspect-ratio:16/10;background:#0a0e12;overflow:hidden}
+ .shot img{width:100%;height:100%;object-fit:cover;display:block}
+ .noshot{display:grid;place-items:center;height:100%;color:#3c4753;font:12px ui-monospace,monospace;letter-spacing:.1em}
+ .dot{position:absolute;top:12px;right:12px;width:9px;height:9px;border-radius:50%;background:var(--off);box-shadow:0 0 0 3px rgba(0,0,0,.45)}
+ .dot.up{background:var(--ok)}
+ .meta{padding:16px 18px 18px}
+ h2{font-size:16px;margin:0 0 6px;font-weight:600}
+ .meta p{margin:0 0 12px;color:var(--dim);font-size:13.5px}
+ .foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+ code{font:12px ui-monospace,Consolas,monospace;color:var(--ac);background:#101720;padding:3px 7px;border-radius:4px}
+ .tag{font-size:11.5px;color:var(--dim);border:1px solid var(--line);padding:3px 8px;border-radius:20px}
+ .tag.base{color:var(--ac);border-color:#2a4054}
+ .tag.empty{color:#6b7784}
+ footer{max-width:1240px;margin:40px auto 0;padding-top:26px;border-top:1px solid var(--line);color:var(--dim);font-size:13.5px}
+ footer code{color:var(--tx)}
+ footer p{margin:0 0 10px}
+ .warn{color:#ffc65f}
+</style></head><body>
+<header>
+  <h1>Montfort — версии</h1>
+  <p class="sub">Вариант открывается по ссылке. Оригинальное зеркало не выложено — оно держит корневые пути и работает только в корне сервера, и это полная копия чужого сайта; карточка ведёт на запись о нём.</p>
+</header>
+<div class="grid">
+  <a class="card" href="original/">
+    <div class="shot"><img src="previews/original.jpeg" alt="" loading="lazy">
+    </div>
+    <div class="meta">
+      <h2>Оригинал Montfort</h2>
+      <p>нетронутое зеркало mont-fort.com</p>
+      <div class="foot"><code>не выложен</code><span class="tag base">базовое зеркало</span></div>
+    </div>
+  </a>
+  <a class="card" href="proba/">
+    <div class="shot"><img src="previews/01-proba.jpg" alt="" loading="lazy">
+    </div>
+    <div class="meta">
+      <h2>Версия 2 — Guidance Development 2</h2>
+      <p>контент GD2 разложен по секциям Montfort, только текст + вордмарк GD2</p>
+      <div class="foot"><code>proba/</code><span class="tag">40 изменённых файл(ов)</span></div>
+    </div>
+  </a>
+</div>
+<footer>
+  <p>Собрано из <code>aan test 6/index.html</code> рабочего каталога. Вариант материализован целиком: на статике оверлей поверх зеркала не работает, сервера, который подставлял бы изменённые файлы, здесь нет.</p>
+</footer>
+</body></html>

@@ -325,6 +325,9 @@ if (existsSync(T1_DIST)) {
 console.log('· aan test 6 — карточки-записи без зеркала')
 for (const e of byGroup.test6 || []) {
   const slug = e.slug.replace(/^t6-/, '')
+  // proba/ собирается tools/build-proba.mjs и содержит сам вариант целиком.
+  // Карточка-запись здесь затёрла бы его главную страницу.
+  if (slug === 'proba') { console.log('  proba — пропущена, ей владеет build-proba.mjs'); continue }
   const shot = existsSync(join(OUT, 'previews', e.slug + '.jpeg')) ? e.slug + '.jpeg' : null
   write(join('aan test 6', slug, 'index.html'), `<!doctype html>
 <html lang="ru">
@@ -354,3 +357,6 @@ for (const e of byGroup.test6 || []) {
 `)
 }
 console.log('готово (второй проход)')
+
+// Полка aan test 6 берётся из рабочего хаба — см. соседний файл.
+await import('./build-test6.mjs')

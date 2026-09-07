@@ -1,0 +1,47 @@
+<!doctype html><meta charset="utf-8"><title>Диагностика зеркала</title>
+<style>
+ body{font:14px/1.6 ui-monospace,Consolas,monospace;background:#11151a;color:#dfe6ee;margin:0;padding:28px}
+ h1{font-size:16px;color:#7fb2d8;margin:0 0 18px;letter-spacing:.08em;text-transform:uppercase}
+ table{border-collapse:collapse;width:100%;max-width:900px}
+ td{padding:6px 12px;border-bottom:1px solid #222a33;vertical-align:top}
+ td:first-child{color:#8b98a6;width:230px}
+ .ok{color:#5fd39a}.bad{color:#ff6b6b}.warn{color:#ffc65f}
+ #verdict{margin:22px 0;padding:14px 18px;border-left:3px solid #7fb2d8;background:#161c23;max-width:900px;font-size:15px}
+</style>
+<h1>Диагностика локального зеркала</h1>
+<div id="verdict">проверяю…</div>
+<table id="t"></table>
+<script>
+const rows=[]
+const add=(k,v,cls)=>rows.push(`<tr><td>${k}</td><td class="${cls||''}">${v}</td></tr>`)
+function ctx(type){ try{ const c=document.createElement('canvas'); return c.getContext(type) }catch(e){ return null } }
+const gl2=ctx('webgl2'), gl1=ctx('webgl')||ctx('experimental-webgl')
+add('WebGL 2', gl2?'ДОСТУПЕН':'НЕДОСТУПЕН', gl2?'ok':'bad')
+add('WebGL 1', gl1?'доступен':'НЕДОСТУПЕН', gl1?'ok':'bad')
+const gl=gl2||gl1
+if(gl){
+  const d=gl.getExtension('WEBGL_debug_renderer_info')
+  add('GPU', d?gl.getParameter(d.UNMASKED_RENDERER_WEBGL):'(скрыт браузером)')
+  add('Вендор', d?gl.getParameter(d.UNMASKED_VENDOR_WEBGL):'(скрыт)')
+  add('Макс. текстура', gl.getParameter(gl.MAX_TEXTURE_SIZE)+' px')
+  add('Float-текстуры', gl.getExtension('EXT_color_buffer_float')?'есть':'НЕТ (нужны для частиц)', gl.getExtension('EXT_color_buffer_float')?'ok':'warn')
+}
+add('Reduced motion', matchMedia('(prefers-reduced-motion: reduce)').matches?'ВКЛЮЧЁН':'выключен', matchMedia('(prefers-reduced-motion: reduce)').matches?'warn':'ok')
+add('Ядер CPU', navigator.hardwareConcurrency||'?')
+add('Память', (navigator.deviceMemory||'?')+' ГБ')
+add('devicePixelRatio', devicePixelRatio)
+add('Окно', innerWidth+' × '+innerHeight)
+add('User agent', navigator.userAgent)
+const assets=['/_____GD2-EXPERIMENTS/aan%20test%206/proba/_astro/App.ST3WWojO.js','/_____GD2-EXPERIMENTS/aan%20test%206/proba/_astro/ScrollTrigger.CcwueB8r.js','/_____GD2-EXPERIMENTS/aan%20test%206/proba/_astro/_slug_.CRG2uH_C.css','/_____GD2-EXPERIMENTS/aan%20test%206/proba/assets/models/mountains.glb','/_____GD2-EXPERIMENTS/aan%20test%206/proba/assets/models/homepage/earth-min.glb','/_____GD2-EXPERIMENTS/aan%20test%206/proba/assets/textures/envmap-min.exr','/_____GD2-EXPERIMENTS/aan%20test%206/proba/assets/fonts/CenturyGothic.woff2']
+Promise.all(assets.map(a=>fetch(a,{cache:'no-store'}).then(r=>[a,r.status]).catch(e=>[a,'ОШИБКА'])))
+.then(res=>{
+  res.forEach(([a,s])=>add(a, s===200?'200 OK':s, s===200?'ok':'bad'))
+  document.getElementById('t').innerHTML=rows.join('')
+  const bad=res.filter(r=>r[1]!==200).length
+  const v=document.getElementById('verdict')
+  if(!gl2 && !gl1) v.innerHTML='<b class="bad">WebGL полностью недоступен.</b> Сцена не запустится ни при каких условиях — отсюда белый экран. Открой <code>chrome://gpu</code> и включи аппаратное ускорение в настройках браузера.'
+  else if(!gl2) v.innerHTML='<b class="bad">Нет WebGL 2.</b> Сайт запрашивает именно WebGL2-контекст, поэтому сцена не стартует. Нужен браузер/драйвер с поддержкой WebGL2.'
+  else if(bad) v.innerHTML=`<b class="bad">${bad} ассет(ов) не отдаётся.</b> Зеркало неполное — см. красные строки ниже.`
+  else v.innerHTML='<b class="ok">WebGL2 работает, все ассеты на месте.</b> Значит дело в кэше браузера — жми Ctrl+Shift+R на главной. Если не помогло — скинь мне ошибки из консоли (F12).'
+})
+</script>
