@@ -1,0 +1,87 @@
+/*
+ * route.css — DOM labels for the descent route stops. Positioned every frame
+ * from the projected 3D marker position (descent.js); opacity follows the
+ * marker activation and the occlusion test.
+ */
+
+#route-labels {
+	position: fixed;
+	inset: 0;
+	z-index: 5;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+.route-label {
+	position: absolute;
+	left: 0;
+	top: 0;
+	opacity: 0;
+	will-change: transform, opacity;
+	font-family: "Inter", "Helvetica Neue", system-ui, sans-serif;
+	color: #dbe8f8;
+	-webkit-font-smoothing: antialiased;
+	--leader: 0;
+}
+
+/* thin leader from the marker up to the text */
+.route-label__leader {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 1px;
+	height: 26px;
+	background: linear-gradient(to top, rgba(169, 226, 255, 0.0), rgba(169, 226, 255, 0.75));
+	transform-origin: bottom center;
+	transform: translate(-0.5px, 0) scaleY(var(--leader));
+}
+
+.route-label__text {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	transform: translate(10px, -30px);
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	white-space: nowrap;
+	transform-origin: left bottom;
+}
+
+.route-label--left .route-label__text {
+	left: auto;
+	right: 0;
+	align-items: flex-end;
+	transform: translate(-10px, -30px);
+}
+
+.route-label__id {
+	font-size: 0.875rem;          /* 14px floor */
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: #eaf2ff;
+	text-shadow: 0 1px 8px rgba(2, 4, 10, 0.6);
+}
+
+.route-label__sub {
+	font-size: 0.875rem;
+	font-weight: 400;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: rgba(169, 226, 255, 0.78);
+	text-shadow: 0 1px 8px rgba(2, 4, 10, 0.6);
+}
+
+#debug-readout {
+	position: fixed;
+	left: 16px;
+	bottom: 12px;
+	z-index: 20;
+	margin: 0;
+	padding: 6px 10px;
+	font: 12px/1.4 ui-monospace, monospace;
+	color: #cfe0ff;
+	background: rgba(4, 7, 15, 0.6);
+	pointer-events: none;
+}

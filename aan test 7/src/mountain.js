@@ -1,0 +1,705 @@
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
+import {
+	mountainVertex, mountainFragment,
+	peaksVertex, peaksFragment,
+	cloudVertex, cloudFragment,
+	skyVertex, skyFragment,
+	nightSkyVertex, nightSkyFragment,
+	mouseVertex, mouseFragment,
+} from './shaders.js';
+import { MAIN_MOUNTAIN, BABY_MOUNTAINS } from './mountain-config.js';
+import { SKY, NIGHT_SKY } from './sky-config.js';
+import { MOUNTAIN_DESCENT } from './descent-config.js';
+import { createDescent } from './descent.js';
+import { createDebugLayer } from './debug-layer.js';
+
+/* ------------------------------------------------------------------ */
+/* Settings                                                            */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Responsive zoom-out limit. The cloud block has a finite width, so the wider
+ * the viewport (larger horizontal FOV) the closer the camera must stay to keep
+ * the outer cloud quads and the dark gap below them out of frame. Measured on
+ * the current cloud placement: 16:9 → 1.45, 21:9 → ~1.25, 32:9 → ~0.78.
+ * Linear in aspect, clamped; recomputed on every resize.
+ */
+const ZOOM_LIMIT = {
+	baseMaxZoomOut: 1.45,        // 16:9 and narrower
+	referenceAspect: 16 / 9,
+	aspectFalloff: 0.38,         // zoom removed per unit of aspect beyond the reference
+	ultrawideMaxZoomOut: 0.7,    // floor for extreme aspects
+};
+function getResponsiveZoomLimit(aspect) {
+	const over = Math.max(0, aspect - ZOOM_LIMIT.referenceAspect);
+	return THREE.MathUtils.clamp(ZOOM_LIMIT.baseMaxZoomOut - ZOOM_LIMIT.aspectFalloff * over, ZOOM_LIMIT.ultrawideMaxZoomOut, ZOOM_LIMIT.baseMaxZoomOut);
+}
+let zoomLimit = ZOOM_LIMIT.baseMaxZoomOut;
+let descentRef = null; // set once the descent route exists (resize needs it)
+
+const SETTINGS = {
+	autoRotateSpeed: 0.035,  // rad/s, full turn ≈ 180 s. 0 = off
+	cloudSpeed: 0.55,        // time scale of the cloud drift (1 = original mont-fort speed)
+	dragSpeed: 0.005,        // rad per px
+	zoomMin: 0.55,
+	zoomMax: ZOOM_LIMIT.baseMaxZoomOut, // 16:9 value; the live limit is getResponsiveZoomLimit(camera.aspect)
+	zoom: 1,                 // 1 = original hero camera distance
+	parallax: 1,             // mouse parallax intensity, 0 = off
+	mouseTrail: true,        // mouse wake in clouds / snow
+	debug: new URLSearchParams(location.search).has('debug'), // debug overlay, also toggled with `D`
+};
+
+// Fixed scene rig (from the original homepage preset) — not mountain-specific.
+const LIGHT_COLOR = new THREE.Color(0xe8ecef);
+const DARK_COLOR = new THREE.Color(0x5c7183);
+const CAMERA_POSITION = new THREE.Vector3(175.856, 45.821, -51.137);
+const CAMERA_LOOK_AT = new THREE.Vector3(-5.934, -4.881, 54.620);
+const SCENE_FILE = 'assets/models/mountains.glb'; // Skybox + Clouds (+ authored camera paths) live here
+
+// Everything below that mentions a mountain comes from mountain-config.js.
+const SUMMIT = new THREE.Vector3().fromArray(MAIN_MOUNTAIN.summit);
+const PIVOT = new THREE.Vector3(SUMMIT.x, 0, SUMMIT.z); // orbit axis through the summit
+const BAKED_LIGHT_DIR = new THREE.Vector3().fromArray(MAIN_MOUNTAIN.relight.bakedLightDir).normalize();
+
+/* ------------------------------------------------------------------ */
+/* Renderer / scene                                                    */
+/* ------------------------------------------------------------------ */
+
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+renderer.setClearColor(0xffffff, 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, 1, 1, 1000);
+
+const shared = {
+	uTime: { value: 0 },
+	uResolution: { value: new THREE.Vector2() },
+	uRatio: { value: 1 },
+	uLightColor: { value: LIGHT_COLOR },
+	uDarkColor: { value: DARK_COLOR },
+	uPixelAngle: { value: 0.001 },
+	uCloudTime: { value: 0 },   // clouds run on their own clock so their drift speed can be tuned
+};
+
+function resize() {
+	const w = window.innerWidth, h = window.innerHeight;
+	const dpr = Math.min(2, window.devicePixelRatio);
+	renderer.setPixelRatio(dpr);
+	renderer.setSize(w, h);
+	camera.aspect = w / h;
+	camera.updateProjectionMatrix();
+	zoomLimit = getResponsiveZoomLimit(camera.aspect);
+	shared.uResolution.value.set(w * dpr, h * dpr);
+	shared.uRatio.value = w / h;
+	descentRef?.resize(shared.uResolution.value);
+	shared.uPixelAngle.value = THREE.MathUtils.degToRad(camera.fov) / (h * dpr); // angular size of one device pixel (night sky star sizing)
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ------------------------------------------------------------------ */
+/* Assets                                                              */
+/* ------------------------------------------------------------------ */
+
+const textureLoader = new THREE.TextureLoader();
+const gltfLoader = new GLTFLoader();
+const exrLoader = new EXRLoader();
+
+const loadTexture = (url, repeat = true) => url ? textureLoader.loadAsync(url).then((t) => {
+	if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+	return t;
+}) : Promise.resolve(null);
+
+const gltfCache = new Map();
+const loadGltf = (url) => {
+	if (!gltfCache.has(url)) gltfCache.set(url, gltfLoader.loadAsync(url));
+	return gltfCache.get(url);
+};
+
+const [
+	sceneGltf, mainGltf, babyGltf, envExr,
+	noise, perlin,
+	rockNormal, rockDiffuse, snowRockMix, lightmap, babyBaseColor,
+] = await Promise.all([
+	loadGltf(SCENE_FILE),
+	loadGltf(MAIN_MOUNTAIN.file),
+	loadGltf(BABY_MOUNTAINS.file),
+	exrLoader.loadAsync('assets/textures/envmap-min.exr'),
+	loadTexture('assets/textures/noise.webp'),
+	loadTexture('assets/textures/perlinNoise.webp'),
+	loadTexture(MAIN_MOUNTAIN.textures.rockNormal),
+	loadTexture(MAIN_MOUNTAIN.textures.rockDiffuse),
+	loadTexture(MAIN_MOUNTAIN.textures.snowRockMix, false),
+	loadTexture(MAIN_MOUNTAIN.textures.lightmap, false),
+	loadTexture(BABY_MOUNTAINS.textures.baseColor, false),
+]);
+
+// PMREM environment, same layout constants as the original pipeline
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+const envMap = pmrem.fromEquirectangular(envExr).texture;
+const envHeight = envMap.image.height;
+const envDefines = {
+	CUBEUV_MAX_MIP: `${Math.log2(envHeight) - 2}.0`,
+	CUBEUV_TEXEL_WIDTH: 1 / (3 * Math.max(Math.pow(2, Math.log2(envHeight) - 2), 112)),
+	CUBEUV_TEXEL_HEIGHT: 1 / envHeight,
+};
+envExr.dispose();
+pmrem.dispose();
+
+const whiteTexture = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+whiteTexture.needsUpdate = true;
+
+/* ------------------------------------------------------------------ */
+/* Mouse trail                                                         */
+/* ------------------------------------------------------------------ */
+
+class MouseTrail {
+	constructor(size = 512) {
+		const geometry = new THREE.BufferGeometry()
+			.setAttribute('position', new THREE.Float32BufferAttribute([-1, 3, 0, -1, -1, 0, 3, -1, 0], 3))
+			.setAttribute('uv', new THREE.Float32BufferAttribute([0, 2, 0, 0, 2, 0], 2));
+		this.material = new THREE.ShaderMaterial({
+			vertexShader: mouseVertex,
+			fragmentShader: mouseFragment,
+			uniforms: {
+				tLast: { value: null },
+				uMouse: { value: new THREE.Vector2() },
+				uMouseVelocity: { value: new THREE.Vector2() },
+				tNoise: { value: noise },
+				uTime: shared.uTime,
+			},
+			dithering: true,
+			depthTest: false,
+			depthWrite: false,
+		});
+		this.mesh = new THREE.Mesh(geometry, this.material);
+		this.mesh.frustumCulled = false;
+		this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+		const opts = { type: THREE.HalfFloatType, depthBuffer: false };
+		this.rt1 = new THREE.WebGLRenderTarget(size, size, opts);
+		this.rt2 = new THREE.WebGLRenderTarget(size, size, opts);
+		this.frame = 0;
+		this.velocity = new THREE.Vector2();
+	}
+	update(dt, target) {
+		const u = this.material.uniforms;
+		this.velocity.subVectors(target, u.uMouse.value);
+		u.uMouseVelocity.value.lerp(this.velocity, dt * 2);
+		u.uMouse.value.lerp(target, dt * 3);
+		const [write, read] = this.frame++ % 2 === 0 ? [this.rt1, this.rt2] : [this.rt2, this.rt1];
+		u.tLast.value = read.texture;
+		renderer.setRenderTarget(write);
+		renderer.clear();
+		renderer.render(this.mesh, this.camera);
+		renderer.setRenderTarget(null);
+	}
+	get texture() { return this.rt1.texture; }
+}
+const mouseTrail = new MouseTrail();
+
+const uvTransform = (repeatX, repeatY) => new THREE.Matrix3().setUvTransform(0, 0, repeatX, repeatY, 0, 0, 0);
+const envRotation = (y) => new THREE.Matrix3().setFromMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0, y, 0)));
+
+/* ------------------------------------------------------------------ */
+/* Mountain helpers (config-driven)                                    */
+/* ------------------------------------------------------------------ */
+
+const DEG = THREE.MathUtils.degToRad;
+
+/** First mesh in a glTF scene, or the mesh with the given name. */
+function pickMesh(root, name) {
+	let mesh = name ? root.getObjectByName(name) : null;
+	if (mesh && !mesh.isMesh) mesh = null;
+	if (!mesh) root.traverse((o) => { if (!mesh && o.isMesh) mesh = o; });
+	if (!mesh) throw new Error(`No mesh found in ${root.name || 'glTF'} (wanted "${name}")`);
+	return mesh;
+}
+
+/** Apply a config transform ({position, rotation(deg XYZ), scale}) or keep the file's. */
+function applyTransform(object, transform) {
+	if (!transform) return;
+	if (transform.position) object.position.fromArray(transform.position);
+	if (transform.rotation) object.rotation.set(DEG(transform.rotation[0]), DEG(transform.rotation[1]), DEG(transform.rotation[2]), 'XYZ');
+	if (transform.scale) object.scale.fromArray(transform.scale);
+}
+
+/** Make sure the geometry has what the shaders need; warn about what it lacks. */
+function checkGeometry(mesh, label) {
+	const g = mesh.geometry;
+	if (!g.attributes.normal) { g.computeVertexNormals(); console.warn(`[${label}] no normals in file — computed`); }
+	if (!g.attributes.uv) console.warn(`[${label}] no UVs — lightmap / mix map / rock texture cannot be sampled correctly`);
+	// Tangents are not required: the shaders build a tangent frame from screen-space derivatives.
+}
+
+/* ------------------------------------------------------------------ */
+/* Main mountain                                                       */
+/* ------------------------------------------------------------------ */
+
+const sceneRoot = sceneGltf.scene;
+const skybox = sceneRoot.getObjectByName('Skybox');
+const cloudsGroup = sceneRoot.getObjectByName('Clouds');
+
+const mountain = pickMesh(mainGltf.scene, MAIN_MOUNTAIN.node);
+// Detach from its file hierarchy: the world transform is the node's own transform
+// (the current file has no parent transforms above the mountain node).
+mountain.removeFromParent();
+applyTransform(mountain, MAIN_MOUNTAIN.transform);
+checkGeometry(mountain, 'MainMountain');
+
+// The asset's own PBR material (kept for the 'rodin' and 'hybrid' material modes)
+const sourceMaterial = mountain.material;
+const materialMode = new URLSearchParams(location.search).get('material') || MAIN_MOUNTAIN.materialMode || 'gd2';
+const hasSourceMaps = !!(sourceMaterial?.map && sourceMaterial?.normalMap);
+
+const mm = MAIN_MOUNTAIN.material;
+const mountainDefines = { ...envDefines };
+if (!lightmap) mountainDefines.NO_LIGHTMAP = 1;
+if (!snowRockMix) mountainDefines.NO_MIXMAP = 1;
+if (materialMode === 'hybrid' && hasSourceMaps) mountainDefines.USE_SOURCE_MAPS = 1;
+if (materialMode === 'hybrid' && !hasSourceMaps) console.warn('[MainMountain] hybrid mode requested but the GLB has no diffuse+normal maps — using gd2');
+
+const gd2Material = new THREE.ShaderMaterial({
+	vertexShader: mountainVertex,
+	fragmentShader: mountainFragment,
+	defines: mountainDefines,
+	uniforms: {
+		uColor: { value: new THREE.Color(mm.color) },
+		uMetalness: { value: mm.metalness },
+		uRoughness: { value: mm.roughness },
+		uAmbient: { value: new THREE.Color(mm.ambient) },
+		uAmbientIntensity: { value: mm.ambientIntensity },
+		tMap2: { value: rockDiffuse },
+		uMap2Transform: { value: uvTransform(mm.rockRepeat[0], mm.rockRepeat[1]) },
+		tMixMap: { value: snowRockMix ?? whiteTexture },
+		tArmMap: { value: lightmap ?? whiteTexture },
+		tRockNormal: { value: rockNormal },
+		tNoise: { value: noise },
+		tPerlin: { value: perlin },
+		tMouse: { value: mouseTrail.texture },
+		tEnvMap: { value: envMap },
+		uEnvMapRotation: { value: envRotation(mm.envMapRotationY) },
+		uEnvMapIntensity: { value: mm.envMapIntensity },
+		uFogNear: { value: mm.fogNear },
+		uFogFar: { value: mm.fogFar },
+		uFog: { value: 1 },
+		uBakedLightDir: { value: BAKED_LIGHT_DIR },
+		uLightDir: { value: BAKED_LIGHT_DIR.clone() },
+		uLightK: { value: MAIN_MOUNTAIN.relight.k },
+		uLightBase: { value: MAIN_MOUNTAIN.relight.base },
+		uPivot: { value: new THREE.Vector2(PIVOT.x, PIVOT.z) },
+		uFrontDir: { value: new THREE.Vector2(CAMERA_POSITION.x - PIVOT.x, CAMERA_POSITION.z - PIVOT.z).normalize() },
+		uSideOnly: { value: MAIN_MOUNTAIN.authoredForHeroSideOnly ? 1 : 0 },
+		tSrcDiffuse: { value: sourceMaterial?.map ?? whiteTexture },
+		tSrcNormal: { value: sourceMaterial?.normalMap ?? whiteTexture },
+		tSrcMR: { value: sourceMaterial?.roughnessMap ?? sourceMaterial?.metalnessMap ?? whiteTexture },
+		uSrcNormalScale: { value: MAIN_MOUNTAIN.hybrid?.normalScale ?? 1 },
+		uSnowCoverage: { value: MAIN_MOUNTAIN.hybrid?.snowCoverage ?? 0.5 },
+		uSteepRock: { value: MAIN_MOUNTAIN.hybrid?.steepRock ?? 0 },
+		uTime: shared.uTime,
+		uResolution: shared.uResolution,
+		uLightColor: shared.uLightColor,
+	},
+	side: THREE.FrontSide,
+});
+
+/**
+ * 'rodin' mode: the GLB's MeshStandardMaterial as authored, placed in the scene's
+ * light: same PMREM environment (+ rotation), an ambient term equal to the GD2
+ * ambient irradiance, and the GD2 pseudo-depth fog injected before output.
+ * Only the main mountain uses this; nothing else in the scene is lit by it.
+ */
+function makeSourcePbrMaterial(src) {
+	const mat = src.clone();
+	mat.side = THREE.FrontSide;
+	mat.envMap = envMap;
+	mat.envMapIntensity = mm.envMapIntensity;
+	mat.envMapRotation = new THREE.Euler(0, mm.envMapRotationY, 0);
+	mat.onBeforeCompile = (shader) => {
+		shader.uniforms.uFogNear = gd2Material.uniforms.uFogNear;
+		shader.uniforms.uFogFar = gd2Material.uniforms.uFogFar;
+		shader.uniforms.uFog = gd2Material.uniforms.uFog;
+		shader.uniforms.uLightColor = shared.uLightColor;
+		shader.fragmentShader = shader.fragmentShader
+			.replace('#include <common>', `#include <common>
+uniform float uFogNear, uFogFar, uFog;
+uniform vec3 uLightColor;
+float gd2ViewZToOrthographicDepth(const in float viewZ, const in float near, const in float far) { return (viewZ + near) / (near - far); }
+float gd2PerspectiveDepthToViewZ(const in float invClipZ, const in float near, const in float far) { return (near * far) / ((far - near) * invClipZ - far); }`)
+			.replace('#include <opaque_fragment>', `
+float gd2Depth = gd2ViewZToOrthographicDepth(gd2PerspectiveDepthToViewZ(gl_FragCoord.z, uFogNear, uFogFar), uFogNear, uFogFar);
+gd2Depth = smoothstep(0.01, .3, gd2Depth) * uFog;
+outgoingLight = mix(outgoingLight, uLightColor, gd2Depth);
+#include <opaque_fragment>`);
+	};
+	return mat;
+}
+
+let sourceAmbient = null;
+if (materialMode === 'rodin' && sourceMaterial?.isMeshStandardMaterial) {
+	mountain.material = makeSourcePbrMaterial(sourceMaterial);
+	sourceAmbient = new THREE.AmbientLight(new THREE.Color(mm.ambient), mm.ambientIntensity);
+} else {
+	mountain.material = gd2Material;
+}
+mountain.renderOrder = 0;
+console.info(`[MainMountain] material mode: ${mountain.material === gd2Material ? (mountainDefines.USE_SOURCE_MAPS ? 'hybrid' : 'gd2') : 'rodin'}`);
+
+/* ------------------------------------------------------------------ */
+/* Baby mountains                                                      */
+/* ------------------------------------------------------------------ */
+
+const bm = BABY_MOUNTAINS.material;
+function babyMaterial(src) {
+	return new THREE.ShaderMaterial({
+		vertexShader: peaksVertex,
+		fragmentShader: peaksFragment,
+		defines: { ...envDefines },
+		uniforms: {
+			uColor: { value: src?.color ? src.color.clone() : new THREE.Color(0xffffff) },
+			uOpacity: { value: 1 },
+			uMetalness: { value: 0 },
+			uRoughness: { value: src?.roughness ?? 1 },
+			uAmbient: { value: new THREE.Color(bm.ambient) },
+			uAmbientIntensity: { value: bm.ambientIntensity },
+			tMap: { value: babyBaseColor ?? src?.map ?? whiteTexture },
+			tNormalMap: { value: rockNormal },
+			uNormalMapTransform: { value: uvTransform(bm.normalRepeat[0], bm.normalRepeat[1]) },
+			uNormalScale: { value: new THREE.Vector2().fromArray(bm.normalScale) },
+			tNoise: { value: noise },
+			tPerlin: { value: perlin },
+			tMouse: { value: mouseTrail.texture },
+			tEnvMap: { value: envMap },
+			uEnvMapRotation: { value: envRotation(bm.envMapRotationY) },
+			uEnvMapIntensity: { value: bm.envMapIntensity },
+			uFogNear: gd2Material.uniforms.uFogNear,
+			uFogFar: gd2Material.uniforms.uFogFar,
+			uFog: gd2Material.uniforms.uFog,
+			uTime: shared.uTime,
+			uResolution: shared.uResolution,
+			uLightColor: shared.uLightColor,
+		},
+		transparent: true,
+		side: THREE.FrontSide,
+	});
+}
+
+const peaksRoot = new THREE.Group();
+peaksRoot.name = 'BabyMountains';
+const babies = [];
+
+if (BABY_MOUNTAINS.instances) {
+	// Explicit placement: clone the mesh from the file for every instance
+	for (const [i, inst] of BABY_MOUNTAINS.instances.entries()) {
+		const src = pickMesh(babyGltf.scene, inst.node);
+		const mesh = new THREE.Mesh(src.geometry, babyMaterial(src.material));
+		mesh.name = `BabyMountain.${i}`;
+		applyTransform(mesh, inst);
+		mesh.renderOrder = inst.renderOrder ?? 0;
+		babies.push(mesh);
+	}
+} else {
+	// File placement: every mesh node in the file, with its own transform and extras.renderOrder
+	babyGltf.scene.updateMatrixWorld(true);
+	babyGltf.scene.traverse((obj) => {
+		if (!obj.isMesh) return;
+		const mesh = new THREE.Mesh(obj.geometry, babyMaterial(obj.material));
+		mesh.name = obj.name;
+		obj.matrixWorld.decompose(mesh.position, mesh.quaternion, mesh.scale);
+		mesh.renderOrder = obj.userData.renderOrder ?? 0;
+		babies.push(mesh);
+	});
+}
+babies.forEach((b) => checkGeometry(b, b.name));
+peaksRoot.add(...babies);
+
+/* ------------------------------------------------------------------ */
+/* Clouds                                                              */
+/* ------------------------------------------------------------------ */
+
+const cloudMaterial = new THREE.ShaderMaterial({
+	vertexShader: cloudVertex,
+	fragmentShader: cloudFragment,
+	uniforms: {
+		uSize: { value: new THREE.Vector2(1, 1) },
+		tPerlin: { value: perlin },
+		tNoise: { value: noise },
+		tMouse: { value: mouseTrail.texture },
+		uTime: shared.uCloudTime,
+		uResolution: shared.uResolution,
+		uRatio: shared.uRatio,
+	},
+	transparent: true,
+	depthWrite: false,
+	depthTest: false,
+	side: THREE.FrontSide,
+});
+cloudsGroup.traverse((obj) => {
+	if (!obj.isMesh) return;
+	obj.material = cloudMaterial;
+	obj.renderOrder = obj.userData.renderOrder ?? 0;
+	obj.frustumCulled = false;
+});
+
+/* ------------------------------------------------------------------ */
+/* Sky                                                                 */
+/* ------------------------------------------------------------------ */
+
+const skyMode = new URLSearchParams(location.search).get('sky') || SKY.mode || 'day';
+const daySkyMaterial = new THREE.ShaderMaterial({
+	vertexShader: skyVertex,
+	fragmentShader: skyFragment,
+	uniforms: {
+		tNoise: { value: noise },
+		uTime: shared.uTime,
+		uResolution: shared.uResolution,
+		uLightColor: shared.uLightColor,
+		uDarkColor: shared.uDarkColor,
+	},
+	side: THREE.FrontSide,
+	depthWrite: false,
+});
+// Night sky: same cylinder, everything derived from the view ray in world space,
+// so the star field stays fixed to the sky whatever the cylinder / camera do.
+const ns = NIGHT_SKY;
+let skyPhoto = null;
+if (ns.photo?.file && skyMode === 'night') {
+	skyPhoto = await textureLoader.loadAsync(ns.photo.file);
+	skyPhoto.colorSpace = THREE.SRGBColorSpace;
+	skyPhoto.wrapS = THREE.MirroredRepeatWrapping;
+	skyPhoto.wrapT = THREE.ClampToEdgeWrapping;
+	skyPhoto.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+}
+const nightSkyMaterial = new THREE.ShaderMaterial({
+	vertexShader: nightSkyVertex,
+	fragmentShader: nightSkyFragment,
+	defines: skyPhoto ? { USE_SKY_PHOTO: 1 } : {},
+	uniforms: {
+		tPhoto: { value: skyPhoto ?? whiteTexture },
+		uPhotoBlend: { value: ns.photo?.blend ?? 0 },
+		uPhotoExposure: { value: ns.photo?.exposure ?? 1 },
+		uPhotoFade: { value: ns.photo?.proceduralFade ?? 0 },
+		uPhotoMap: { value: new THREE.Vector4(
+			THREE.MathUtils.degToRad(ns.photo?.azimuthSpanDeg ?? 180),
+			THREE.MathUtils.degToRad(ns.photo?.azimuthOffsetDeg ?? 0),
+			THREE.MathUtils.degToRad(ns.photo?.elevationMinDeg ?? 0),
+			THREE.MathUtils.degToRad(ns.photo?.elevationMaxDeg ?? 60)) },
+		tNoise: { value: noise },
+		uTime: shared.uTime,
+		uPixelAngle: shared.uPixelAngle,
+		uSkyTopColor: { value: new THREE.Color(ns.skyTopColor) },
+		uSkyHorizonColor: { value: new THREE.Color(ns.skyHorizonColor) },
+		uGradientPower: { value: ns.gradientPower },
+		uHorizonGlow: { value: ns.horizonGlow },
+		uHorizonGlowColor: { value: new THREE.Color(ns.horizonGlowColor) },
+		uStarDensity: { value: ns.starDensity },
+		uStarBrightness: { value: ns.starBrightness },
+		uStarSize: { value: ns.starSize },
+		uStarClustering: { value: ns.starClustering },
+		uStarColor: { value: new THREE.Color(ns.starColor) },
+		uTwinkleStrength: { value: ns.twinkleStrength },
+		uTwinkleSpeed: { value: ns.twinkleSpeed },
+		uStarFadeFraction: { value: ns.starFadeFraction ?? 0 },
+		uStarFadeSpeed: { value: ns.starFadeSpeed ?? 0.25 },
+		uDustStrength: { value: ns.dustStrength },
+		uDustColor: { value: new THREE.Color(ns.dustColor) },
+		uDustBandNormal: { value: new THREE.Vector3().fromArray(ns.dustBandTilt).normalize() },
+		uDustBandWidth: { value: ns.dustBandWidth },
+		uSummitGlowStrength: { value: ns.summitGlowStrength },
+		uSummitGlowColor: { value: new THREE.Color(ns.summitGlowColor) },
+		uSummitGlowRadius: { value: new THREE.Vector2().fromArray(ns.summitGlowRadius) },
+		uSummitGlowLift: { value: ns.summitGlowLift },
+		uSummitDir: { value: new THREE.Vector3(0, 0, 1) },
+		uAtmoGlowDir: { value: atmosphericGlowDirection() },
+		uAtmoGlowColor: { value: new THREE.Color(ns.atmosphericGlowColor) },
+		uAtmoGlowStrength: { value: ns.atmosphericGlowStrength },
+		uAtmoGlowRadius: { value: ns.atmosphericGlowRadius },
+		uAtmoGlowNoiseAmount: { value: ns.atmosphericGlowNoiseAmount },
+		uAtmoGlowNoiseScale: { value: ns.atmosphericGlowNoiseScale },
+	},
+	side: THREE.FrontSide,
+	depthWrite: false,
+});
+// Fixed sky direction for the atmospheric lift: hero camera → summit, shifted by the config offset.
+function atmosphericGlowDirection() {
+	const dir = SUMMIT.clone().sub(CAMERA_POSITION).normalize();
+	const az = Math.atan2(dir.z, dir.x) + ns.atmosphericGlowOffset[0];
+	const el = Math.asin(dir.y) + ns.atmosphericGlowOffset[1];
+	return new THREE.Vector3(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az));
+}
+skybox.material = skyMode === 'night' ? nightSkyMaterial : daySkyMaterial;
+console.info(`[Sky] mode: ${skyMode}`);
+skybox.renderOrder = -10;
+skybox.frustumCulled = false;
+skybox.onBeforeRender = (_r, _s, cam) => { skybox.matrixWorld.copyPosition(cam.matrixWorld); };
+
+/* ------------------------------------------------------------------ */
+/* Scene graph                                                         */
+/* ------------------------------------------------------------------ */
+
+// Static world: mountain + baby mountains + sky
+scene.add(mountain, peaksRoot, skybox);
+if (sourceAmbient) scene.add(sourceAmbient); // only in 'rodin' material mode; ShaderMaterials ignore it
+
+// Cloud rig turns with the camera around the summit so the cloud planes keep
+// facing the viewer and the composition stays the hero one.
+const cloudRig = new THREE.Group();
+cloudRig.position.copy(PIVOT);
+cloudsGroup.position.sub(PIVOT);
+cloudRig.add(cloudsGroup);
+scene.add(cloudRig);
+
+/* ------------------------------------------------------------------ */
+/* Descent route (scroll-driven)                                       */
+/* ------------------------------------------------------------------ */
+
+document.body.style.height = `${MOUNTAIN_DESCENT.scrollViewports * 100}vh`;
+const descent = createDescent({
+	scene, camera, mountain, pivot: PIVOT,
+	resolution: shared.uResolution.value,
+	labelRoot: document.getElementById('route-labels'),
+});
+descentRef = descent;
+scene.add(descent.group, descent.debugGroup);
+const scroll = { target: 0, value: 0 };
+function readScroll() {
+	const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+	scroll.target = THREE.MathUtils.clamp(window.scrollY / max, 0, 1);
+}
+window.addEventListener('scroll', readScroll, { passive: true });
+readScroll();
+
+/* ------------------------------------------------------------------ */
+/* Debug layer (off by default)                                        */
+/* ------------------------------------------------------------------ */
+
+// Authored camera / look-at splines from the scene file (LINE_STRIP primitives).
+// The original site reverses the point order; index 0 after reversal = hero camera.
+function pathPoints(name) {
+	const obj = sceneRoot.getObjectByName(name);
+	const attr = obj?.geometry?.attributes.position;
+	if (!attr) return null;
+	const pts = [];
+	for (let i = 0; i < attr.count; i++) pts.push(new THREE.Vector3().fromBufferAttribute(attr, i));
+	return pts.reverse();
+}
+scene.updateMatrixWorld(true);
+const debug = createDebugLayer({
+	mountain, babies,
+	summit: SUMMIT, pivot: PIVOT,
+	cameraPosition: CAMERA_POSITION, cameraLookAt: CAMERA_LOOK_AT,
+	zoomMin: SETTINGS.zoomMin, zoomMax: SETTINGS.zoomMax,
+	cameraPath: pathPoints('CameraPath'),
+	targetPath: pathPoints('TargetPath'),
+});
+scene.add(debug.group);
+const debugReadout = document.getElementById('debug-readout');
+function setDebug(on) {
+	SETTINGS.debug = on;
+	descent.debugGroup.visible = on;
+	if (debugReadout) debugReadout.hidden = !on;
+	return on;
+}
+if (SETTINGS.debug) { debug.toggle(true); setDebug(true); }
+window.addEventListener('keydown', (e) => { if (e.key === 'd' || e.key === 'D') setDebug(debug.toggle()); });
+
+/* ------------------------------------------------------------------ */
+/* Orbit                                                               */
+/* ------------------------------------------------------------------ */
+
+const orbit = {
+	enabled: true,
+	angle: 0,
+	targetAngle: 0,
+	zoom: SETTINGS.zoom,
+	targetZoom: SETTINGS.zoom,
+	dragging: false,
+	lastX: 0,
+	idleSince: 0,
+};
+const mouse = new THREE.Vector2();
+const lerpedMouse = new THREE.Vector2();
+
+canvas.addEventListener('pointerdown', (e) => {
+	orbit.dragging = true;
+	orbit.lastX = e.clientX;
+	canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', (e) => {
+	mouse.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+	if (!orbit.dragging) return;
+	orbit.targetAngle += (e.clientX - orbit.lastX) * SETTINGS.dragSpeed;
+	orbit.lastX = e.clientX;
+	orbit.idleSince = performance.now();
+});
+const endDrag = () => { orbit.dragging = false; orbit.idleSince = performance.now(); };
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+// Wheel is the page scroll now — it drives the descent timeline (see descent-config.js).
+// Zoom is choreographed by the timeline and still clamped by getResponsiveZoomLimit().
+
+const baseOffset = CAMERA_POSITION.clone().sub(PIVOT);
+const baseLookOffset = CAMERA_LOOK_AT.clone().sub(PIVOT);
+const tmpPos = new THREE.Vector3();
+const tmpLook = new THREE.Vector3();
+
+function updateCamera(dt) {
+	if (!orbit.enabled) return;
+	const ds = descent.state;
+	const idle = !orbit.dragging && performance.now() - orbit.idleSince > 1500 && ds.progress < MOUNTAIN_DESCENT.camera.autoRotateBelowProgress;
+	if (idle) orbit.targetAngle += SETTINGS.autoRotateSpeed * dt;
+
+	// The limit can drop on resize (wider viewport): pull the target in and let the damp ease into it
+	if (orbit.targetZoom > zoomLimit) orbit.targetZoom = zoomLimit;
+	orbit.angle = THREE.MathUtils.damp(orbit.angle, orbit.targetAngle, 6, dt);
+	orbit.zoom = THREE.MathUtils.damp(orbit.zoom, orbit.targetZoom, 6, dt);
+
+	// drag orbit + descent choreography (angle adds, zoom multiplies within the responsive limit, camera / look-at descend)
+	const totalAngle = orbit.angle + THREE.MathUtils.degToRad(ds.angleDeg);
+	const totalZoom = Math.min(orbit.zoom * ds.zoom, zoomLimit);
+	tmpPos.copy(baseOffset).multiplyScalar(totalZoom).applyAxisAngle(THREE.Object3D.DEFAULT_UP, totalAngle).add(PIVOT);
+	tmpLook.copy(baseLookOffset).applyAxisAngle(THREE.Object3D.DEFAULT_UP, totalAngle).add(PIVOT);
+	tmpPos.y += ds.camDrop;
+	tmpLook.y += ds.lookDrop;
+	if (ds.follow > 0) tmpLook.lerp(ds.tip, ds.follow); // steer toward the route tip during the descent
+
+	camera.position.copy(tmpPos);
+	camera.lookAt(tmpLook);
+
+	lerpedMouse.lerp(mouse, dt * 0.5);
+	camera.translateX(lerpedMouse.x * 0.1 * SETTINGS.parallax);
+	camera.translateY(lerpedMouse.y * 0.2 * SETTINGS.parallax);
+	camera.rotateY(-lerpedMouse.x * 0.05 * SETTINGS.parallax);
+	camera.rotateX(lerpedMouse.y * 0.05 * SETTINGS.parallax);
+
+	cloudRig.rotation.y = totalAngle;
+	skybox.rotation.y = totalAngle; // keeps the cylinder's UV seam behind the camera
+	gd2Material.uniforms.uLightDir.value.copy(BAKED_LIGHT_DIR).applyAxisAngle(THREE.Object3D.DEFAULT_UP, totalAngle);
+}
+
+/* ------------------------------------------------------------------ */
+/* Loop                                                                */
+/* ------------------------------------------------------------------ */
+
+const clock = new THREE.Clock();
+function tick() {
+	const dt = Math.min(clock.getDelta(), 0.1);
+	shared.uTime.value = clock.elapsedTime;
+	shared.uCloudTime.value += dt * SETTINGS.cloudSpeed;
+	scroll.value = THREE.MathUtils.damp(scroll.value, scroll.target, MOUNTAIN_DESCENT.scrollDamp, dt);
+	if (Math.abs(scroll.value - scroll.target) < 0.0005) scroll.value = scroll.target;
+	descent.update(scroll.value, dt, camera);
+	updateCamera(dt);
+	if (SETTINGS.debug && debugReadout) debugReadout.textContent = `scroll ${scroll.value.toFixed(3)}  route u ${descent.state.u.toFixed(3)}  orbit ${(THREE.MathUtils.radToDeg(orbit.angle) + descent.state.angleDeg).toFixed(1)}°  zoom ${Math.min(orbit.zoom * descent.state.zoom, zoomLimit).toFixed(3)}`;
+	if (skybox.material === nightSkyMaterial) nightSkyMaterial.uniforms.uSummitDir.value.subVectors(SUMMIT, camera.position).normalize();
+	if (SETTINGS.mouseTrail) mouseTrail.update(dt, mouse);
+	renderer.render(scene, camera);
+	requestAnimationFrame(tick);
+}
+document.body.classList.add('is-ready');
+tick();
+
+window.__mountain = { SETTINGS, orbit, scene, camera, renderer, mouseTrail, cloudsGroup, mountain, peaksRoot, babies, debug, gd2Material, materialMode, skyMode, nightSkyMaterial, daySkyMaterial, skybox, ZOOM_LIMIT, getResponsiveZoomLimit, get zoomLimit() { return zoomLimit; }, descent, scroll, setDebug };

@@ -1,0 +1,122 @@
+/*
+ * nav.css — primary navigation floating over the hero.
+ *
+ * A quiet interface layer: no bar, no container, transparent ground. It sits
+ * above the WebGL canvas and never touches the scene. Tokens up top so the
+ * whole treatment can be tuned in one place.
+ */
+
+:root {
+	--nav-top: clamp(32px, 4vh, 48px);
+	--nav-right: clamp(48px, 4.5vw, 64px);
+	--nav-gap: clamp(28px, 3vw, 44px);
+
+	--nav-font: "Inter", "Söhne", "Helvetica Neue", system-ui, sans-serif;
+	--nav-size: 0.9375rem;            /* 15px — above the 14px floor for functional text */
+	--nav-tracking: 0.03em;
+
+	--nav-ink: #e6edf8;               /* very light cool grey */
+	--nav-ink-rest: 0.7;              /* resting opacity */
+	--nav-ink-hover: 1;
+	--nav-glow: rgba(160, 190, 235, 0.45);
+	--nav-shadow: 0 1px 10px rgba(2, 4, 10, 0.55);   /* legibility over stars, not decoration */
+
+	--nav-ease: cubic-bezier(0.22, 0.61, 0.36, 1);    /* soft, precise, no overshoot */
+	--nav-dur: 320ms;
+}
+
+.nav {
+	position: fixed;
+	top: var(--nav-top);
+	right: var(--nav-right);
+	z-index: 10;
+	pointer-events: none;             /* the canvas keeps every gesture except on the links themselves */
+	opacity: 0;
+	transform: translateY(-4px);
+	transition: opacity 900ms var(--nav-ease) 400ms, transform 900ms var(--nav-ease) 400ms;
+}
+body.is-ready .nav {
+	opacity: 1;
+	transform: none;
+}
+
+.nav ul {
+	display: flex;
+	justify-content: flex-end;
+	align-items: baseline;
+	gap: var(--nav-gap);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.nav a {
+	pointer-events: auto;
+	position: relative;
+	display: inline-block;
+	padding: 6px 0;                   /* comfortable hit area without a visible box */
+	font-family: var(--nav-font);
+	font-size: var(--nav-size);
+	font-weight: 400;
+	letter-spacing: var(--nav-tracking);
+	line-height: 1.2;
+	color: var(--nav-ink);
+	opacity: var(--nav-ink-rest);
+	text-decoration: none;
+	text-shadow: var(--nav-shadow);
+	white-space: nowrap;
+	-webkit-font-smoothing: antialiased;
+	transition:
+		opacity var(--nav-dur) var(--nav-ease),
+		text-shadow var(--nav-dur) var(--nav-ease);
+}
+
+/* hairline indicator — scales in from the left, never moves the text */
+.nav a::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 1px;
+	background: currentColor;
+	opacity: 0;
+	transform: scaleX(0);
+	transform-origin: left center;
+	transition:
+		transform var(--nav-dur) var(--nav-ease),
+		opacity var(--nav-dur) var(--nav-ease);
+}
+
+.nav a:hover,
+.nav a:focus-visible {
+	opacity: var(--nav-ink-hover);
+	text-shadow: var(--nav-shadow), 0 0 14px var(--nav-glow);
+}
+.nav a:hover::after,
+.nav a:focus-visible::after {
+	opacity: 0.55;
+	transform: scaleX(1);
+}
+
+/* keyboard focus: same state as hover, plus a visible ring that does not draw a box in the resting state */
+.nav a:focus-visible {
+	outline: 1px solid rgba(200, 216, 245, 0.6);
+	outline-offset: 6px;
+	border-radius: 2px;
+}
+
+/* Smaller screens: keep it horizontal as long as it fits, then stack top-right.
+   The WebGL scene is untouched either way. */
+@media (max-width: 1100px) {
+	:root { --nav-gap: 24px; --nav-right: 32px; --nav-top: 28px; }
+}
+@media (max-width: 760px) {
+	.nav ul { flex-direction: column; align-items: flex-end; gap: 10px; }
+	:root { --nav-right: 24px; --nav-top: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.nav, .nav a, .nav a::after { transition: none; }
+	.nav { transform: none; }
+}
