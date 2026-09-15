@@ -597,7 +597,7 @@ scene.add(cloudFloor.group);
 
 // Hero statement: a camera-parented quad drawn between the cloud layers (see hero-text.js)
 scene.add(camera);
-const heroText = await createHeroText({ camera, noise, cloudTime: shared.uCloudTime });
+const heroText = await createHeroText({ camera });
 heroTextRef = heroText;
 
 /* ------------------------------------------------------------------ */
@@ -775,7 +775,7 @@ function tick() {
 	descent.update(scroll.value, dt, camera, spin);
 	camp?.update(scroll.value);
 	updateCamera(dt);
-	heroText.update(dt, scroll.value);
+	heroText.update(dt);
 	if (SETTINGS.debug && debugReadout) debugReadout.textContent = `scroll ${scroll.value.toFixed(3)}  route u ${descent.state.u.toFixed(3)}  orbit ${(THREE.MathUtils.radToDeg(orbit.angle) + descent.state.angleDeg).toFixed(1)}°  zoom ${Math.min(orbit.zoom * descent.state.zoom, zoomLimit).toFixed(3)}`;
 	if (skybox.material === nightSkyMaterial) nightSkyMaterial.uniforms.uSummitDir.value.subVectors(SUMMIT, camera.position).normalize();
 	if (SETTINGS.mouseTrail) mouseTrail.update(dt, mouse);
