@@ -98,6 +98,30 @@ export const MOUNTAIN_DESCENT = {
 	scrollDamp: 4.5,
 
 	style: {
+		/* Route rendering: 'conduit' = transparent tube with luminous fluid inside (below);
+		   'line' = the previous glow line (kept as a fallback, same reveal / tip / occlusion). */
+		routeMode: 'conduit',
+		conduit: {
+			tubeOuterRadius: 0.62,        // world units — the clear shell (≈ 4 px at the hero distance)
+			tubeInnerRadius: 0.36,        // the fluid core
+			haloRadius: 1.3,              // additive halo around the pulse only (0 = none)
+			haloStrength: 0.7,
+			radialSegments: 10,
+			tubeShellOpacity: 0.3,
+			tubeShellTint: 0xcfe6ff,      // cold, nearly clear
+			shellRoughness: 0.12,
+			shellEnvIntensity: 0.9,       // highlights come from the scene environment
+			fluidColor: 0x37d6ff,         // icy cyan
+			fluidBaseEmission: 0.8,       // dim base glow (0 = invisible fluid)
+			fluidFlowSpeed: 0.35,         // texture units / s along the tube
+			fluidNoiseStrength: 0.45,     // 0 = even, 1 = strongly clotted flow
+			pulseSpeed: 9,                // world units / s
+			pulseLength: 9,               // world units, half-width of the energy packet
+			pulseStrength: 3.2,
+			pulseColor: 0xe8fbff,
+			pulsePause: 22,               // world units of "empty run" after the pulse leaves the route before the next one starts
+			tipStrength: 0.9,             // hot tip while the route is being drawn
+		},
 		route: {
 			/* On a snow mountain a light line disappears (the old cool-white 1.6 px route did), so
 			   the route is drawn the way a map draws a road: a dark casing under a bright core.

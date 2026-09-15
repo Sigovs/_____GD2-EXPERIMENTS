@@ -236,7 +236,65 @@ void main() {
 /* Descent                                                             */
 /* ------------------------------------------------------------------ */
 
-export function createDescent({ scene, camera, mountain, pivot, resolution, labelRoot }) {
+/* ------------------------------------------------------------------ */
+/* Fluid conduit shaders                                               */
+/* ------------------------------------------------------------------ */
+
+const fluidVertex = /* glsl */ `
+varying vec2 vUv;
+varying vec3 vNormalV, vViewV;
+void main() {
+	vUv = uv;
+	vec4 mv = modelViewMatrix * vec4(position, 1.);
+	vNormalV = normalize(normalMatrix * normal);
+	vViewV = -mv.xyz;
+	gl_Position = projectionMatrix * mv;
+}`;
+
+const fluidFragment = /* glsl */ `
+precision highp float;
+uniform sampler2D tNoise;
+uniform float uTime, uRouteProgress, uRouteTotal;
+uniform float uFlowSpeed, uNoiseStrength, uBaseEmission;
+uniform float uPulsePos, uPulseLength, uPulseStrength;
+uniform float uTipLength, uTipStrength, uHalo;   // uHalo > 0: this mesh is the additive halo around the pulse only
+uniform vec3 uFluidColor, uPulseColor, uTipColor;
+varying vec2 vUv;
+varying vec3 vNormalV, vViewV;
+
+void main() {
+	if (vUv.x > uRouteProgress) discard;
+	if (uHalo > 0.0) {
+		float facingH = abs(dot(normalize(vNormalV), normalize(vViewV)));
+		float alongH = vUv.x * uRouteTotal;
+		float dh = (alongH - uPulsePos) / (uPulseLength * 1.6);
+		float g = exp(-dh * dh) * pow(facingH, 2.0) * uHalo;
+		if (g < 0.004) discard;
+		gl_FragColor = vec4(uPulseColor * g, g);
+		return;
+	}
+	float along = vUv.x * uRouteTotal;                       // world units along the route
+	// looking through the tube: brightest where we look straight into the fluid (the centre line)
+	float facing = abs(dot(normalize(vNormalV), normalize(vViewV)));
+	float centre = pow(facing, 1.6);
+	// slow, low-frequency circulation + finer strands, both drifting down the tube
+	float f1 = texture2D(tNoise, vec2(along * 0.05 - uTime * uFlowSpeed, vUv.y * 0.35 + 0.1)).r;
+	float f2 = texture2D(tNoise, vec2(along * 0.18 - uTime * uFlowSpeed * 1.8, vUv.y * 0.8 + 0.6)).g;
+	float flow = 1.0 + uNoiseStrength * ((f1 - 0.5) * 1.4 + (f2 - 0.5) * 0.8);
+	float base = uBaseEmission * flow;
+	// the signal packet: soft edges, slightly clotted by the same noise
+	float dp = (along - uPulsePos) / uPulseLength;
+	float pulse = exp(-dp * dp) * (0.75 + 0.5 * f2) * uPulseStrength;
+	// hot tip while the route is being drawn
+	float tip = smoothstep(uRouteProgress - uTipLength / uRouteTotal, uRouteProgress, vUv.x) * uTipStrength;
+	vec3 col = uFluidColor * base * (0.45 + 0.55 * centre) + uPulseColor * pulse * (0.6 + 0.4 * centre) + uTipColor * tip;
+	float a = clamp(base * 0.9 * (0.5 + 0.5 * centre) + pulse * 0.8 + tip * 0.8, 0.0, 1.0);
+	// soft fade at the very end of the revealed length so the tube does not end in a hard cap
+	a *= smoothstep(uRouteProgress, uRouteProgress - 0.004, vUv.x);
+	gl_FragColor = vec4(col, a);
+}`;
+
+export function createDescent({ scene, camera, mountain, pivot, resolution, labelRoot, noise, envMap }) {
 	const probe = new TerrainProbe(mountain, pivot);
 	const occluder = probe.buildProxyMesh();   // ~5k triangles, raycast-only
 	occluder.updateMatrixWorld(true);
@@ -294,6 +352,78 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 	const group = new THREE.Group();
 	group.name = 'DescentRoute';
 	group.add(casingLine, glowLine, routeLine);
+
+	/* --- fluid conduit (default) --------------------------------------- */
+	const conduit = { uniforms: null, shell: null, fluid: null, pulseClock: 0 };
+	if (cfg.style.routeMode === 'conduit') {
+		const cc = cfg.style.conduit;
+		[casingLine, glowLine, routeLine].forEach((l) => { l.visible = false; });
+		// same points → arc-length parametrised tube, so uv.x == route-length fraction (the reveal parameter)
+		const curve = new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.5);
+		const segs = N - 1;
+		const shellGeo = new THREE.TubeGeometry(curve, segs, cc.tubeOuterRadius, cc.radialSegments, false);
+		const fluidGeo = new THREE.TubeGeometry(curve, segs, cc.tubeInnerRadius, cc.radialSegments, false);
+
+		// outer shell: clear polymer — reflections from the scene environment, faint cold tint,
+		// reveal via the same route-length parameter (discard beyond the drawn length)
+		const shellMat = new THREE.MeshPhysicalMaterial({
+			color: cc.tubeShellTint, transparent: true, opacity: cc.tubeShellOpacity,
+			roughness: cc.shellRoughness, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.1,
+			envMap: envMap ?? null, envMapIntensity: cc.shellEnvIntensity,
+			depthWrite: false, side: THREE.FrontSide,
+		});
+		shellMat.onBeforeCompile = (shader) => {
+			shader.uniforms.uRouteProgress = routeUniforms.uRouteProgress;
+			shader.vertexShader = shader.vertexShader
+				.replace('#include <common>', '#include <common>\nvarying float vRouteU;')
+				.replace('#include <begin_vertex>', '#include <begin_vertex>\nvRouteU = uv.x;');
+			shader.fragmentShader = shader.fragmentShader
+				.replace('#include <common>', '#include <common>\nvarying float vRouteU;\nuniform float uRouteProgress;')
+				.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nif (vRouteU > uRouteProgress) discard;');
+		};
+		conduit.uniforms = {
+			tNoise: { value: noise },
+			uTime: { value: 0 },
+			uRouteProgress: routeUniforms.uRouteProgress,
+			uRouteTotal: routeUniforms.uRouteTotal,
+			uFlowSpeed: { value: cc.fluidFlowSpeed },
+			uNoiseStrength: { value: cc.fluidNoiseStrength },
+			uBaseEmission: { value: cc.fluidBaseEmission },
+			uPulsePos: { value: -1e3 },
+			uPulseLength: { value: cc.pulseLength },
+			uPulseStrength: { value: cc.pulseStrength },
+			uTipLength: { value: st.tipLength },
+			uTipStrength: { value: cc.tipStrength },
+			uHalo: { value: 0 },
+			uFluidColor: { value: new THREE.Color(cc.fluidColor) },
+			uPulseColor: { value: new THREE.Color(cc.pulseColor) },
+			uTipColor: { value: new THREE.Color(st.tipColor) },
+		};
+		const fluidMat = new THREE.ShaderMaterial({
+			vertexShader: fluidVertex, fragmentShader: fluidFragment, uniforms: conduit.uniforms,
+			transparent: true, depthWrite: false, depthTest: true, side: THREE.FrontSide,
+		});
+		conduit.fluid = new THREE.Mesh(fluidGeo, fluidMat);
+		conduit.shell = new THREE.Mesh(shellGeo, shellMat);
+		conduit.fluid.renderOrder = 0;
+		conduit.shell.renderOrder = 0.1;
+		conduit.fluid.frustumCulled = conduit.shell.frustumCulled = false;
+		conduit.fluid.name = 'RouteFluid'; conduit.shell.name = 'RouteShell';
+		group.add(conduit.fluid, conduit.shell);
+		if (cc.haloRadius > 0) {
+			const haloGeo = new THREE.TubeGeometry(curve, Math.round(segs / 2), cc.haloRadius, 8, false);
+			const haloMat = new THREE.ShaderMaterial({
+				vertexShader: fluidVertex, fragmentShader: fluidFragment,
+				uniforms: { ...conduit.uniforms, uHalo: { value: cc.haloStrength } },
+				transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending, side: THREE.FrontSide,
+			});
+			conduit.halo = new THREE.Mesh(haloGeo, haloMat);
+			conduit.halo.renderOrder = -0.2;
+			conduit.halo.frustumCulled = false;
+			conduit.halo.name = 'RouteHalo';
+			group.add(conduit.halo);
+		}
+	}
 
 	/* --- markers + callouts ------------------------------------------------ */
 	const ms = cfg.style.marker;
@@ -538,6 +668,17 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 		state.u = linearKeys(timingKeys, progress);
 		routeUniforms.uRouteProgress.value = state.u;
 
+		// fluid: time-driven inside whatever length is revealed; the pulse runs the whole route
+		// (through hidden sections too), then rests for `pulsePause` units before the next one
+		if (conduit.uniforms) {
+			const cc = cfg.style.conduit;
+			const u = conduit.uniforms;
+			u.uTime.value += dt;
+			conduit.pulseClock += dt * cc.pulseSpeed;
+			const cycle = total + cc.pulsePause + 2 * cc.pulseLength;
+			u.uPulsePos.value = (conduit.pulseClock % cycle) - cc.pulseLength;
+		}
+
 		const c = cfg.camera;
 		state.angleDeg = smoothKeys(c.angleDeg, progress);
 		state.zoom = smoothKeys(c.zoom, progress);
@@ -585,5 +726,5 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 		measureCallouts(); // max-width and the hidden sentence change with the viewport
 	}
 
-	return { group, debugGroup, state, stops, probe, occluder, points, total, anchorU, update, resize, timingKeys, pointAt };
+	return { group, debugGroup, state, stops, probe, occluder, points, total, anchorU, update, resize, timingKeys, pointAt, conduit };
 }

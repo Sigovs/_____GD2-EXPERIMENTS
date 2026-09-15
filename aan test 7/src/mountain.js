@@ -609,6 +609,7 @@ const descent = createDescent({
 	scene, camera, mountain, pivot: PIVOT,
 	resolution: shared.uResolution.value,
 	labelRoot: document.getElementById('route-labels'),
+	noise, envMap,
 });
 descentRef = descent;
 scene.add(descent.group, descent.debugGroup);
