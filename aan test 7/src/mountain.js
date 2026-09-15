@@ -757,13 +757,16 @@ function updateCamera(dt) {
 	camera.position.copy(tmpPos);
 	camera.lookAt(tmpLook);
 	abyss.applyShift(camera);
-	abyss.place(camera);   // billboards at fixed depths in front of the camera (before the mouse parallax, so they get it like the world does)
+	// billboards at fixed depths in front of the camera — placed BEFORE the mouse parallax so the chasm edge and the canyon
+	// video react to mouse move like the world does (ABYSS_TRANSITION.camera.mouseParallax — approved, keep it this way)
+	if (ABYSS_TRANSITION.camera.mouseParallax) abyss.place(camera);
 
 	lerpedMouse.lerp(mouse, dt * 0.5);
 	camera.translateX(lerpedMouse.x * 0.1 * SETTINGS.parallax);
 	camera.translateY(lerpedMouse.y * 0.2 * SETTINGS.parallax);
 	camera.rotateY(-lerpedMouse.x * 0.05 * SETTINGS.parallax);
 	camera.rotateX(lerpedMouse.y * 0.05 * SETTINGS.parallax);
+	if (!ABYSS_TRANSITION.camera.mouseParallax) abyss.place(camera);   // (locked to the frame instead — not the approved look)
 
 	cloudRig.rotation.y = totalAngle;
 	skybox.rotation.y = totalAngle; // keeps the cylinder's UV seam behind the camera

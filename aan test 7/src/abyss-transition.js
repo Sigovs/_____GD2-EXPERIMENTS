@@ -30,8 +30,11 @@ export const ABYSS_TRANSITION = {
 	totalViewports: 13,
 	descentShare: 9 / 13,
 
-	/* Camera: lens shift of the projection (frame heights the hero picture moves UP) and a small zoom-out */
+	/* Camera: lens shift of the projection (frame heights the hero picture moves UP) and a small zoom-out.
+	   `mouseParallax` — APPROVED, KEEP: the chasm edge and the canyon video are placed BEFORE the mouse parallax is applied
+	   to the camera, so they swing with the mouse like the world does (the video reacts to mouse move). Never place them after it. */
 	camera: {
+		mouseParallax: true,
 		shift:   [[0, 0], [0.25, 0.02], [0.55, 0.15], [0.8, 0.45], [1, 0.9]],
 		zoomMul: [[0, 1], [0.6, 1.12], [1, 1.15]],   // "slightly backward" — a small size reduction, inside the responsive clamp
 	},
