@@ -643,7 +643,7 @@ void main() {
 	vec4 mvPosition = vec4(position, 1.0);
 	vNormal = normalize(normalMatrix * normal);
 	mvPosition = instanceMatrix * mvPosition;
-	vWorldY = (modelMatrix * mvPosition).y;   // rig turns about Y, so this is the plate's world height
+	vWorldY = (modelMatrix * mvPosition).y - modelMatrix[3][1];   // height relative to the rig (it turns about Y and follows the camera down)
 
 	vSeed = (instanceMatrix[3][0] + instanceMatrix[3][1] + instanceMatrix[3][2]);
 	vRatio = instanceMatrix[1][1] / instanceMatrix[0][0];

@@ -52,9 +52,8 @@ const fragment = /* glsl */ `
 precision highp float;
 uniform sampler2D tNoise, tPerlin;
 uniform float uTime, uCoverage, uOpacity, uScale, uSoftness, uSeed, uRadius, uRimFade, uBump;
-uniform float uDusk, uHole, uCollar;   // abyss transition: cooling of the sea, radius of the rupture (world units), solid collar around the axis
-uniform vec2 uCenter, uViewFade, uHoleCenter;
-uniform vec3 uColorDark, uColorLight, uDuskColor;
+uniform vec2 uCenter, uViewFade;
+uniform vec3 uColorDark, uColorLight;
 varying vec3 vWorld;
 varying vec2 vUv;
 
@@ -67,21 +66,14 @@ void main() {
 	        + texture2D(tPerlin, p * 5.1 + vec2(t * 0.3, t * 0.9)).r * 0.15;
 	float thr = 1.0 - uCoverage;                          // coverage 1 → threshold 0 → solid
 	float a = smoothstep(thr - uSoftness, thr + uSoftness, n);
-	float dist = length(vWorld.xz - uCenter);
-	float d = dist / uRadius;
+	float d = length(vWorld.xz - uCenter) / uRadius;
 	a *= smoothstep(1.0, uRimFade, d);
-	// the rupture: a ragged hole opening on the camera's side of the axis (noise-eroded edge); the collar around the axis stays
-	float holeDist = length(vWorld.xz - uHoleCenter);
-	if (uHole > 0.0) a *= max(smoothstep(uHole * (0.55 + 0.4 * n), uHole * (1.15 + 0.3 * n), holeDist), 1.0 - smoothstep(uCollar, uCollar + 40.0, dist));
 	a *= smoothstep(uViewFade.y, uViewFade.x, distance(vWorld, cameraPosition));
 	a *= uOpacity;
 	if (a < 0.015) discard;
 	// crests lighter, troughs darker; a touch of extra shadow where the layer is thin
 	vec3 color = mix(uColorDark, uColorLight, smoothstep(0.25, 0.85, n));
 	color *= 0.96 + 0.04 * a;
-	// dusk: the sea cools from the rupture outward
-	float cool = uDusk * (0.6 + 0.4 * smoothstep(uHole * 2.5 + 60.0, uHole * 1.0, holeDist));
-	color = mix(color, uDuskColor * (0.8 + 0.4 * smoothstep(0.25, 0.85, n)), cool);
 	gl_FragColor = vec4(color, a);
 }`;
 
@@ -111,11 +103,6 @@ export function createCloudFloor({ pivot, noise, perlin, cloudTime }) {
 				uViewFade: { value: new THREE.Vector2().fromArray(cfg.viewFade) },
 				uColorDark: { value: new THREE.Color(cfg.colorDark) },
 				uColorLight: { value: new THREE.Color(cfg.colorLight) },
-				uDusk: { value: 0 },
-				uHole: { value: 0 },
-				uCollar: { value: 75 },
-				uHoleCenter: { value: new THREE.Vector2(pivot.x, pivot.z) },
-				uDuskColor: { value: new THREE.Color(0x2a3d5c) },
 			},
 			transparent: true,
 			depthTest: true,
