@@ -6,8 +6,8 @@ import * as THREE from 'three';
  * Each line is its own textured quad parented to the camera (screen-locked,
  * like the cloud quads), drawn between the middle-ground clouds (renderOrder −1)
  * and the foreground clouds (+1), so the foreground cloud plates genuinely pass
- * in front of the lower lines. On load the lines slide up from below one after
- * another (staircase). Nothing happens to the text on scroll.
+ * in front of the lower lines. On load the lines slide in from the left one
+ * after another (staircase). Nothing happens to the text on scroll.
  */
 
 export const HERO_TEXT = {
@@ -21,8 +21,8 @@ export const HERO_TEXT = {
 	top: 0.265,         // block top edge
 	height: 0.30,       // block height (all lines)
 	renderOrder: 0.5,   // between the cloud quads: middle-ground −1 … foreground +1
-	// load-in: every line rises from below and fades in; the next line starts `stagger` seconds later
-	reveal: { delay: 0.5, duration: 1.3, stagger: 0.22, rise: 0.12 },   // rise = fraction of viewport height
+	// load-in: every line slides in from the left and fades in; the next line starts `stagger` seconds later
+	reveal: { delay: 0.5, duration: 1.3, stagger: 0.22, slide: 0.10 },  // slide = fraction of viewport width
 };
 
 const vertex = /* glsl */ `
@@ -92,10 +92,10 @@ export async function createHeroText({ camera }) {
 		mesh.renderOrder = cfg.renderOrder;
 		mesh.frustumCulled = false;
 		group.add(mesh);
-		return { mesh, material, aspect: t.aspect, padFrac: t.padFrac, baseY: 0 };
+		return { mesh, material, aspect: t.aspect, padFrac: t.padFrac, baseX: 0 };
 	});
 
-	const base = { screenH: 1 };
+	const base = { screenW: 1 };
 	function layout() {
 		const D = cfg.distance;
 		const screenH = 2 * D * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
@@ -108,10 +108,10 @@ export async function createHeroText({ camera }) {
 			const w = lineH * l.aspect;
 			l.mesh.scale.set(w, lineH, 1);
 			// the canvas has padding; shift so the glyphs' left edge sits on the block's left edge
-			l.baseY = top - lineH * (i + 0.5);
-			l.mesh.position.set(left + w / 2 - l.padFrac * w, l.baseY, -D);
+			l.baseX = left + w / 2 - l.padFrac * w;
+			l.mesh.position.set(l.baseX, top - lineH * (i + 0.5), -D);
 		});
-		base.screenH = screenH;
+		base.screenW = screenW;
 	}
 	layout();
 
@@ -122,7 +122,7 @@ export async function createHeroText({ camera }) {
 		lines.forEach((l, i) => {
 			const k = THREE.MathUtils.clamp((t - i * cfg.reveal.stagger) / cfg.reveal.duration, 0, 1);
 			const e = 1 - Math.pow(1 - k, 3);   // ease-out cubic
-			l.mesh.position.y = l.baseY - (1 - e) * cfg.reveal.rise * base.screenH;
+			l.mesh.position.x = l.baseX - (1 - e) * cfg.reveal.slide * base.screenW;
 			l.material.uniforms.uAlpha.value = e;
 		});
 	}
