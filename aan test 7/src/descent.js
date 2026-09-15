@@ -478,7 +478,15 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 		// the glass plate: its refraction filter is sized to the plate in placeCallout (measure)
 		const gc = cfg.style.callout?.glass;
 		const glass = gc?.enabled ? createGlassFilter({ id: `glass-${stop.id}`, root: labelRoot, ...gc }) : null;
-		if (glass) plane.classList.add('callout__in--glass');
+		if (glass) {
+			plane.classList.add('callout__in--glass');
+			// the slab's lit bevel and its chromatic fringe (route.css); the crisp rim and the light sweep are pseudo-elements
+			for (const cls of ['glass__bevel', 'glass__fringe']) {
+				const i = document.createElement('i');
+				i.className = cls; i.setAttribute('aria-hidden', 'true');
+				plane.appendChild(i);
+			}
+		}
 		const title = document.createElement('p');
 		title.className = 'callout__k';
 		title.innerHTML = `<svg class="ico" viewBox="0 0 12 12" aria-hidden="true" focusable="false">${ICONS[stop.icon] ?? ''}</svg>`;

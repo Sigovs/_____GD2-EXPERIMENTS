@@ -167,11 +167,12 @@ export const MOUNTAIN_DESCENT = {
 			glass: {
 				enabled: true,
 				radius: 8,            // px — keep equal to route.css .callout__in border-radius
-				bevelPx: 22,          // width of the refracting edge band
-				refractPx: 26,        // displacement at the very edge
-				dispersion: 0.2,      // chromatic spread of the refraction (the rainbow fringe)
-				frostPx: 1.4,         // blur after refraction
-				profile: 1.7,         // 1 = linear bevel, 2 = rounder lens edge
+				bevelPx: 34,          // width of the refracting edge band — a thick slab
+				refractPx: 64,        // displacement at the very edge
+				dispersion: 0.32,     // chromatic spread of the refraction (the rainbow fringe)
+				frostPx: 0.9,         // blur after refraction — light, so the bending stays crisp
+				profile: 2.2,         // 1 = linear bevel, 2+ = rounder lens edge
+				magnify: 0.07,        // the interior is a weak convex lens (the backdrop is slightly enlarged through the slab)
 			},
 		},
 	},

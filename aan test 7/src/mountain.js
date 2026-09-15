@@ -806,6 +806,9 @@ function tick() {
 	abyss.update(transP, descentP);
 	cloudMaterial.uniforms.uDusk.value = abyss.state.dusk;
 	routeLabels.style.opacity = abyss.state.labelFade;   // the callouts belong to the mountain and dissolve with it
+	// the glass plates' light follows the mouse (route.css reads --glass-angle): the sweep and the lit bevel turn with it
+	const glassAngle = 135 - lerpedMouse.x * 40 + lerpedMouse.y * 25;
+	if (Math.abs(glassAngle - (routeLabels.__glassAngle ?? 0)) > 0.25) { routeLabels.__glassAngle = glassAngle; routeLabels.style.setProperty('--glass-angle', `${glassAngle.toFixed(1)}deg`); }
 	heroText.setFade(abyss.state.heroTextFade);
 	for (const l of cloudFloor.layers) l.material.uniforms.uDusk.value = abyss.state.seaDusk;
 	updateCamera(dt);

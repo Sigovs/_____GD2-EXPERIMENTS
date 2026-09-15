@@ -6,8 +6,8 @@
  *
  * Refraction and dispersion are an SVG filter applied with `backdrop-filter: url(#…)`:
  * a canvas-drawn displacement map (R = x, G = y, 128 = none) of the plate's own size —
- * a bevel band along the rounded edge that pushes the sample point outward, strongest at
- * the edge, flat in the middle so the text sits on undistorted, merely frosted backdrop.
+ * a bevel band along the rounded edge that pulls the sample point inward (a convex lens),
+ * strongest at the edge, nearly flat in the middle so the text sits on a calm backdrop.
  * One filter per plate (its map is its size); `fit(w, h)` redraws it. Where url() is not
  * accepted in backdrop-filter (Safari, Firefox) the plain blur declaration before it wins.
  */
@@ -44,8 +44,9 @@ function sdRoundRect(px, py, hw, hh, r) {
  * @param {number} o.dispersion  0..1 — channel spread (R less, B more than G)
  * @param {number} o.frostPx     blur (px) after refraction
  * @param {number} [o.profile]   edge profile exponent: 1 linear, 2 lens-like (default 1.6)
+ * @param {number} [o.magnify]   0..0.2 — the slab is a weak convex lens: the interior samples toward the centre
  */
-export function createGlassFilter({ id, root, radius = 8, bevelPx = 22, refractPx = 28, dispersion = 0.18, frostPx = 1.2, profile = 1.6 }) {
+export function createGlassFilter({ id, root, radius = 8, bevelPx = 22, refractPx = 28, dispersion = 0.18, frostPx = 1.2, profile = 1.6, magnify = 0 }) {
 	const svg = ensureHost(root);
 	const filter = document.createElementNS(SVG_NS, 'filter');
 	filter.setAttribute('id', id);
@@ -109,19 +110,23 @@ export function createGlassFilter({ id, root, radius = 8, bevelPx = 22, refractP
 			for (let i = 0; i < W; i++) {
 				const px = (i + 0.5) / dpr - hw;
 				const d = sdRoundRect(px, py, hw, hh, r);
-				let dx = 0, dy = 0;
+				// map value ±0.5 ↔ ±refractPx of displacement (the filter's scale is 2·refractPx)
+				// the lens body: sample toward the centre → the backdrop is magnified through the slab
+				let dx = -px * magnify / (2 * refractPx), dy = -py * magnify / (2 * refractPx);
 				if (d < bevelPx) {
-					// outward normal from the SDF gradient; magnitude rises toward the edge with the lens profile
+					// the thick edge: outward normal from the SDF gradient, magnitude rising to the edge with the lens profile
 					const gx = (sdRoundRect(px + eps, py, hw, hh, r) - sdRoundRect(px - eps, py, hw, hh, r)) / (2 * eps);
 					const gy = (sdRoundRect(px, py + eps, hw, hh, r) - sdRoundRect(px, py - eps, hw, hh, r)) / (2 * eps);
 					const len = Math.hypot(gx, gy) || 1;
 					const t = Math.max(0, 1 - Math.max(d, 0) / bevelPx);
 					const mag = Math.pow(t, profile) * 0.5;
-					dx = -gx / len * mag; dy = -gy / len * mag;   // −gradient = outward
+					// INWARD (+gradient): the edge shows the backdrop from further inside, like a convex lens —
+				// sampling outward would read past the element's clipped backdrop and go transparent
+				dx += gx / len * mag; dy += gy / len * mag;
 				}
 				const o = (j * W + i) * 4;
-				data[o] = Math.round((0.5 + dx) * 255);
-				data[o + 1] = Math.round((0.5 + dy) * 255);
+				data[o] = Math.round(Math.min(1, Math.max(0, 0.5 + dx)) * 255);
+				data[o + 1] = Math.round(Math.min(1, Math.max(0, 0.5 + dy)) * 255);
 				data[o + 2] = 0;
 				data[o + 3] = 255;
 			}
