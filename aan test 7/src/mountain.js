@@ -15,6 +15,7 @@ import { MOUNTAIN_DESCENT } from './descent-config.js';
 import { createDescent } from './descent.js';
 import { createCloudFloor, CLOUD_FLOOR } from './cloud-floor.js';
 import { createHeroText, HERO_TEXT } from './hero-text.js';
+import { createAbyssTransition, ABYSS_TRANSITION } from './abyss-transition.js';
 import { createDebugLayer } from './debug-layer.js';
 
 /* ------------------------------------------------------------------ */
@@ -441,6 +442,10 @@ const cloudMaterial = new THREE.ShaderMaterial({
 	uniforms: {
 		uSize: { value: new THREE.Vector2(1, 1) },
 		uEdgeFeather: { value: SETTINGS.cloudEdgeFeather },
+		uDusk: { value: 0 },
+		uDuskThin: { value: ABYSS_TRANSITION.clouds.duskThin },
+		uDuskBand: { value: new THREE.Vector2().fromArray(ABYSS_TRANSITION.clouds.duskBand) },
+		uDuskColor: { value: new THREE.Color(ABYSS_TRANSITION.clouds.duskColor) },
 		tPerlin: { value: perlin },
 		tNoise: { value: noise },
 		tMouse: { value: mouseTrail.texture },
@@ -594,6 +599,11 @@ scene.add(cloudRig);
 // World-fixed cloud sea under the mountain (hides the base plate and the quad borders when the camera flies in)
 const cloudFloor = createCloudFloor({ pivot: PIVOT, noise, perlin, cloudTime: shared.uCloudTime });
 scene.add(cloudFloor.group);
+cloudFloor.layers.forEach((l) => { l.material.uniforms.uDuskColor.value.set(ABYSS_TRANSITION.clouds.duskColor); l.material.uniforms.uCollar.value = ABYSS_TRANSITION.clouds.seaCollar; });
+
+// Abyss transition (structural test): chasm-edge plate + placeholder abyss light in the cloud rig (see abyss-transition.js)
+const abyss = createAbyssTransition({ cloudRig, pivot: PIVOT, cameraOffset: CAMERA_POSITION.clone().sub(PIVOT), textureLoader });
+scene.add(abyss.floor);
 
 // Hero statement: a camera-parented quad drawn between the cloud layers (see hero-text.js)
 scene.add(camera);
@@ -604,7 +614,10 @@ heroTextRef = heroText;
 /* Descent route (scroll-driven)                                       */
 /* ------------------------------------------------------------------ */
 
-document.body.style.height = `${MOUNTAIN_DESCENT.scrollViewports * 100}vh`;
+// Page = descent (first DESCENT_SHARE of the scroll, choreography unchanged) + abyss transition tail
+const PAGE_VIEWPORTS = ABYSS_TRANSITION.enabled ? ABYSS_TRANSITION.totalViewports : MOUNTAIN_DESCENT.scrollViewports;
+const DESCENT_SHARE = ABYSS_TRANSITION.enabled ? ABYSS_TRANSITION.descentShare : 1;
+document.body.style.height = `${PAGE_VIEWPORTS * 100}vh`;
 const descent = createDescent({
 	scene, camera, mountain, pivot: PIVOT,
 	resolution: shared.uResolution.value,
@@ -632,6 +645,7 @@ if (CAMP_CONFIG.enabled || new URLSearchParams(location.search).has('camp')) {
 	scene.add(camp.group);
 }
 window.__camp = camp;
+const routeLabels = document.getElementById('route-labels');
 const scroll = { target: 0, value: 0 };
 function readScroll() {
 	const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
@@ -733,6 +747,13 @@ function updateCamera(dt) {
 	tmpPos.y += ds.camDrop;
 	tmpLook.y += ds.lookDrop;
 	if (ds.follow > 0) tmpLook.lerp(ds.tip, ds.follow); // steer toward the route tip during the descent
+	// abyss transition: the look-at and the camera sink, so the mountain leaves through the top at constant size
+	const ab = abyss.state;
+	if (ab.t > 0) {
+		tmpPos.copy(baseOffset).multiplyScalar(Math.min(totalZoom * ab.zoomMul, zoomLimit)).applyAxisAngle(THREE.Object3D.DEFAULT_UP, totalAngle).add(PIVOT);
+		tmpPos.y += ds.camDrop + ab.camDrop;
+		tmpLook.y += ab.lookDrop;
+	}
 
 	camera.position.copy(tmpPos);
 	camera.lookAt(tmpLook);
@@ -744,6 +765,7 @@ function updateCamera(dt) {
 	camera.rotateX(lerpedMouse.y * 0.05 * SETTINGS.parallax);
 
 	cloudRig.rotation.y = totalAngle;
+	if (ab.t > 0) { const hc = abyss.seaHoleCenter(totalAngle); for (const l of cloudFloor.layers) l.material.uniforms.uHoleCenter.value.copy(hc); }
 	skybox.rotation.y = totalAngle; // keeps the cylinder's UV seam behind the camera
 	gd2Material.uniforms.uLightDir.value.copy(BAKED_LIGHT_DIR).applyAxisAngle(THREE.Object3D.DEFAULT_UP, totalAngle);
 }
@@ -773,11 +795,19 @@ function tick() {
 	// angular velocity of the drag / idle orbit only (rad/s) — the scroll choreography's own turn is not in it
 	const spin = dt > 0 ? (orbit.angle - (orbit.lastAngle ?? orbit.angle)) / dt : 0;
 	orbit.lastAngle = orbit.angle;
-	descent.update(scroll.value, dt, camera, spin);
-	camp?.update(scroll.value);
+	// the descent keeps its whole choreography on the first DESCENT_SHARE of the page; the tail is the abyss transition
+	const descentP = Math.min(1, scroll.value / DESCENT_SHARE);
+	const transP = DESCENT_SHARE < 1 ? Math.max(0, (scroll.value - DESCENT_SHARE) / (1 - DESCENT_SHARE)) : 0;
+	descent.update(descentP, dt, camera, spin);
+	camp?.update(descentP);
+	abyss.update(transP);
+	cloudMaterial.uniforms.uDusk.value = abyss.state.dusk;
+	routeLabels.style.opacity = abyss.state.labelFade;   // the callouts belong to the mountain and dissolve with it
+	heroText.setFade(abyss.state.heroTextFade);
+	for (const l of cloudFloor.layers) { l.material.uniforms.uDusk.value = abyss.state.seaDusk; l.material.uniforms.uHole.value = abyss.state.seaHole; }
 	updateCamera(dt);
 	heroText.update(dt);
-	if (SETTINGS.debug && debugReadout) debugReadout.textContent = `scroll ${scroll.value.toFixed(3)}  route u ${descent.state.u.toFixed(3)}  orbit ${(THREE.MathUtils.radToDeg(orbit.angle) + descent.state.angleDeg).toFixed(1)}°  zoom ${Math.min(orbit.zoom * descent.state.zoom, zoomLimit).toFixed(3)}`;
+	if (SETTINGS.debug && debugReadout) debugReadout.textContent = `scroll ${scroll.value.toFixed(3)}  descent ${descentP.toFixed(3)}  abyss ${transP.toFixed(3)}  route u ${descent.state.u.toFixed(3)}  orbit ${(THREE.MathUtils.radToDeg(orbit.angle) + descent.state.angleDeg).toFixed(1)}°  zoom ${Math.min(orbit.zoom * descent.state.zoom, zoomLimit).toFixed(3)}`;
 	if (skybox.material === nightSkyMaterial) nightSkyMaterial.uniforms.uSummitDir.value.subVectors(SUMMIT, camera.position).normalize();
 	if (SETTINGS.mouseTrail) mouseTrail.update(dt, mouse);
 	renderer.render(scene, camera);
@@ -799,4 +829,4 @@ window.addEventListener('keydown', (e) => {
 	if ((e.key === 't' || e.key === 'T') && !window.__tune && !e.target.closest?.('input, textarea, select')) openTune();
 });
 
-window.__mountain = { SETTINGS, orbit, scene, camera, renderer, mouseTrail, cloudsGroup, mountain, peaksRoot, babies, debug, gd2Material, materialMode, skyMode, nightSkyMaterial, daySkyMaterial, skybox, ZOOM_LIMIT, getResponsiveZoomLimit, get zoomLimit() { return zoomLimit; }, descent, scroll, setDebug, cloudFloor, CLOUD_FLOOR, cloudMaterial, heroText, HERO_TEXT };
+window.__mountain = { SETTINGS, orbit, scene, camera, renderer, mouseTrail, cloudsGroup, mountain, peaksRoot, babies, debug, gd2Material, materialMode, skyMode, nightSkyMaterial, daySkyMaterial, skybox, ZOOM_LIMIT, getResponsiveZoomLimit, get zoomLimit() { return zoomLimit; }, descent, scroll, setDebug, cloudFloor, CLOUD_FLOOR, cloudMaterial, heroText, HERO_TEXT, abyss, ABYSS_TRANSITION, cloudRig };

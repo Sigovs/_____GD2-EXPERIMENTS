@@ -634,7 +634,7 @@ export const cloudVertex = /* glsl */ `
 precision highp float;
 
 varying vec2 vUv;
-varying float vSeed, vRatio;
+varying float vSeed, vRatio, vWorldY;
 varying vec3 vNormal;
 
 void main() {
@@ -643,6 +643,7 @@ void main() {
 	vec4 mvPosition = vec4(position, 1.0);
 	vNormal = normalize(normalMatrix * normal);
 	mvPosition = instanceMatrix * mvPosition;
+	vWorldY = (modelMatrix * mvPosition).y;   // rig turns about Y, so this is the plate's world height
 
 	vSeed = (instanceMatrix[3][0] + instanceMatrix[3][1] + instanceMatrix[3][2]);
 	vRatio = instanceMatrix[1][1] / instanceMatrix[0][0];
@@ -654,9 +655,13 @@ export const cloudFragment = /* glsl */ `
 precision highp float;
 
 uniform float uTime, uRatio, uEdgeFeather;
+uniform float uDusk;            // abyss transition: 0 = hero clouds, 1 = fully cooled from below
+uniform float uDuskThin;        // how far the cooled plates thin out (0 = keep density, 1 = vanish) so the chasm shows through
+uniform vec2 uDuskBand;         // world y: (fully cold below, untouched above) at uDusk = 1
+uniform vec3 uDuskColor;
 uniform vec2 uSize, uResolution;
 uniform sampler2D tPerlin, tNoise, tMouse;
-varying float vSeed, vRatio;
+varying float vSeed, vRatio, vWorldY;
 varying vec2 vUv;
 varying vec3 vNormal;
 
@@ -687,6 +692,11 @@ void main() {
 
 	float cloudDarkness = smoothstep(.4, 1., dUv.y) + smoothstep(.4, 0., dUv.y);
 	vec3 color = mix(vec3(0.82, 0.86, 0.88), 1.1 * vec3(0.961, 0.969, 0.976), cloudDarkness);
+	// dusk: the band climbs with uDusk, so the lowest plates cool first and the upper ones last
+	float band = smoothstep(uDuskBand.y, uDuskBand.x, vWorldY - (1.0 - uDusk) * (uDuskBand.y - uDuskBand.x) * 1.5);
+	band = max(band, smoothstep(0.55, 1.0, uDusk));   // the last stretch takes every plate, whatever its height
+	color = mix(color, uDuskColor * (0.85 + 0.3 * cloudDarkness), band * uDusk);
+	alpha *= 1.0 - band * uDusk * uDuskThin;   // the cold plates part to reveal what lies beneath
 
 	gl_FragColor = vec4(color, alpha);
 }

@@ -116,6 +116,7 @@ export async function createHeroText({ camera }) {
 	layout();
 
 	let t = -cfg.reveal.delay;   // seconds since the reveal started (negative = waiting)
+	let fade = 1;                // external multiplier (the abyss transition dissolves the statement with the mountain world)
 	function update(dt) {
 		if (!group.visible) return;
 		t += dt;
@@ -123,12 +124,13 @@ export async function createHeroText({ camera }) {
 			const k = THREE.MathUtils.clamp((t - i * cfg.reveal.stagger) / cfg.reveal.duration, 0, 1);
 			const e = 1 - Math.pow(1 - k, 3);   // ease-out cubic
 			l.mesh.position.x = l.baseX - (1 - e) * cfg.reveal.slide * base.screenW;
-			l.material.uniforms.uAlpha.value = e;
+			l.material.uniforms.uAlpha.value = e * fade;
 		});
 	}
+	function setFade(f) { fade = f; }
 
 	/** Debug / capture helper: jump the load-in clock to `seconds` after page ready. */
 	function setTime(seconds) { t = seconds - cfg.reveal.delay; update(0); }
 
-	return { group, lines, update, layout, setTime };
+	return { group, lines, update, layout, setTime, setFade };
 }
