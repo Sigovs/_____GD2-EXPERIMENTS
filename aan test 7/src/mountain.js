@@ -294,6 +294,8 @@ const gd2Material = new THREE.ShaderMaterial({
 		uFogNear: { value: mm.fogNear },
 		uFogFar: { value: mm.fogFar },
 		uFog: { value: 1 },
+		uNight: { value: 0 },
+		uNightColor: { value: new THREE.Color(ABYSS_TRANSITION.mountain.nightColor) },
 		uBakedLightDir: { value: BAKED_LIGHT_DIR },
 		uLightDir: { value: BAKED_LIGHT_DIR.clone() },
 		uLightK: { value: MAIN_MOUNTAIN.relight.k },
@@ -386,6 +388,8 @@ function babyMaterial(src) {
 			uFogNear: gd2Material.uniforms.uFogNear,
 			uFogFar: gd2Material.uniforms.uFogFar,
 			uFog: gd2Material.uniforms.uFog,
+			uNight: gd2Material.uniforms.uNight,
+			uNightColor: gd2Material.uniforms.uNightColor,
 			uTime: shared.uTime,
 			uResolution: shared.uResolution,
 			uLightColor: shared.uLightColor,
@@ -443,9 +447,13 @@ const cloudMaterial = new THREE.ShaderMaterial({
 		uSize: { value: new THREE.Vector2(1, 1) },
 		uEdgeFeather: { value: SETTINGS.cloudEdgeFeather },
 		uDusk: { value: 0 },
+		uDuskUpper: { value: ABYSS_TRANSITION.clouds.duskUpper },
 		uDuskThin: { value: ABYSS_TRANSITION.clouds.duskThin },
 		uDuskBand: { value: new THREE.Vector2().fromArray(ABYSS_TRANSITION.clouds.duskBand) },
 		uDuskColor: { value: new THREE.Color(ABYSS_TRANSITION.clouds.duskColor) },
+		uGlow: { value: 0 },
+		uCrestNdc: { value: -2 },
+		uGlowColor: { value: new THREE.Color(ABYSS_TRANSITION.glow.color) },
 		tPerlin: { value: perlin },
 		tNoise: { value: noise },
 		tMouse: { value: mouseTrail.texture },
@@ -462,6 +470,8 @@ cloudsGroup.traverse((obj) => {
 	if (!obj.isMesh) return;
 	obj.material = cloudMaterial;
 	obj.renderOrder = obj.userData.renderOrder ?? 0;
+	// the FOREGROUND plates (+1) draw after the canyon (0.5) and the ocean glow (0.45) — the light is seen through them —
+	// but behind the chasm edge (1.5): the rim's silhouette always reads (the plates below its crest part, shaders.js)
 	obj.frustumCulled = false;
 });
 
@@ -599,10 +609,11 @@ scene.add(cloudRig);
 // World-fixed cloud sea under the mountain (hides the base plate and the quad borders when the camera flies in)
 const cloudFloor = createCloudFloor({ pivot: PIVOT, noise, perlin, cloudTime: shared.uCloudTime });
 scene.add(cloudFloor.group);
-cloudFloor.layers.forEach((l) => l.material.uniforms.uDuskColor.value.set(ABYSS_TRANSITION.clouds.duskColor));
+cloudFloor.layers.forEach((l) => { l.material.uniforms.uDuskColor.value.set(ABYSS_TRANSITION.clouds.duskColor); l.material.uniforms.uGlowColor.value.set(ABYSS_TRANSITION.glow.color); });
 
 // Transition to the canyon / ocean: chasm-edge plate + video billboards placed in front of the camera (see abyss-transition.js)
-const abyss = createAbyssTransition({ textureLoader, pivot: PIVOT });
+const abyss = createAbyssTransition({ textureLoader, pivot: PIVOT, noise: perlin, envMap });
+camera.layers.enable(3);   // the rock rim's private light layer (rock-rim.js ROCK_LAYER)
 scene.add(abyss.group);
 
 // Hero statement: a camera-parented quad drawn between the cloud layers (see hero-text.js)
@@ -704,6 +715,7 @@ const orbit = {
 };
 const mouse = new THREE.Vector2();
 const lerpedMouse = new THREE.Vector2();
+const tmpDir = new THREE.Vector3();
 
 canvas.addEventListener('pointerdown', (e) => {
 	orbit.dragging = true;
@@ -769,6 +781,15 @@ function updateCamera(dt) {
 	if (!ABYSS_TRANSITION.camera.mouseParallax) abyss.place(camera);   // (locked to the frame instead — not the approved look)
 
 	cloudRig.rotation.y = totalAngle;
+	// abyss transition: the cloud layer comes FORWARD toward the viewer (the rig slides along the camera axis and grows
+	// about its centre), so the near plates pass in front of the receding mountain — behind the chasm edge, in front of the canyon
+	cloudRig.position.copy(PIVOT);
+	cloudRig.scale.setScalar(1);
+	if (abyss.state.t > 0) {
+		tmpDir.copy(camera.position).sub(PIVOT).normalize();
+		cloudRig.position.addScaledVector(tmpDir, abyss.state.cloudForward);
+		cloudRig.scale.setScalar(abyss.state.cloudScale);
+	}
 	skybox.rotation.y = totalAngle; // keeps the cylinder's UV seam behind the camera
 	gd2Material.uniforms.uLightDir.value.copy(BAKED_LIGHT_DIR).applyAxisAngle(THREE.Object3D.DEFAULT_UP, totalAngle);
 }
@@ -805,12 +826,16 @@ function tick() {
 	camp?.update(descentP);
 	abyss.update(transP, descentP);
 	cloudMaterial.uniforms.uDusk.value = abyss.state.dusk;
-	routeLabels.style.opacity = abyss.state.labelFade;   // the callouts belong to the mountain and dissolve with it
+	cloudMaterial.uniforms.uDuskThin.value = abyss.state.cloudThin;   // the cooled plates thin late, to reveal the depth
+	cloudMaterial.uniforms.uGlow.value = abyss.state.glowClouds;     // the cold light from below, in the clouds
+	cloudMaterial.uniforms.uCrestNdc.value = abyss.state.t > 0 ? 2 * abyss.state.crest : -2;
+	gd2Material.uniforms.uNight.value = abyss.state.night;           // the mountain world recedes into night
+	descent.state.labelFold = 1 - abyss.state.labelFade;   // the callouts belong to the mountain: they fold back (reverse unfold) as it goes
 	// the glass plates' light follows the mouse (route.css reads --glass-angle): the sweep and the lit bevel turn with it
 	const glassAngle = 135 - lerpedMouse.x * 40 + lerpedMouse.y * 25;
 	if (Math.abs(glassAngle - (routeLabels.__glassAngle ?? 0)) > 0.25) { routeLabels.__glassAngle = glassAngle; routeLabels.style.setProperty('--glass-angle', `${glassAngle.toFixed(1)}deg`); }
 	heroText.setFade(abyss.state.heroTextFade);
-	for (const l of cloudFloor.layers) l.material.uniforms.uDusk.value = abyss.state.seaDusk;
+	for (const l of cloudFloor.layers) { l.material.uniforms.uDusk.value = abyss.state.seaDusk; l.material.uniforms.uGlow.value = abyss.state.glowSea; }
 	updateCamera(dt);
 	heroText.update(dt);
 	if (SETTINGS.debug && debugReadout) debugReadout.textContent = `scroll ${scroll.value.toFixed(3)}  descent ${descentP.toFixed(3)}  abyss ${transP.toFixed(3)}  route u ${descent.state.u.toFixed(3)}  orbit ${(THREE.MathUtils.radToDeg(orbit.angle) + descent.state.angleDeg).toFixed(1)}°  zoom ${Math.min(orbit.zoom * descent.state.zoom, zoomLimit).toFixed(3)}`;

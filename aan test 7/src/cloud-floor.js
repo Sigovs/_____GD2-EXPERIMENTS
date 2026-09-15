@@ -55,6 +55,8 @@ uniform float uTime, uCoverage, uOpacity, uScale, uSoftness, uSeed, uRadius, uRi
 uniform float uDusk;            // transition: 0 = hero sea, 1 = cooled to uDuskColor
 uniform vec2 uCenter, uViewFade;
 uniform vec3 uColorDark, uColorLight, uDuskColor;
+uniform float uGlow;            // transition: cold light from the ocean below, strongest near the camera
+uniform vec3 uGlowColor;
 varying vec3 vWorld;
 varying vec2 vUv;
 
@@ -76,6 +78,8 @@ void main() {
 	vec3 color = mix(uColorDark, uColorLight, smoothstep(0.25, 0.85, n));
 	color *= 0.96 + 0.04 * a;
 	color = mix(color, uDuskColor * (0.8 + 0.4 * smoothstep(0.25, 0.85, n)), uDusk * 0.9);
+	float nearK = 1.0 - smoothstep(60.0, 260.0, distance(vWorld, cameraPosition));
+	color = mix(color, uGlowColor * 1.1, clamp(uGlow * nearK * (0.35 + 0.65 * smoothstep(0.2, 0.8, n)), 0.0, 0.8));
 	gl_FragColor = vec4(color, a);
 }`;
 
@@ -107,6 +111,8 @@ export function createCloudFloor({ pivot, noise, perlin, cloudTime }) {
 				uColorLight: { value: new THREE.Color(cfg.colorLight) },
 				uDusk: { value: 0 },
 				uDuskColor: { value: new THREE.Color(0x28364c) },
+				uGlow: { value: 0 },
+				uGlowColor: { value: new THREE.Color(0x2f6fbf) },
 			},
 			transparent: true,
 			depthTest: true,

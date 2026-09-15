@@ -725,7 +725,9 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 			proj.copy(s.position).project(cam);
 			const onScreen = proj.z < 1 && Math.abs(proj.x) < 1.05 && Math.abs(proj.y) < 1.05;
 			s.seen = THREE.MathUtils.damp(s.seen, onScreen ? s.visible : 0, 8, dt);
-			s.reveal = THREE.MathUtils.damp(s.reveal, labelA, 10, dt);
+			// state.labelFold (abyss transition): the readings fold back the way they unfolded — plane turns edge-on,
+			// leader retracts, dot goes — instead of fading; the route itself stays
+			s.reveal = THREE.MathUtils.damp(s.reveal, labelA * (1 - (state.labelFold ?? 0)), 10, dt);
 			const shown = s.reveal > 0.002 ? s.seen : 0;
 			s.root.style.opacity = shown.toFixed(3);
 			if (shown === 0) return; // nothing to lay out while it is not there

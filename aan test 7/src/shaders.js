@@ -350,6 +350,8 @@ uniform float uEnvMapIntensity;
 uniform vec2 uResolution;
 uniform vec3 uLightColor;
 uniform float uFogNear, uFogFar, uFog, uTime;
+uniform float uNight;           // abyss transition: 0 = hero, 1 = lost in night
+uniform vec3 uNightColor;
 
 // Relighting: the lightmap is baked for one view; we subtract its fitted
 // directional term and add the same term with a light that turns with the camera.
@@ -508,6 +510,13 @@ void main() {
 	float depth = computeDepth(gl_FragCoord.z, uFogNear, uFogFar);
 	depth = smoothstep(0.01, .3, depth) * uFog;
 	outgoingLight = mix(outgoingLight, uLightColor, depth);
+	// abyss transition: the mountain world recedes into night — darker, a little flatter and cooler (no opacity fade)
+	if (uNight > 0.0) {
+		float nl = dot(outgoingLight, vec3(0.2126, 0.7152, 0.0722));
+		vec3 nightMix = mix(outgoingLight, vec3(nl), 0.35 * uNight);          // desaturate a touch
+		nightMix = mix(nightMix, vec3(nl * 0.55 + 0.03), 0.3 * uNight);           // contrast down
+		outgoingLight = mix(nightMix, uNightColor * (0.7 + 0.6 * nl), uNight); // darkness and cold atmosphere consume it
+	}
 
 	gl_FragColor = vec4(outgoingLight, 1.);
 	gl_FragColor = linearToOutputTexel(gl_FragColor);
@@ -559,6 +568,8 @@ uniform float uEnvMapIntensity;
 uniform vec2 uResolution;
 uniform vec3 uLightColor;
 uniform float uFogNear, uFogFar, uFog, uTime;
+uniform float uNight;           // abyss transition: 0 = hero, 1 = lost in night
+uniform vec3 uNightColor;
 
 varying vec2 vUv, vNormalMapUv;
 varying vec3 vNormal, vViewPosition, vPosition;
@@ -618,6 +629,13 @@ void main() {
 	float depth = computeDepth(gl_FragCoord.z, uFogNear, uFogFar);
 	depth = smoothstep(0.01, .6, depth) * uFog;
 	outgoingLight = mix(outgoingLight, uLightColor, depth);
+	// abyss transition: the mountain world recedes into night — darker, a little flatter and cooler (no opacity fade)
+	if (uNight > 0.0) {
+		float nl = dot(outgoingLight, vec3(0.2126, 0.7152, 0.0722));
+		vec3 nightMix = mix(outgoingLight, vec3(nl), 0.35 * uNight);          // desaturate a touch
+		nightMix = mix(nightMix, vec3(nl * 0.55 + 0.03), 0.3 * uNight);           // contrast down
+		outgoingLight = mix(nightMix, uNightColor * (0.7 + 0.6 * nl), uNight); // darkness and cold atmosphere consume it
+	}
 
 	diffuseColor.a *= smoothstep(-.8, 1., vPosition.y);
 
@@ -634,7 +652,7 @@ export const cloudVertex = /* glsl */ `
 precision highp float;
 
 varying vec2 vUv;
-varying float vSeed, vRatio, vWorldY;
+varying float vSeed, vRatio, vWorldY, vNdcY;
 varying vec3 vNormal;
 
 void main() {
@@ -648,6 +666,7 @@ void main() {
 	vSeed = (instanceMatrix[3][0] + instanceMatrix[3][1] + instanceMatrix[3][2]);
 	vRatio = instanceMatrix[1][1] / instanceMatrix[0][0];
 	gl_Position = projectionMatrix * modelViewMatrix * mvPosition;
+	vNdcY = gl_Position.y / max(gl_Position.w, 1e-4);   // where the plate sits in the visible frame (lens shift included)
 }
 `;
 
@@ -655,13 +674,16 @@ export const cloudFragment = /* glsl */ `
 precision highp float;
 
 uniform float uTime, uRatio, uEdgeFeather;
-uniform float uDusk;            // abyss transition: 0 = hero clouds, 1 = fully cooled from below
+uniform float uDusk, uDuskUpper;            // abyss transition: 0 = hero clouds, 1 = fully cooled from below
 uniform float uDuskThin;        // how far the cooled plates thin out (0 = keep density, 1 = vanish) so the chasm shows through
 uniform vec2 uDuskBand;         // world y: (fully cold below, untouched above) at uDusk = 1
 uniform vec3 uDuskColor;
+uniform float uGlow;            // abyss transition: cold light from the ocean below, on the low (cooled) plates
+uniform float uCrestNdc;        // the chasm edge's crest in NDC y: plates below it part and catch the light, plates above keep hiding the mountain's foot
+uniform vec3 uGlowColor;
 uniform vec2 uSize, uResolution;
 uniform sampler2D tPerlin, tNoise, tMouse;
-varying float vSeed, vRatio, vWorldY;
+varying float vSeed, vRatio, vWorldY, vNdcY;
 varying vec2 vUv;
 varying vec3 vNormal;
 
@@ -694,9 +716,13 @@ void main() {
 	vec3 color = mix(vec3(0.82, 0.86, 0.88), 1.1 * vec3(0.961, 0.969, 0.976), cloudDarkness);
 	// dusk: the band climbs with uDusk, so the lowest plates cool first and the upper ones last
 	float band = smoothstep(uDuskBand.y, uDuskBand.x, vWorldY - (1.0 - uDusk) * (uDuskBand.y - uDuskBand.x) * 1.5);
-	band = max(band, smoothstep(0.55, 1.0, uDusk));   // the last stretch takes every plate, whatever its height
+	band = max(band, smoothstep(0.55, 1.0, uDusk) * uDuskUpper);   // the plates above the band cool only this far   // the last stretch takes every plate, whatever its height
 	color = mix(color, uDuskColor * (0.85 + 0.3 * cloudDarkness), band * uDusk);
-	alpha *= 1.0 - band * uDusk * uDuskThin;   // the cold plates part to reveal what lies beneath
+	// the cold light from below: the lowest plates catch the ocean's blue (strongest where the plate is thin / at its edges)
+	float belowCrest = smoothstep(uCrestNdc + 0.02, uCrestNdc - 0.16, vNdcY);   // under the rim's crest the plates part (the rim is in front of them anyway)
+	float glowH = max(smoothstep(30.0, -70.0, vWorldY), belowCrest);   // the low plates and the ones in front of the rim
+	color = mix(color, uGlowColor * 1.15, clamp(uGlow * band * glowH * (0.5 + 0.5 * cloudDarkness), 0.0, 0.85));
+	alpha *= 1.0 - uDuskThin * max(belowCrest, 0.5 * band * uDusk * smoothstep(0.0, -45.0, vWorldY));   // plates below the crest part (independent of height); the ones over the mountain's foot keep hiding it
 
 	gl_FragColor = vec4(color, alpha);
 }

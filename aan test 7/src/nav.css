@@ -99,6 +99,36 @@ body.is-ready .nav {
 	transform: scaleX(1);
 }
 
+/* random letter swap (nav-letter-swap.js): each letter is a two-line column clipped to one line;
+   on hover the column rolls up one line — letters in a random order, staggered, with a springy ease */
+.nav a .ls-word { display: inline-flex; white-space: pre; }
+.nav a .ls-space { display: inline-block; white-space: pre; }
+.nav a .ls {
+	position: relative;
+	display: inline-block;
+	overflow: hidden;
+	vertical-align: top;
+	line-height: 1.2;
+	height: 1.2em;
+	transition-property: none;
+}
+.nav a .ls__a,
+.nav a .ls__b {
+	display: block;
+	transition: transform 0.6s cubic-bezier(0.34, 1.4, 0.64, 1);
+	transition-duration: inherit;
+	transition-timing-function: inherit;
+	transition-delay: inherit;
+	will-change: transform;
+}
+.nav a .ls__b { position: absolute; left: 0; top: 100%; }
+.nav a.is-swapped .ls__a { transform: translateY(-100%); }
+.nav a.is-swapped .ls__b { transform: translateY(-100%); }
+@media (prefers-reduced-motion: reduce) {
+	.nav a .ls__a, .nav a .ls__b { transition: none; }
+	.nav a.is-swapped .ls__a, .nav a.is-swapped .ls__b { transform: none; }
+}
+
 /* keyboard focus: same state as hover, plus a visible ring that does not draw a box in the resting state */
 .nav a:focus-visible {
 	outline: 1px solid rgba(200, 216, 245, 0.6);
