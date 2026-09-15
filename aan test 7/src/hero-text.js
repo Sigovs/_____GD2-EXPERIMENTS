@@ -6,8 +6,8 @@ import * as THREE from 'three';
  * It is a textured quad parented to the camera (screen-locked, like the cloud
  * quads), drawn between the middle-ground clouds (renderOrder −1) and the
  * foreground clouds (+1), so the foreground cloud plates genuinely pass in front
- * of the lower lines. Slides up from below on load; on scroll it smears and
- * erodes sideways into the clouds.
+ * of the lower lines. Slides up from below on load; on scroll it wipes to
+ * transparency left → right, line by line in a staircase.
  */
 
 export const HERO_TEXT = {
@@ -22,7 +22,8 @@ export const HERO_TEXT = {
 	height: 0.30,       // block height
 	renderOrder: 0.5,   // between the cloud quads: middle-ground −1 … foreground +1
 	reveal: { delay: 0.5, duration: 1.7, rise: 0.14 },       // slide in from below; rise = fraction of viewport height
-	dissolve: { start: 0.015, end: 0.2, drift: 0.16, blur: 0.035 },  // scroll range; drift/blur as fractions of block width
+	// on scroll: a wipe to transparency that travels left → right, staggered per line ("staircase")
+	dissolve: { start: 0.015, end: 0.2, stairStep: 0.16, softness: 0.025, driftRight: 0.05 },
 };
 
 const vertex = /* glsl */ `
@@ -34,33 +35,23 @@ void main() {
 
 const fragment = /* glsl */ `
 precision highp float;
-uniform sampler2D tText, tNoise;
-uniform float uTime, uAlpha, uDissolve, uDrift, uBlur;
+uniform sampler2D tText;
+uniform float uAlpha, uDissolve, uLines, uStair, uSoft, uDrift;
 uniform vec3 uColor;
 varying vec2 vUv;
 
 void main() {
 	float d = uDissolve;
-	// low-frequency cloud noise drives both the sideways smear and the erosion
-	float n = texture2D(tNoise, vUv * vec2(1.6, 3.2) + vec2(uTime * 0.012, 0.)).r;
-	float n2 = texture2D(tNoise, vUv * vec2(5.0, 9.0) + vec2(-uTime * 0.02, 0.37)).r;
-	float w = 0.35 + 0.65 * n;
-	vec2 shift = vec2(-d * uDrift * w, 0.);
-	// a few taps along x → horizontal streaks as the text is carried into the clouds
-	float blur = d * uBlur * w;
-	float a = 0.;
-	for (int i = -5; i <= 5; i++) {
-		a += texture2D(tText, vUv + shift + vec2(float(i) * blur / 5.0, 0.)).a;
-	}
-	a /= 11.0;
-	// the lower lines sink into the cloud first
-	float sink = (1.0 - vUv.y) * 0.45 * d;
-	float erode = smoothstep(0.0, 1.0, (n * 0.6 + n2 * 0.4) * 1.15 + sink - (1.2 - d * 1.9));
-	a *= (1.0 - erode) * (1.0 - smoothstep(0.55, 1.0, d));
-	a *= uAlpha;
+	// line index from the top (0 = first line); each line starts its wipe a little later
+	float line = floor((1.0 - vUv.y) * uLines);
+	float lead = uStair * line;
+	float total = 1.0 + uStair * (uLines - 1.0) + 2.0 * uSoft;
+	float front = d * total - lead - uSoft;                 // wipe front in block-x for this line
+	float wipe = smoothstep(front - uSoft, front + uSoft, vUv.x);   // left of the front → transparent
+	vec2 uv = vUv - vec2(d * uDrift, 0.);                   // the text slides a touch to the right as it goes
+	float a = texture2D(tText, uv).a * wipe * uAlpha;
 	if (a < 0.003) discard;
-	vec3 color = mix(uColor, vec3(0.90, 0.93, 0.97), d * 0.8);  // cools toward the cloud tone while dissolving
-	gl_FragColor = vec4(color, a);
+	gl_FragColor = vec4(uColor, a);
 }`;
 
 async function makeTextTexture(cfg) {
@@ -98,12 +89,12 @@ export async function createHeroText({ camera, noise, cloudTime }) {
 		fragmentShader: fragment,
 		uniforms: {
 			tText: { value: tex },
-			tNoise: { value: noise },
-			uTime: cloudTime,
 			uAlpha: { value: 0 },
 			uDissolve: { value: 0 },
-			uDrift: { value: cfg.dissolve.drift },
-			uBlur: { value: cfg.dissolve.blur },
+			uLines: { value: cfg.lines.length },
+			uStair: { value: cfg.dissolve.stairStep },
+			uSoft: { value: cfg.dissolve.softness },
+			uDrift: { value: cfg.dissolve.driftRight },
 			uColor: { value: new THREE.Color(cfg.color) },
 		},
 		transparent: true,
