@@ -13,6 +13,8 @@ import { MAIN_MOUNTAIN, BABY_MOUNTAINS } from './mountain-config.js';
 import { SKY, NIGHT_SKY } from './sky-config.js';
 import { MOUNTAIN_DESCENT } from './descent-config.js';
 import { createDescent } from './descent.js';
+import { createCloudFloor, CLOUD_FLOOR } from './cloud-floor.js';
+import { createHeroText, HERO_TEXT } from './hero-text.js';
 import { createDebugLayer } from './debug-layer.js';
 
 /* ------------------------------------------------------------------ */
@@ -38,10 +40,12 @@ function getResponsiveZoomLimit(aspect) {
 }
 let zoomLimit = ZOOM_LIMIT.baseMaxZoomOut;
 let descentRef = null; // set once the descent route exists (resize needs it)
+let heroTextRef = null;
 
 const SETTINGS = {
 	autoRotateSpeed: 0.035,  // rad/s, full turn ≈ 180 s. 0 = off
 	cloudSpeed: 0.55,        // time scale of the cloud drift (1 = original mont-fort speed)
+	cloudEdgeFeather: 0.16,  // softness of the cloud quads' solid core edge (0.1 = original mont-fort)
 	dragSpeed: 0.005,        // rad per px
 	zoomMin: 0.55,
 	zoomMax: ZOOM_LIMIT.baseMaxZoomOut, // 16:9 value; the live limit is getResponsiveZoomLimit(camera.aspect)
@@ -97,6 +101,7 @@ function resize() {
 	shared.uResolution.value.set(w * dpr, h * dpr);
 	shared.uRatio.value = w / h;
 	descentRef?.resize(shared.uResolution.value);
+	heroTextRef?.layout();
 	shared.uPixelAngle.value = THREE.MathUtils.degToRad(camera.fov) / (h * dpr); // angular size of one device pixel (night sky star sizing)
 }
 window.addEventListener('resize', resize);
@@ -435,6 +440,7 @@ const cloudMaterial = new THREE.ShaderMaterial({
 	fragmentShader: cloudFragment,
 	uniforms: {
 		uSize: { value: new THREE.Vector2(1, 1) },
+		uEdgeFeather: { value: SETTINGS.cloudEdgeFeather },
 		tPerlin: { value: perlin },
 		tNoise: { value: noise },
 		tMouse: { value: mouseTrail.texture },
@@ -584,6 +590,15 @@ cloudRig.position.copy(PIVOT);
 cloudsGroup.position.sub(PIVOT);
 cloudRig.add(cloudsGroup);
 scene.add(cloudRig);
+
+// World-fixed cloud sea under the mountain (hides the base plate and the quad borders when the camera flies in)
+const cloudFloor = createCloudFloor({ pivot: PIVOT, noise, perlin, cloudTime: shared.uCloudTime });
+scene.add(cloudFloor.group);
+
+// Hero statement: a camera-parented quad drawn between the cloud layers (see hero-text.js)
+scene.add(camera);
+const heroText = await createHeroText({ camera, noise, cloudTime: shared.uCloudTime });
+heroTextRef = heroText;
 
 /* ------------------------------------------------------------------ */
 /* Descent route (scroll-driven)                                       */
@@ -760,6 +775,7 @@ function tick() {
 	descent.update(scroll.value, dt, camera, spin);
 	camp?.update(scroll.value);
 	updateCamera(dt);
+	heroText.update(dt, scroll.value);
 	if (SETTINGS.debug && debugReadout) debugReadout.textContent = `scroll ${scroll.value.toFixed(3)}  route u ${descent.state.u.toFixed(3)}  orbit ${(THREE.MathUtils.radToDeg(orbit.angle) + descent.state.angleDeg).toFixed(1)}°  zoom ${Math.min(orbit.zoom * descent.state.zoom, zoomLimit).toFixed(3)}`;
 	if (skybox.material === nightSkyMaterial) nightSkyMaterial.uniforms.uSummitDir.value.subVectors(SUMMIT, camera.position).normalize();
 	if (SETTINGS.mouseTrail) mouseTrail.update(dt, mouse);
@@ -782,4 +798,4 @@ window.addEventListener('keydown', (e) => {
 	if ((e.key === 't' || e.key === 'T') && !window.__tune && !e.target.closest?.('input, textarea, select')) openTune();
 });
 
-window.__mountain = { SETTINGS, orbit, scene, camera, renderer, mouseTrail, cloudsGroup, mountain, peaksRoot, babies, debug, gd2Material, materialMode, skyMode, nightSkyMaterial, daySkyMaterial, skybox, ZOOM_LIMIT, getResponsiveZoomLimit, get zoomLimit() { return zoomLimit; }, descent, scroll, setDebug };
+window.__mountain = { SETTINGS, orbit, scene, camera, renderer, mouseTrail, cloudsGroup, mountain, peaksRoot, babies, debug, gd2Material, materialMode, skyMode, nightSkyMaterial, daySkyMaterial, skybox, ZOOM_LIMIT, getResponsiveZoomLimit, get zoomLimit() { return zoomLimit; }, descent, scroll, setDebug, cloudFloor, CLOUD_FLOOR, cloudMaterial, heroText, HERO_TEXT };

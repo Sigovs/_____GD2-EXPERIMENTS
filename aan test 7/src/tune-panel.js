@@ -17,7 +17,8 @@ const hexInt = (css) => `0x${css.replace('#', '').toLowerCase()}`;
 const round = (v) => Math.round(v * 1000) / 1000;
 
 export function createTunePanel(ctx) {
-	const { gd2Material, babies, nightSkyMaterial, descent } = ctx;
+	const { gd2Material, babies, nightSkyMaterial, descent, cloudFloor, cloudMaterial } = ctx;
+	const floorLayers = cloudFloor?.layers ?? [];
 	const m = gd2Material.uniforms;
 	const s = nightSkyMaterial.uniforms;
 	const lines = descent.group.children.filter((o) => o.isLine2);
@@ -59,6 +60,16 @@ export function createTunePanel(ctx) {
 		calloutsMatchPath: false,
 		calloutAccent: cssVar('--cyan') || '#00ecff',
 		calloutTitleOnCloud: cssVar('--ink-deep') || '#00505c',
+		// cloud sea under the mountain
+		floorEnabled: cloudFloor ? cloudFloor.group.visible : false,
+		floorTopY: floorLayers[0]?.position.y ?? -1.5,
+		floorTopCoverage: floorLayers[0]?.material.uniforms.uCoverage.value ?? 0.42,
+		floorMidY: floorLayers[1]?.position.y ?? -6.5,
+		floorMidCoverage: floorLayers[1]?.material.uniforms.uCoverage.value ?? 0.68,
+		floorBaseY: floorLayers[2]?.position.y ?? -12.5,
+		floorLight: floorLayers[0] ? hex(floorLayers[0].material.uniforms.uColorLight.value) : '#f5f8fb',
+		floorDark: floorLayers[0] ? hex(floorLayers[0].material.uniforms.uColorDark.value) : '#d1dbe3',
+		quadEdgeFeather: cloudMaterial?.uniforms.uEdgeFeather.value ?? 0.16,
 	};
 	const fromConfig = { ...params };
 
@@ -101,6 +112,19 @@ export function createTunePanel(ctx) {
 		labels.style.setProperty('--cyan-glow', `color-mix(in srgb, ${accent} 55%, transparent)`);
 		labels.style.setProperty('--ink-deep', params.calloutTitleOnCloud);
 		descent.stops.forEach((st) => { st.renderedGround = null; });   // leaders re-read their ink next frame
+
+		if (cloudFloor) {
+			cloudFloor.group.visible = params.floorEnabled;
+			const ys = [params.floorTopY, params.floorMidY, params.floorBaseY];
+			const cov = [params.floorTopCoverage, params.floorMidCoverage, 1];
+			floorLayers.forEach((l, i) => {
+				l.position.y = ys[i] ?? l.position.y;
+				l.material.uniforms.uCoverage.value = cov[i] ?? l.material.uniforms.uCoverage.value;
+				l.material.uniforms.uColorLight.value.set(params.floorLight);
+				l.material.uniforms.uColorDark.value.set(params.floorDark);
+			});
+		}
+		if (cloudMaterial) cloudMaterial.uniforms.uEdgeFeather.value = params.quadEdgeFeather;
 
 		if (remember) {
 			try { localStorage.setItem(STORAGE_KEY, JSON.stringify(params)); } catch { /* not remembered */ }
@@ -151,6 +175,18 @@ export function createTunePanel(ctx) {
 	callouts.addColor(params, 'calloutTitleOnCloud').name('Title on cloud');
 	callouts.close();
 
+	const floor = gui.addFolder('Cloud sea');
+	floor.add(params, 'floorEnabled').name('Enabled');
+	floor.add(params, 'floorTopY', -20, 10, 0.5).name('Top layer height');
+	floor.add(params, 'floorTopCoverage', 0, 1, 0.01).name('Top coverage');
+	floor.add(params, 'floorMidY', -25, 5, 0.5).name('Mid layer height');
+	floor.add(params, 'floorMidCoverage', 0, 1, 0.01).name('Mid coverage');
+	floor.add(params, 'floorBaseY', -30, 0, 0.5).name('Base layer height');
+	floor.addColor(params, 'floorLight').name('Crest colour');
+	floor.addColor(params, 'floorDark').name('Trough colour');
+	floor.add(params, 'quadEdgeFeather', 0.05, 0.4, 0.01).name('Cloud quad edge');
+	floor.close();
+
 	gui.onChange(() => apply(true));
 
 	const actions = {
@@ -174,6 +210,12 @@ export function createTunePanel(ctx) {
 					casingColor: hexInt(params.casingColor), casingOpacity: round(params.casingOpacity), casingWidthPx: round(params.casingWidth),
 				},
 				'route.css → #route-labels': { '--cyan': accent, '--ink-deep': params.calloutTitleOnCloud },
+				'cloud-floor.js → CLOUD_FLOOR': {
+					enabled: params.floorEnabled, colorLight: hexInt(params.floorLight), colorDark: hexInt(params.floorDark),
+					'layers[0].y': params.floorTopY, 'layers[0].coverage': round(params.floorTopCoverage),
+					'layers[1].y': params.floorMidY, 'layers[1].coverage': round(params.floorMidCoverage), 'layers[2].y': params.floorBaseY,
+				},
+				'mountain.js → SETTINGS': { cloudEdgeFeather: round(params.quadEdgeFeather) },
 			};
 			const text = JSON.stringify(values, null, 2);
 			console.log('[tune] current values\n' + text);

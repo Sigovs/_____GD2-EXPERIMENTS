@@ -270,3 +270,9 @@ Edge identified: on wide viewports at zoom 1.6 the **vertical borders of the out
 **Scroll** — 9 viewport heights; wheel/trackpad now scrolls the page (the earlier wheel-zoom is replaced by the choreographed zoom, still clamped by `getResponsiveZoomLimit`). Drag-orbit remains as an additive offset; the idle auto-orbit runs only while parked at the hero.
 
 **Previews** `previews/descent/01-start … 08-end-clouds.png`, ultrawide `09-ultrawide-3440x1440-stop02.jpg`.
+
+---
+
+## 14. Cloud sea + hero statement
+- `src/cloud-floor.js` (`CLOUD_FLOOR`) — world-fixed cloud sea under the mountain: three noise-displaced, patchy discs (y −4 / −8 / −13, radius 340, rim + view-distance fade so the far horizon stays dark), drawn before the camera-relative cloud quads; the bottom layer writes depth so the route / markers / far peak feet sink into it. `SETTINGS.cloudEdgeFeather` (0.16, was 0.1) softens the quads' solid-core edge. Tune panel folder "Cloud sea".
+- `src/hero-text.js` (`HERO_TEXT`) — "The deeper you go, the more you know." as a camera-parented textured quad (Inter Tight 800, canvas texture) drawn between the middle-ground and foreground cloud quads, so the near clouds veil the lower lines. Slides up from below after load (0.5 s delay, 1.7 s ease-out); on scroll (0.015–0.2) it smears and erodes sideways into the clouds, lower lines first. Previews: `previews/hero-text/`, `previews/floor/`.

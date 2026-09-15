@@ -653,7 +653,7 @@ void main() {
 export const cloudFragment = /* glsl */ `
 precision highp float;
 
-uniform float uTime, uRatio;
+uniform float uTime, uRatio, uEdgeFeather;
 uniform vec2 uSize, uResolution;
 uniform sampler2D tPerlin, tNoise, tMouse;
 varying float vSeed, vRatio;
@@ -682,7 +682,7 @@ void main() {
 	clouds *= smoothstep(0., .2, dUv.y - .2 * smoothstep(.4, 1., dUv.x));
 
 	float alpha = clouds * smoothstep(1., .9, vUv.y) * smoothstep(0., .1, vUv.y) * smoothstep(0., .1, vUv.x) * smoothstep(1., 0.9, vUv.x);
-	alpha += smoothstep(0.2, .3, vUv.y) * smoothstep(0.7, .6, vUv.y) * smoothstep(0.2, .3, vUv.x) * smoothstep(.9, 0.8, vUv.x);
+	alpha += smoothstep(0.2, 0.2 + uEdgeFeather, vUv.y) * smoothstep(0.7, 0.7 - uEdgeFeather, vUv.y) * smoothstep(0.2, 0.2 + uEdgeFeather, vUv.x) * smoothstep(.9, 0.9 - uEdgeFeather, vUv.x);
 	alpha = min(1., alpha);
 
 	float cloudDarkness = smoothstep(.4, 1., dUv.y) + smoothstep(.4, 0., dUv.y);
