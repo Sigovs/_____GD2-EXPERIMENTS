@@ -23,6 +23,23 @@ export const HERO_TEXT = {
 	renderOrder: 0.5,   // between the cloud quads: middle-ground −1 … foreground +1
 	// load-in: every line slides in from the left and fades in; the next line starts `stagger` seconds later
 	reveal: { delay: 0.5, duration: 1.3, stagger: 0.22, slide: 0.10 },  // slide = fraction of viewport width
+	/* Marker highlight on "MORE YOU KNOW." (after the marker-highlight reference: a highlighter stroke springs
+	   in from the left across the phrase, the covered text turns to the ink colour). Lines are indexes into
+	   `lines`; the stroke runs line after line. The spring is Remotion's (stiffness 100, mass 1) — closed form,
+	   so it is a pure function of time and scrubs with setTime(). */
+	marker: {
+		enabled: true,
+		lines: [2, 3],
+		color: 0x00ecff,          // the instrument cyan — the site's one accent
+		textColor: 0x0b0f1e,      // the covered text takes the GD2 ground ink
+		delay: 0.35,              // s after the first marked line has finished sliding in
+		gap: 0.42,                // s between one line's stroke start and the next
+		damping: 14,
+		stiffness: 80,           // the reference's 100 settles in ~0.3 s; a touch slower reads better at this size
+		inset: 0.1,               // em — the stroke overhangs the glyphs left and right
+		bleed: [0.06, 0.02],      // em — below the baseline / above the cap height
+		edge: 0.6,                // px of softness on the stroke's edges
+	},
 };
 
 const vertex = /* glsl */ `
@@ -35,13 +52,23 @@ void main() {
 const fragment = /* glsl */ `
 precision highp float;
 uniform sampler2D tText;
-uniform float uAlpha;
-uniform vec3 uColor;
+uniform float uAlpha, uMark;          // uMark: 0..1 (spring, may overshoot) — how far the stroke has run
+uniform vec2 uMarkX, uMarkY, uMarkPx; // stroke extent in uv (x: start..end, y: bottom..top); uv size of one texture pixel
+uniform vec3 uColor, uMarkColor, uMarkTextColor;
 varying vec2 vUv;
 void main() {
-	float a = texture2D(tText, vUv).a * uAlpha;
+	float ta = texture2D(tText, vUv).a;
+	// the highlighter stroke: a box from the phrase's left edge to uMark of its width, soft-edged by ~a pixel
+	float right = mix(uMarkX.x, uMarkX.y, clamp(uMark, 0.0, 1.06));
+	float inX = smoothstep(uMarkX.x - uMarkPx.x, uMarkX.x + uMarkPx.x, vUv.x) * (1.0 - smoothstep(right - uMarkPx.x, right + uMarkPx.x, vUv.x));
+	float inY = smoothstep(uMarkY.x - uMarkPx.y, uMarkY.x + uMarkPx.y, vUv.y) * (1.0 - smoothstep(uMarkY.y - uMarkPx.y, uMarkY.y + uMarkPx.y, vUv.y));
+	float mark = inX * inY * step(0.0001, uMark);
+	vec3 textCol = mix(uColor, uMarkTextColor, mark);    // covered glyphs take the ink colour
+	vec3 col = mix(uMarkColor, textCol, ta);             // glyphs over the stroke
+	col = mix(uColor, col, max(mark, ta));               // outside the stroke: plain text colour (alpha does the rest)
+	float a = max(ta, mark) * uAlpha;
 	if (a < 0.003) discard;
-	gl_FragColor = vec4(uColor, a);
+	gl_FragColor = vec4(col, a);
 }`;
 
 /** One canvas texture per line; all lines share the same height (line box) so they stack evenly. */
@@ -69,7 +96,15 @@ async function makeLineTextures(cfg) {
 		tex.colorSpace = THREE.SRGBColorSpace;
 		tex.anisotropy = 4;
 		tex.minFilter = THREE.LinearMipmapLinearFilter;
-		return { tex, aspect: canvas.width / canvas.height, padFrac: pad / canvas.width };
+		// the stroke box in uv: glyph span ± inset horizontally, baseline − bleed .. cap height + bleed vertically
+		const m = cfg.marker, capH = 0.73;
+		const glyphW = canvas.width - pad * 2;
+		return {
+			tex, aspect: canvas.width / canvas.height, padFrac: pad / canvas.width,
+			markX: [(pad - m.inset * f.sizePx) / canvas.width, (pad + glyphW + m.inset * f.sizePx) / canvas.width],
+			markY: [1 - (f.sizePx * (0.78 + m.bleed[0])) / lineH, 1 - (f.sizePx * (0.78 - capH - m.bleed[1])) / lineH],
+			px: [m.edge / canvas.width, m.edge / lineH],
+		};
 	});
 }
 
@@ -85,7 +120,12 @@ export async function createHeroText({ camera }) {
 		const material = new THREE.ShaderMaterial({
 			vertexShader: vertex,
 			fragmentShader: fragment,
-			uniforms: { tText: { value: t.tex }, uAlpha: { value: 0 }, uColor: { value: new THREE.Color(cfg.color) } },
+			uniforms: {
+				tText: { value: t.tex }, uAlpha: { value: 0 }, uColor: { value: new THREE.Color(cfg.color) },
+				uMark: { value: 0 }, uMarkX: { value: new THREE.Vector2().fromArray(t.markX) }, uMarkY: { value: new THREE.Vector2().fromArray(t.markY) },
+				uMarkPx: { value: new THREE.Vector2().fromArray(t.px) },
+				uMarkColor: { value: new THREE.Color(cfg.marker.color) }, uMarkTextColor: { value: new THREE.Color(cfg.marker.textColor) },
+			},
 			transparent: true, depthTest: false, depthWrite: false,
 		});
 		const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
@@ -115,6 +155,19 @@ export async function createHeroText({ camera }) {
 	}
 	layout();
 
+	/** Underdamped spring 0 → 1 (mass 1), closed form — Remotion's spring() for the same stiffness / damping. */
+	function spring(time, stiffness, damping) {
+		if (time <= 0) return 0;
+		const w0 = Math.sqrt(stiffness), zeta = damping / (2 * Math.sqrt(stiffness));
+		if (zeta >= 1) return 1 - Math.exp(-w0 * time) * (1 + w0 * time);
+		const wd = w0 * Math.sqrt(1 - zeta * zeta);
+		return 1 - Math.exp(-zeta * w0 * time) * (Math.cos(wd * time) + (zeta * w0 / wd) * Math.sin(wd * time));
+	}
+	const mk = cfg.marker;
+	const markOrder = mk.enabled ? mk.lines.filter((i) => lines[i]) : [];
+	// the strokes start after the first marked line has slid in, then one after another
+	const markStart = markOrder.length ? markOrder[0] * cfg.reveal.stagger + cfg.reveal.duration + mk.delay : 0;
+
 	let t = -cfg.reveal.delay;   // seconds since the reveal started (negative = waiting)
 	let fade = 1;                // external multiplier (the abyss transition dissolves the statement with the mountain world)
 	function update(dt) {
@@ -125,6 +178,9 @@ export async function createHeroText({ camera }) {
 			const e = 1 - Math.pow(1 - k, 3);   // ease-out cubic
 			l.mesh.position.x = l.baseX - (1 - e) * cfg.reveal.slide * base.screenW;
 			l.material.uniforms.uAlpha.value = e * fade;
+		});
+		markOrder.forEach((li, n) => {
+			lines[li].material.uniforms.uMark.value = spring(t - markStart - n * mk.gap, mk.stiffness, mk.damping);
 		});
 	}
 	function setFade(f) { fade = f; }

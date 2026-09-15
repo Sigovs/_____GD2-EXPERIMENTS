@@ -163,6 +163,16 @@ export const MOUNTAIN_DESCENT = {
 			swingPerRadPerSec: 12,  // degrees of rotateY per rad/s of orbit angular velocity
 			swingMaxDeg: 28,        // cap — past ~30° the reading foreshortens enough to hurt reading
 			swingDamp: 6,           // how quickly the swing follows and settles back
+			/* Glass plate under the reading (glass.js + route.css), after Figma's Glass effect */
+			glass: {
+				enabled: true,
+				radius: 8,            // px — keep equal to route.css .callout__in border-radius
+				bevelPx: 22,          // width of the refracting edge band
+				refractPx: 26,        // displacement at the very edge
+				dispersion: 0.2,      // chromatic spread of the refraction (the rainbow fringe)
+				frostPx: 1.4,         // blur after refraction
+				profile: 1.7,         // 1 = linear bevel, 2 = rounder lens edge
+			},
 		},
 	},
 };

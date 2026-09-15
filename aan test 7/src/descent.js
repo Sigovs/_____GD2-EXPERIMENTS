@@ -294,6 +294,8 @@ void main() {
 	gl_FragColor = vec4(col, a);
 }`;
 
+import { createGlassFilter } from './glass.js';
+
 export function createDescent({ scene, camera, mountain, pivot, resolution, labelRoot, noise, envMap }) {
 	const probe = new TerrainProbe(mountain, pivot);
 	const occluder = probe.buildProxyMesh();   // ~5k triangles, raycast-only
@@ -473,6 +475,10 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 
 		const plane = document.createElement('div');
 		plane.className = 'callout__in';
+		// the glass plate: its refraction filter is sized to the plate in placeCallout (measure)
+		const gc = cfg.style.callout?.glass;
+		const glass = gc?.enabled ? createGlassFilter({ id: `glass-${stop.id}`, root: labelRoot, ...gc }) : null;
+		if (glass) plane.classList.add('callout__in--glass');
 		const title = document.createElement('p');
 		title.className = 'callout__k';
 		title.innerHTML = `<svg class="ico" viewBox="0 0 12 12" aria-hidden="true" focusable="false">${ICONS[stop.icon] ?? ''}</svg>`;
@@ -487,7 +493,7 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 		});
 
 		root.append(lead, dot, plane);
-		return { root, line, grad, dot, plane, desc, length: 0, pathD: '' };
+		return { root, line, grad, dot, plane, desc, glass, length: 0, pathD: '' };
 	}
 
 	const stops = cfg.stops.map((s) => {
@@ -595,7 +601,14 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 	function placeCallout(s, x, y, w, h) {
 		const narrow = w <= (co.narrowPx ?? 992);
 		if (s.narrow !== narrow) { s.narrow = narrow; s.planeWidth = 0; }
-		if (!s.planeWidth) s.planeWidth = s.plane.offsetWidth;
+		if (!s.planeWidth) {
+			s.planeWidth = s.plane.offsetWidth;
+			if (s.glass) {
+				// refraction map at the plate's size; the plain blur in route.css stays the fallback where url() is refused
+				s.glass.fit(s.plane.offsetWidth, s.plane.offsetHeight);
+				s.plane.style.backdropFilter = `${s.glass.css} saturate(1.25) brightness(1.04)`;
+			}
+		}
 		const [fx, fy, ground = 'sky'] = narrow ? s.slot.narrow : s.slot.wide;
 		if (ground !== s.renderedGround) {
 			// sky → light ink, lit cloud → dark ink; the leader's gradient takes the same ink (from route.css)

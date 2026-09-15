@@ -82,8 +82,47 @@
 }
 .callout--left .callout__in { text-align: right; justify-items: end; }
 
-/* No surface while the plane turns (the framed, tinted flash mid-unfold read as the rejected
-   panel): the reading is unboxed text at every frame. */
+/* ---- the glass plate (glass.js draws the refraction; this is tint, frost fallback and light) ----
+   Figma Glass: refraction + dispersion come from the per-plate SVG filter set inline as backdrop-filter;
+   browsers that refuse url() there keep the plain frost below. The light is a specular ring: a
+   gradient border lit from the top-left, and a faint top-edge highlight. */
+.callout__in--glass {
+	padding: 0.9rem 1.15rem 0.95rem;
+	border-radius: 8px;                              /* = descent-config.js callout.glass.radius */
+	background:
+		linear-gradient(160deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02) 45%, rgba(255, 255, 255, 0.06)),
+		rgba(10, 16, 32, 0.34);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.22),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+		0 10px 34px rgba(2, 6, 16, 0.28);
+	-webkit-backdrop-filter: blur(6px) saturate(1.25);
+	backdrop-filter: blur(6px) saturate(1.25);
+	isolation: isolate;
+}
+.callout__in--glass::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	padding: 1px;
+	background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.10) 35%, rgba(255, 255, 255, 0.04) 62%, rgba(255, 255, 255, 0.38));
+	-webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+	mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+	pointer-events: none;
+}
+/* on lit cloud the plate is a light glass (the dark ink stays) */
+.callout--on-cloud .callout__in--glass {
+	background:
+		linear-gradient(160deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.22)),
+		rgba(220, 230, 245, 0.18);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.6),
+		inset 0 -1px 0 rgba(0, 40, 60, 0.06),
+		0 10px 30px rgba(0, 30, 50, 0.12);
+}
 
 .callout__k {
 	margin: 0;
