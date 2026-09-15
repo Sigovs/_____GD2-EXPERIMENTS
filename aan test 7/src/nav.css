@@ -11,7 +11,7 @@
 	--nav-right: clamp(48px, 4.5vw, 64px);
 	--nav-gap: clamp(28px, 3vw, 44px);
 
-	--nav-font: "Inter", "Söhne", "Helvetica Neue", system-ui, sans-serif;
+	--nav-font: "Inter Tight", "Helvetica Neue", system-ui, sans-serif;   /* the site's one family */
 	--nav-size: 0.9375rem;            /* 15px — above the 14px floor for functional text */
 	--nav-tracking: 0.03em;
 

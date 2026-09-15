@@ -15,21 +15,24 @@
 	</style>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap">
+	<!-- one family across the site: Inter Tight — Regular 400, SemiBold 600, ExtraBold 800 -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 	<link rel="stylesheet" href="src/nav.css">
 	<link rel="stylesheet" href="src/route.css">
 	<script type="importmap">
 	{
 		"imports": {
 			"three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
-			"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+			"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+			"lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.21.0/+esm"
 		}
 	}
 	</script>
 </head>
 <body>
 	<canvas id="scene"></canvas>
-	<div id="route-labels" aria-hidden="true"></div>
+	<!-- route callouts: real text (the readings carry information), decorative parts are aria-hidden inside -->
+	<div id="route-labels"></div>
 	<pre id="debug-readout" hidden></pre>
 	<nav class="nav" aria-label="Primary">
 		<ul>

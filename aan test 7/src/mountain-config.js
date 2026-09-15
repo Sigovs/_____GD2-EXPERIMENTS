@@ -126,7 +126,10 @@ export const MAIN_MOUNTAIN_GORA_1 = {
 		rockNormal: 'assets/textures/rock_normal.webp',
 	},
 	authoredForHeroSideOnly: false,
-	material: { ...MAIN_MOUNTAIN_TEMP_TILE.material },
+	// a little darker than the tile's rig, for the night scene: ambient ×0.75 (2.39 → 1.79), env ×0.82
+	// (0.33 → 0.27) — measured −17 % mean luminance on the summit, −18 % on the snow field
+	// values set by Alex in the tuning panel (2026-09-14): brightness 1.38, reflections 0.42, tint #f7f7f7
+	material: { ...MAIN_MOUNTAIN_TEMP_TILE.material, ambientIntensity: 1.38, envMapIntensity: 0.42, color: 0xf7f7f7 },
 	relight: { ...MAIN_MOUNTAIN_TEMP_TILE.relight },
 
 	// Material comparison (evaluation only — no permanent choice yet).
@@ -168,13 +171,23 @@ export const BABY_MOUNTAINS = {
 	//   HomepagePeaks.002  pos [90.04, 5.26, -64.19]     quat [0.1585, 0.8555, 0.0097, 0.4928]    scale [5.569, 5.569, 6.683]   renderOrder 0   (near, left ridge)
 	//   HomepagePeaks.BG   pos [-201.63, -35.99, 438.01] quat [0.0338, -0.6794, 0.0393, 0.7319]   scale [21.869, 21.869, 26.243] renderOrder -2  (far background peak)
 
+	// Per-node adjustments on top of the file placement (used when instances is null). Keyed by
+	// the node name as three.js reports it (dots stripped). `scale` multiplies the node's scale;
+	// `keepTop: true` lowers the node by the height it gained, so its summit stays where it was
+	// in the sky and only the base sinks.
+	overrides: {
+		// The far background peak read as floating: its transparent base fade sat above anything
+		// that could cover it. At 1.4× and sunk by the extra height, the fade goes into the clouds.
+		HomepagePeaksBG: { scale: 1.4, keepTop: true },
+	},
+
 	textures: {
 		baseColor: null,   // null → embedded texture from the GLB; or a path
 	},
 
 	material: {
 		ambient: 12703189,        // 0xC1D6D5
-		ambientIntensity: 2.24,
+		ambientIntensity: 0.58,   // set by Alex in the tuning panel (2026-09-14); the file rig had 2.24
 		envMapIntensity: 0.44,
 		envMapRotationY: -3,      // radians
 		normalRepeat: [3, 5],     // rockNormal repeat over the peak's UVs

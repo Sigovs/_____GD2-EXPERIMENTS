@@ -1,7 +1,12 @@
 /*
- * route.css — DOM labels for the descent route stops. Positioned every frame
- * from the projected 3D marker position (descent.js); opacity follows the
- * marker activation and the occlusion test.
+ * route.css — DOM callouts for the descent route stops, after aan test 4 / index2:
+ * a glowing anchor dot, an angular leader, and a reading with a 12-unit icon.
+ *
+ * The reading holds still in its own slot (descent-config.js → slot); only the leader
+ * tracks the anchor as the camera moves. A slot is either on sky (light ink) or on lit
+ * cloud (dark ink) — never on a plate. The leader's stroke is a gradient from 0 % at
+ * the anchor to 100 % at the reading, and it draws on. The unfold is driven by route
+ * progress, so it scrubs with the scroll and reverses with it.
  */
 
 #route-labels {
@@ -10,67 +15,159 @@
 	z-index: 5;
 	pointer-events: none;
 	overflow: hidden;
+	/* the reference's tokens (aan test 4 / assets20/css/tokens.css) */
+	--cyan: #00ECFF;                             /* the instrument accent: signal, data, annotation */
+	--cyan-glow: rgba(0, 236, 255, 0.55);
+	--ink-78: rgba(255, 255, 255, 0.78);         /* secondary readings on sky */
+	/* ink on lit cloud — derived, not picked: the instrument cyan's own hue (186°) taken
+	   down until a title clears 5.2:1 on cloud at luminance 0.55, the darkest a cloud slot
+	   is allowed to be; the sentence ink is the GD2 ground colour itself */
+	--ink-deep: #00505C;
+	--ink-cloud: rgba(11, 15, 30, 0.88);
+	--font: "Inter Tight", "Helvetica Neue", system-ui, sans-serif;   /* the site's one family */
+	--w-regular: 400;
+	--w-semi: 600;
+	--measure-reading: 22ch;                     /* a reading's sentence (the reference's cap) */
+	--measure-narrow: 17ch;                      /* the same at one column */
 }
 
-.route-label {
+.callout {
 	position: absolute;
 	left: 0;
 	top: 0;
 	opacity: 0;
 	will-change: transform, opacity;
-	font-family: "Inter", "Helvetica Neue", system-ui, sans-serif;
-	color: #dbe8f8;
-	-webkit-font-smoothing: antialiased;
-	--leader: 0;
 }
 
-/* thin leader from the marker up to the text */
-.route-label__leader {
+/* ---- the leader: a diagonal off the anchor, then a run into the reading ---- */
+.callout__lead {
 	position: absolute;
 	left: 0;
-	bottom: 0;
-	width: 1px;
-	height: 26px;
-	background: linear-gradient(to top, rgba(169, 226, 255, 0.0), rgba(169, 226, 255, 0.75));
-	transform-origin: bottom center;
-	transform: translate(-0.5px, 0) scaleY(var(--leader));
+	top: 0;
+	overflow: visible;
+}
+.callout__line {
+	fill: none;
+	/* stroke: the per-callout gradient (0 % at the anchor → 100 % at the reading), set in descent.js */
+	stroke-width: 0.85;
+	stroke-linecap: square;
+	stroke-linejoin: miter;
+	opacity: 0.8;
+}
+.callout--on-cloud .callout__line { stroke-width: 1; opacity: 0.9; }
+
+.callout__anchor {
+	position: absolute;
+	left: -3px;
+	top: -3px;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--cyan);
+	filter: drop-shadow(0 0 3px var(--cyan-glow));
 }
 
-.route-label__text {
+/* ---- the reading: one thin plane hinged on the edge its leader reaches ----
+   As wide as its widest line; only the sentence under the title has a measure. */
+.callout__in {
 	position: absolute;
 	left: 0;
-	bottom: 0;
-	transform: translate(10px, -30px);
-	display: flex;
-	flex-direction: column;
-	gap: 3px;
+	top: 0;
+	width: max-content;
+	backface-visibility: hidden;
+	--srf: 0;       /* surface presence while the plane turns */
+	--sheen: -60%;  /* the reflection's travel across it */
+}
+.callout--readout .callout__in {
+	display: grid;
+	gap: 0.35em;
+}
+.callout--left .callout__in { text-align: right; justify-items: end; }
+
+/* The temporary surface: exists only while the plane is turning. At rest --srf is 0
+   and the reading is unboxed text. */
+.callout__in::before {
+	content: '';
+	position: absolute;
+	inset: -0.55em -0.9em;
+	pointer-events: none;
+	opacity: var(--srf);
+	border: 1px solid rgba(0, 236, 255, 0.16);
+	border-left-color: rgba(0, 236, 255, 0.65);
+	background:
+		linear-gradient(90deg, rgba(0, 236, 255, 0), rgba(0, 236, 255, 0.22) 50%, rgba(0, 236, 255, 0)) var(--sheen) 0 / 45% 100% no-repeat,
+		linear-gradient(90deg, rgba(0, 236, 255, 0.10), rgba(10, 30, 48, 0.18) 35%, rgba(10, 20, 35, 0.04));
+}
+.callout--left .callout__in::before {
+	border-left-color: rgba(0, 236, 255, 0.16);
+	border-right-color: rgba(0, 236, 255, 0.65);
+}
+
+.callout__k {
+	margin: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
 	white-space: nowrap;
-	transform-origin: left bottom;
-}
-
-.route-label--left .route-label__text {
-	left: auto;
-	right: 0;
-	align-items: flex-end;
-	transform: translate(-10px, -30px);
-}
-
-.route-label__id {
+	font-family: var(--font);
 	font-size: 0.875rem;          /* 14px floor */
-	font-weight: 500;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: #eaf2ff;
-	text-shadow: 0 1px 8px rgba(2, 4, 10, 0.6);
-}
-
-.route-label__sub {
-	font-size: 0.875rem;
-	font-weight: 400;
+	font-weight: var(--w-semi);
+	line-height: 1.25;
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
-	color: rgba(169, 226, 255, 0.78);
-	text-shadow: 0 1px 8px rgba(2, 4, 10, 0.6);
+	font-variant-numeric: tabular-nums;
+	color: var(--cyan);
+}
+.callout__s {
+	margin: 0.4em 0 0;
+	max-width: var(--measure-reading);
+	font-family: var(--font);
+	font-size: 0.875rem;
+	font-weight: var(--w-regular);
+	line-height: 1.45;
+	color: var(--ink-78);
+}
+.callout--left .callout__s { margin-left: auto; }
+
+/* the readout: every line is instrument type — tracked caps, tabular figures */
+.callout--readout .callout__s {
+	margin: 0;
+	max-width: none;
+	line-height: 1.25;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+/* on lit cloud: the same reading in dark ink — no plate, no blur */
+.callout--on-cloud .callout__k { color: var(--ink-deep); }
+.callout--on-cloud .callout__s { color: var(--ink-cloud); }
+
+.callout .ico {
+	width: 11px;
+	height: 11px;
+	flex: 0 0 auto;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	opacity: 0.82;
+}
+
+/* one column, as in the reference: shorter lines, the sentence under a title goes;
+   titles and the readout's lines wrap so a reading fits its slot */
+@media (max-width: 62rem) {
+	.callout__k,
+	.callout--readout .callout__s {
+		max-width: var(--measure-narrow);
+		white-space: normal;
+	}
+	/* a wrapped title keeps its icon on the first line, beside the first word */
+	.callout__k { display: block; }
+	.callout__k .ico { display: inline-block; vertical-align: -1px; margin-right: 0.5rem; }
+	.callout--reading .callout__s { display: none; }
 }
 
 #debug-readout {
@@ -80,7 +177,8 @@
 	z-index: 20;
 	margin: 0;
 	padding: 6px 10px;
-	font: 12px/1.4 ui-monospace, monospace;
+	font: 12px/1.4 "Inter Tight", system-ui, sans-serif;
+	font-variant-numeric: tabular-nums;
 	color: #cfe0ff;
 	background: rgba(4, 7, 15, 0.6);
 	pointer-events: none;

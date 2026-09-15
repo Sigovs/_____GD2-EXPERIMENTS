@@ -52,7 +52,9 @@ const SETTINGS = {
 };
 
 // Fixed scene rig (from the original homepage preset) — not mountain-specific.
-const LIGHT_COLOR = new THREE.Color(0xe8ecef);
+// the mountain's and the peaks' distance haze (also the day sky's light colour). Night value set by
+// Alex in the tuning panel (2026-09-14); the original homepage rig had 0xe8ecef.
+const LIGHT_COLOR = new THREE.Color(0x2b3740);
 const DARK_COLOR = new THREE.Color(0x5c7183);
 const CAMERA_POSITION = new THREE.Vector3(175.856, 45.821, -51.137);
 const CAMERA_LOOK_AT = new THREE.Vector3(-5.934, -4.881, 54.620);
@@ -409,6 +411,14 @@ if (BABY_MOUNTAINS.instances) {
 		const mesh = new THREE.Mesh(obj.geometry, babyMaterial(obj.material));
 		mesh.name = obj.name;
 		obj.matrixWorld.decompose(mesh.position, mesh.quaternion, mesh.scale);
+		const override = BABY_MOUNTAINS.overrides?.[obj.name.replace(/\./g, '')];
+		if (override?.scale) {
+			if (override.keepTop) {
+				obj.geometry.computeBoundingBox();
+				mesh.position.y -= obj.geometry.boundingBox.max.y * mesh.scale.y * (override.scale - 1);
+			}
+			mesh.scale.multiplyScalar(override.scale);
+		}
 		mesh.renderOrder = obj.userData.renderOrder ?? 0;
 		babies.push(mesh);
 	});
@@ -519,10 +529,33 @@ const nightSkyMaterial = new THREE.ShaderMaterial({
 		uAtmoGlowRadius: { value: ns.atmosphericGlowRadius },
 		uAtmoGlowNoiseAmount: { value: ns.atmosphericGlowNoiseAmount },
 		uAtmoGlowNoiseScale: { value: ns.atmosphericGlowNoiseScale },
+		uResolution: shared.uResolution,
+		uMotion: { value: 1 },
+		uAirglowStrength: { value: ns.airglow?.strength ?? 0 },
+		uAirglowColor: { value: new THREE.Color(ns.airglow?.color ?? 0) },
+		uAirglowShiftColor: { value: new THREE.Color(ns.airglow?.shiftColor ?? 0) },
+		uAirglowScale: { value: new THREE.Vector2().fromArray(ns.airglow?.scale ?? [3, 1.4]) },
+		uAirglowSpeed: { value: ns.airglow?.speed ?? 0 },
+		uAirglowBand: { value: new THREE.Vector2().fromArray(ns.airglow?.band ?? [0, 0.5]) },
+		uMeteorSlot: { value: ns.meteors?.slot ?? 5 },
+		uMeteorChance: { value: ns.meteors?.chance ?? 0 },
+		uMeteorDuration: { value: new THREE.Vector2().fromArray(ns.meteors?.duration ?? [0.7, 1.2]) },
+		uMeteorTravel: { value: ns.meteors?.travel ?? 0.18 },
+		uMeteorTail: { value: ns.meteors?.tail ?? 0.08 },
+		uMeteorWidthPx: { value: ns.meteors?.widthPx ?? 1.5 },
+		uMeteorBrightness: { value: ns.meteors?.brightness ?? 0 },
+		uMeteorColor: { value: new THREE.Color(ns.meteors?.color ?? 0xffffff) },
+		uMeteorZone: { value: new THREE.Vector2().fromArray(ns.meteors?.zone ?? [0.6, 0.95]) },
+		uMeteorRadiant: { value: new THREE.Vector2().fromArray(ns.meteors?.radiant ?? [-0.25, 1.6]) },
 	},
 	side: THREE.FrontSide,
 	depthWrite: false,
 });
+// prefers-reduced-motion: no meteors and the airglow veil holds still — the static night sky is the authored state
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const applyMotionPreference = () => { nightSkyMaterial.uniforms.uMotion.value = reducedMotion.matches ? 0 : 1; };
+reducedMotion.addEventListener('change', applyMotionPreference);
+applyMotionPreference();
 // Fixed sky direction for the atmospheric lift: hero camera → summit, shifted by the config offset.
 function atmosphericGlowDirection() {
 	const dir = SUMMIT.clone().sub(CAMERA_POSITION).normalize();
@@ -684,6 +717,13 @@ function updateCamera(dt) {
 /* Loop                                                                */
 /* ------------------------------------------------------------------ */
 
+// Meteors belong to the pauses: while the route is being scrolled (the page's primary
+// idea) they fade out, and they come back once the scroll has rested for a moment.
+const METEOR_REST_MS = 1200;
+const meteorBrightness = ns.meteors?.brightness ?? 0;
+let meteorGate = 1;
+let scrollRestSince = 0;
+
 const clock = new THREE.Clock();
 function tick() {
 	const dt = Math.min(clock.getDelta(), 0.1);
@@ -691,7 +731,14 @@ function tick() {
 	shared.uCloudTime.value += dt * SETTINGS.cloudSpeed;
 	scroll.value = THREE.MathUtils.damp(scroll.value, scroll.target, MOUNTAIN_DESCENT.scrollDamp, dt);
 	if (Math.abs(scroll.value - scroll.target) < 0.0005) scroll.value = scroll.target;
-	descent.update(scroll.value, dt, camera);
+	const now = performance.now();
+	if (scroll.value !== scroll.target) scrollRestSince = now;
+	meteorGate = THREE.MathUtils.damp(meteorGate, now - scrollRestSince > METEOR_REST_MS ? 1 : 0, 6, dt);
+	nightSkyMaterial.uniforms.uMeteorBrightness.value = meteorBrightness * meteorGate;
+	// angular velocity of the drag / idle orbit only (rad/s) — the scroll choreography's own turn is not in it
+	const spin = dt > 0 ? (orbit.angle - (orbit.lastAngle ?? orbit.angle)) / dt : 0;
+	orbit.lastAngle = orbit.angle;
+	descent.update(scroll.value, dt, camera, spin);
 	updateCamera(dt);
 	if (SETTINGS.debug && debugReadout) debugReadout.textContent = `scroll ${scroll.value.toFixed(3)}  route u ${descent.state.u.toFixed(3)}  orbit ${(THREE.MathUtils.radToDeg(orbit.angle) + descent.state.angleDeg).toFixed(1)}°  zoom ${Math.min(orbit.zoom * descent.state.zoom, zoomLimit).toFixed(3)}`;
 	if (skybox.material === nightSkyMaterial) nightSkyMaterial.uniforms.uSummitDir.value.subVectors(SUMMIT, camera.position).normalize();
@@ -701,5 +748,18 @@ function tick() {
 }
 document.body.classList.add('is-ready');
 tick();
+
+// Tuning panel for the look (mountain, sky, path, callouts): ?tune in the URL, or press T
+const openTune = () => {
+	if (window.__tune) return;
+	window.__tune = 'loading';
+	import('./tune-panel.js')
+		.then(({ createTunePanel }) => { window.__tune = createTunePanel(window.__mountain); })
+		.catch((err) => { window.__tune = null; console.error('[tune] panel failed to load', err); });
+};
+if (new URLSearchParams(location.search).has('tune')) openTune();
+window.addEventListener('keydown', (e) => {
+	if ((e.key === 't' || e.key === 'T') && !window.__tune && !e.target.closest?.('input, textarea, select')) openTune();
+});
 
 window.__mountain = { SETTINGS, orbit, scene, camera, renderer, mouseTrail, cloudsGroup, mountain, peaksRoot, babies, debug, gd2Material, materialMode, skyMode, nightSkyMaterial, daySkyMaterial, skybox, ZOOM_LIMIT, getResponsiveZoomLimit, get zoomLimit() { return zoomLimit; }, descent, scroll, setDebug };

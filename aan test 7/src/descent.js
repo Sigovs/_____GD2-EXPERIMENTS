@@ -11,13 +11,17 @@ import { MOUNTAIN_DESCENT } from './descent-config.js';
  *                   mesh; turns (az, y) into a point on the outer surface.
  *  Route          : control points → Catmull-Rom in (az, y) → dense samples → probe →
  *                   3D polyline that hugs the terrain, lifted by `hover`.
- *  Line2 (×2)     : route + soft glow, one geometry each. The draw-on, tip colour and
- *                   tip fade are uniforms injected into LineMaterial (progress in route
- *                   length via vLineDistance) — nothing is rebuilt per frame.
+ *  Line2 (×3)     : a glow line — dark casing, soft additive glow (alpha falls off across
+ *                   its width), pale core. The draw-on, tip colour and tip fade are uniforms
+ *                   injected into LineMaterial (progress in route length via vLineDistance) —
+ *                   nothing is rebuilt per frame.
  *  Markers (×3)   : billboard quads with a tiny core / thin ring / halo shader,
- *                   depth-tested against the mountain like the line.
- *  Labels (×3)    : DOM, projected from the marker world positions every frame,
- *                   hidden when occluded (throttled raycast) or off-screen.
+ *                   depth-tested against the mountain like the line (off by default:
+ *                   the callout's anchor dot marks the stop).
+ *  Callouts (×3)  : DOM, after aan test 4 / index2. The reading holds still in a slot;
+ *                   the anchor dot is projected from the stop every frame, and the leader
+ *                   is rebuilt between the two. Hidden when occluded (throttled raycast)
+ *                   or off-screen.
  *  Camera state   : smooth keyframes over the same timeline, consumed by mountain.js.
  */
 
@@ -165,7 +169,13 @@ const routeUniforms = {
 	uRouteTipMix: { value: cfg.style.route.tipMix },
 };
 
-function makeRouteMaterial({ color, opacity, widthPx, resolution, tip }) {
+/**
+ * tipAmount: how much of the tip colour this layer takes at the drawing tip (core 1, glow 0.6, casing 0).
+ * softness:  alpha falloff across the line's width — 0 = a flat band, >0 = pow(1 − |across|, softness),
+ *            so a wide additive layer blooms instead of ending in a hard edge. Per material, live in
+ *            mat.userData.soft (the tuning panel drives it).
+ */
+function makeRouteMaterial({ color, opacity, widthPx, resolution, tipAmount = 1, softness = 0 }) {
 	const mat = new LineMaterial({
 		color, opacity, linewidth: widthPx, transparent: true, depthWrite: false,
 		worldUnits: false, dashed: true, dashSize: 1e6, gapSize: 0,
@@ -173,11 +183,13 @@ function makeRouteMaterial({ color, opacity, widthPx, resolution, tip }) {
 		alphaToCoverage: false,
 	});
 	mat.resolution.copy(resolution);
+	mat.userData.soft = { value: softness };
 	mat.onBeforeCompile = (shader) => {
 		Object.assign(shader.uniforms, routeUniforms);
+		shader.uniforms.uLineSoft = mat.userData.soft;
 		shader.fragmentShader = shader.fragmentShader
 			.replace('uniform float opacity;', `uniform float opacity;
-uniform float uRouteProgress, uRouteTotal, uRouteTipLength, uRouteTipMix;
+uniform float uRouteProgress, uRouteTotal, uRouteTipLength, uRouteTipMix, uLineSoft;
 uniform vec3 uRouteTipColor;`)
 			.replace('gl_FragColor = vec4( diffuseColor.rgb, alpha );', `
 float routeT = vLineDistance / uRouteTotal;
@@ -185,8 +197,9 @@ if (routeT > uRouteProgress) discard;
 float tipW = uRouteTipLength / uRouteTotal;
 float tip = smoothstep(uRouteProgress - tipW, uRouteProgress, routeT);
 float endFade = smoothstep(uRouteProgress, uRouteProgress - tipW * 0.35, routeT);
-vec3 routeRgb = mix(diffuseColor.rgb, uRouteTipColor, tip * uRouteTipMix * ${tip ? '1.0' : '0.6'});
-gl_FragColor = vec4(routeRgb, alpha * endFade);`);
+float across = uLineSoft > 0.0 ? pow(clamp(1.0 - abs(vUv.x), 0.0, 1.0), uLineSoft) : 1.0;
+vec3 routeRgb = mix(diffuseColor.rgb, uRouteTipColor, tip * uRouteTipMix * ${tipAmount.toFixed(2)});
+gl_FragColor = vec4(routeRgb, alpha * endFade * across);`);
 	};
 	return mat;
 }
@@ -265,19 +278,88 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 	routeUniforms.uRouteTotal.value = total;
 
 	const st = cfg.style.route;
-	const routeMat = makeRouteMaterial({ color: st.color, opacity: st.opacity, widthPx: st.widthPx, resolution, tip: true });
-	const glowMat = makeRouteMaterial({ color: st.glowColor, opacity: st.glowOpacity, widthPx: st.glowWidthPx, resolution, tip: false });
+	const routeMat = makeRouteMaterial({ color: st.color, opacity: st.opacity, widthPx: st.widthPx, resolution, tipAmount: 1 });
+	const glowMat = makeRouteMaterial({ color: st.glowColor, opacity: st.glowOpacity, widthPx: st.glowWidthPx, resolution, tipAmount: 0.6, softness: st.glowSoftness ?? 0 });
 	glowMat.blending = THREE.AdditiveBlending;
+	// the dark casing under the core (normal blending, no tip colour) — what keeps the route
+	// readable on snow. It shares the core's resolution vector, so resize() keeps it in step.
+	const casingMat = makeRouteMaterial({ color: st.casingColor ?? 0x0b0f1e, opacity: st.casingOpacity ?? 0.6, widthPx: st.casingWidthPx ?? 6, resolution, tipAmount: 0 });
+	casingMat.uniforms.resolution.value = routeMat.uniforms.resolution.value;
 	const routeLine = new Line2(geometry, routeMat);
 	const glowLine = new Line2(geometry, glowMat);
-	[routeLine, glowLine].forEach((l) => { l.computeLineDistances(); l.frustumCulled = false; l.renderOrder = 0; });
+	const casingLine = new Line2(geometry, casingMat);
+	[casingLine, glowLine, routeLine].forEach((l) => { l.computeLineDistances(); l.frustumCulled = false; l.renderOrder = 0; });
+	casingLine.renderOrder = -1;
 	glowLine.renderOrder = -0.5;
 	const group = new THREE.Group();
 	group.name = 'DescentRoute';
-	group.add(glowLine, routeLine);
+	group.add(casingLine, glowLine, routeLine);
 
-	/* --- markers + labels ------------------------------------------------ */
+	/* --- markers + callouts ------------------------------------------------ */
 	const ms = cfg.style.marker;
+	const SVG_NS = 'http://www.w3.org/2000/svg';
+	// the reference's 12-unit glyphs (aan test 4 / index2)
+	const ICONS = {
+		database: '<ellipse cx="6" cy="2.6" rx="4.2" ry="1.7"/><path d="M1.8 2.6v3.1c0 .94 1.88 1.7 4.2 1.7s4.2-.76 4.2-1.7V2.6"/><path d="M1.8 5.9v3.1c0 .94 1.88 1.7 4.2 1.7s4.2-.76 4.2-1.7V5.9"/>',
+		scan: '<path d="M1 3.4V1.6h1.9M10.4 3.4V1.6H8.5M1 8.6v1.8h1.9M10.4 8.6v1.8H8.5"/><path d="M1 6h9.4"/><circle cx="5.7" cy="6" r="1.5"/>',
+		nodes: '<circle cx="2.2" cy="9.4" r="1.4"/><circle cx="6" cy="4" r="1.4"/><circle cx="9.8" cy="8.2" r="1.4"/><path d="M3.3 8.5 4.9 5M7.1 4.8 8.9 7.2"/>',
+	};
+	/** Anchor dot + angular leader + reading. Copy goes in as text nodes, never as markup. */
+	function buildCallout(stop) {
+		const root = document.createElement('div');
+		root.className = `callout callout--${stop.register || 'reading'}`;
+
+		const lead = document.createElementNS(SVG_NS, 'svg');
+		lead.setAttribute('class', 'callout__lead');
+		lead.setAttribute('width', '1');
+		lead.setAttribute('height', '1');
+		lead.setAttribute('aria-hidden', 'true');
+		// the leader's stroke: 0 % at the anchor → 100 % at the reading (end point updated per frame)
+		const defs = document.createElementNS(SVG_NS, 'defs');
+		const grad = document.createElementNS(SVG_NS, 'linearGradient');
+		const gradId = `callout-lead-${stop.id}`;
+		grad.setAttribute('id', gradId);
+		grad.setAttribute('gradientUnits', 'userSpaceOnUse');
+		grad.setAttribute('x1', '0');
+		grad.setAttribute('y1', '0');
+		grad.setAttribute('x2', '1');
+		grad.setAttribute('y2', '0');
+		[[0, 0], [1, 1]].forEach(([offset, opacity]) => {
+			const gs = document.createElementNS(SVG_NS, 'stop');
+			gs.setAttribute('offset', String(offset));
+			gs.setAttribute('stop-color', '#00ECFF');
+			gs.setAttribute('stop-opacity', String(opacity));
+			grad.appendChild(gs);
+		});
+		defs.appendChild(grad);
+		const line = document.createElementNS(SVG_NS, 'path');
+		line.setAttribute('class', 'callout__line');
+		line.setAttribute('stroke', `url(#${gradId})`);
+		lead.append(defs, line);
+
+		const dot = document.createElement('span');
+		dot.className = 'callout__anchor';
+		dot.setAttribute('aria-hidden', 'true');
+
+		const plane = document.createElement('div');
+		plane.className = 'callout__in';
+		const title = document.createElement('p');
+		title.className = 'callout__k';
+		title.innerHTML = `<svg class="ico" viewBox="0 0 12 12" aria-hidden="true" focusable="false">${ICONS[stop.icon] ?? ''}</svg>`;
+		title.append(stop.title);
+		plane.appendChild(title);
+		const desc = (stop.lines ?? []).map((text) => {
+			const p = document.createElement('p');
+			p.className = 'callout__s';
+			p.textContent = text;
+			plane.appendChild(p);
+			return p;
+		});
+
+		root.append(lead, dot, plane);
+		return { root, line, grad, dot, plane, desc, length: 0, pathD: '' };
+	}
+
 	const stops = cfg.stops.map((s) => {
 		const cp = cfg.route.find((p) => p.name === s.anchor);
 		if (!cp) throw new Error(`descent: stop anchor "${s.anchor}" not in route`);
@@ -302,14 +384,20 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 		mesh.position.copy(position);
 		mesh.frustumCulled = false;
 		mesh.renderOrder = 0;
+		mesh.visible = ms.show !== false;
 		group.add(mesh);
 
-		const el = document.createElement('div');
-		el.className = `route-label route-label--${s.labelSide || 'right'}`;
-		el.innerHTML = `<span class="route-label__leader"></span><span class="route-label__text"><span class="route-label__id">${s.label}</span><span class="route-label__sub">${s.sub}</span></span>`;
-		labelRoot.appendChild(el);
+		const callout = buildCallout(s);
+		labelRoot.appendChild(callout.root);
 
-		return { ...s, u: anchorU[s.anchor], position, mesh, material, el, activation: 0, labelAlpha: 0, visible: 1 };
+		return {
+			...s, u: anchorU[s.anchor], position, mesh, material, ...callout,
+			planeWidth: 0,
+			activation: 0,
+			reveal: 0,     // 0..1 route-driven unfold (dot → leader → plane → lines)
+			seen: 0,       // 0..1 damped on-screen and not occluded
+			visible: 1,
+		};
 	});
 
 	/* --- debug ------------------------------------------------------------ */
@@ -348,8 +436,108 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 	const proj = new THREE.Vector3();
 	let frame = 0;
 
-	function update(progress, dt, cam) {
+	/* Callout unfold, in the reference's order: the anchor lights, the leader draws
+	   out, then the reading turns in from edge-on and its lines resolve. One 0..1
+	   `reveal` drives all of it, so a stopped scroll is a stopped frame. */
+	const co = cfg.style.callout ?? {};
+	const gap = co.gapPx ?? 14.4;
+	const minRun = co.minRunPx ?? 24;
+	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+	const phase = (a, from, to) => THREE.MathUtils.clamp((a - from) / (to - from), 0, 1);
+	const measureCallouts = () => stops.forEach((s) => { s.planeWidth = 0; });
+	document.fonts?.ready.then(measureCallouts);
+
+	function setLeader(s, knee, end) {
+		const d = `M0 0 L${knee[0].toFixed(1)} ${knee[1].toFixed(1)} L${end[0].toFixed(1)} ${end[1].toFixed(1)}`;
+		if (d === s.pathD) return;
+		s.pathD = d;
+		s.line.setAttribute('d', d);
+		// the gradient runs along the leader: 0 % at the anchor, 100 % where it meets the reading
+		s.grad.setAttribute('x2', end[0].toFixed(1));
+		s.grad.setAttribute('y2', end[1].toFixed(1));
+		s.length = Math.hypot(knee[0], knee[1]) + Math.hypot(end[0] - knee[0], end[1] - knee[1]);
+		s.line.style.strokeDasharray = `${s.length.toFixed(1)}`;
+	}
+
+	/* The reading holds still in its slot (fractions of the viewport); only the leader
+	   tracks the anchor: a diagonal of about 45° off the anchor, then a horizontal run
+	   into the reading's near edge. */
+	function placeCallout(s, x, y, w, h) {
+		const narrow = w <= (co.narrowPx ?? 992);
+		if (s.narrow !== narrow) { s.narrow = narrow; s.planeWidth = 0; }
+		if (!s.planeWidth) s.planeWidth = s.plane.offsetWidth;
+		const [fx, fy, ground = 'sky'] = narrow ? s.slot.narrow : s.slot.wide;
+		if (ground !== s.renderedGround) {
+			// sky → light ink, lit cloud → dark ink; the leader's gradient takes the same ink (from route.css)
+			s.root.classList.toggle('callout--on-cloud', ground === 'cloud');
+			const ink = getComputedStyle(labelRoot).getPropertyValue(ground === 'cloud' ? '--ink-deep' : '--cyan').trim() || '#00ECFF';
+			s.grad.querySelectorAll('stop').forEach((g) => g.setAttribute('stop-color', ink));
+			s.renderedGround = ground;
+		}
+		const cx = fx * w, cy = fy * h;
+		const left = x >= cx;                                    // reading left of its anchor → right-aligned, hinged on its right edge
+		const sign = left ? -1 : 1;
+		const edgeX = cx - sign * s.planeWidth / 2;              // the edge the leader reaches
+		const endX = edgeX - sign * gap;
+		const rise = cy - y;
+		// the knee: ~45° off the anchor, never closer than minRun to the reading's edge. When the
+		// anchor itself has less than minRun of room outside that edge, a knee would have to loop
+		// past the edge and come back, so the leader runs straight from the anchor to its end.
+		const room = (endX - x) * sign;                          // > 0: the anchor is outside the edge it connects to
+		let kneeX = x + sign * Math.abs(rise);
+		if (left ? kneeX < endX + minRun : kneeX > endX - minRun) kneeX = endX - sign * minRun;
+		if (room < minRun) kneeX = endX;
+		setLeader(s, [kneeX - x, rise], [endX - x, rise]);
+		if (left !== s.renderedLeft) {
+			s.root.classList.toggle('callout--left', left);
+			s.renderedLeft = left;
+		}
+		s.root.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+		return { left, px: edgeX - x, py: rise };
+	}
+
+	function paintCallout(s, { left, px, py }) {
+		const still = reducedMotion.matches;          // reduced motion: no turn, no draw-on — present or not
+		const a = still ? (s.reveal > 0.5 ? 1 : 0) : s.reveal;
+		const dotP = still ? a : phase(a, 0, 0.15);
+		const lineP = still ? 1 : phase(a, 0.08, 0.4);
+		const planeP = still ? a : phase(a, 0.35, 0.8);
+		const descP = still ? a : phase(a, 0.62, 0.9);
+		const burn = still ? 1 : phase(a, 0.6, 0.95);
+		const e = 1 - Math.pow(1 - planeP, 3);        // power3.out, as in the reference
+		const turn = still ? 0 : 1 - e;
+		const sign = left ? -1 : 1;
+
+		s.dot.style.opacity = dotP.toFixed(3);
+		s.dot.style.transform = `scale(${still ? 1 : dotP.toFixed(3)})`;
+		s.line.style.strokeDashoffset = (s.length * (1 - lineP)).toFixed(2);
+
+		s.plane.style.transformOrigin = left ? 'right center' : 'left center';
+		// the hand-turned swing: a rotateY about the reading's own centre (the unfold keeps its hinge
+		// on the edge), pushed back a little with the angle so it reads as a plane in the scene's space
+		const swing = state.swing ?? 0;
+		const half = sign * s.planeWidth / 2;
+		s.plane.style.transform =
+			`translate(${px.toFixed(1)}px, ${py.toFixed(1)}px) translate(${left ? '-100%' : '0'}, -50%) perspective(1000px) ` +
+			`translateX(${half.toFixed(1)}px) rotateY(${swing.toFixed(2)}deg) translateZ(${(-Math.abs(swing) * 1.2).toFixed(1)}px) translateX(${(-half).toFixed(1)}px) ` +
+			`translateX(${(-5 * sign * turn).toFixed(2)}px) rotateY(${(75 * sign * turn).toFixed(2)}deg) ` +
+			`scaleX(${(1 - 0.2 * turn).toFixed(3)}) translateZ(${(-55 * turn).toFixed(1)}px)`;
+		s.plane.style.opacity = planeP > 0 ? (still ? a : 0.45 + 0.55 * e).toFixed(3) : '0';
+		s.plane.style.filter = turn > 0.001 ? `blur(${(1.5 * turn).toFixed(2)}px)` : 'none';
+		s.plane.style.setProperty('--srf', planeP > 0 ? (1 - burn).toFixed(3) : '0');
+		s.plane.style.setProperty('--sheen', `${(-60 + 220 * burn).toFixed(1)}%`);
+		const descO = descP.toFixed(3);
+		s.desc.forEach((d) => { d.style.opacity = descO; });
+	}
+
+	function update(progress, dt, cam, spin = 0) {
 		state.progress = progress;
+		// turn the mountain by hand and the readings swing like planes in the same space: a rotateY
+		// in perspective that follows the orbit's angular velocity (the camera orbiting +θ turns the
+		// scene −θ in view), capped, and settles back to face the viewer when the mountain stops
+		const swingMax = co.swingMaxDeg ?? 28;
+		const swingTarget = reducedMotion.matches ? 0 : THREE.MathUtils.clamp(-spin * (co.swingPerRadPerSec ?? 12), -swingMax, swingMax);
+		state.swing = THREE.MathUtils.damp(state.swing ?? 0, swingTarget, co.swingDamp ?? 6, dt);
 		state.u = linearKeys(timingKeys, progress);
 		routeUniforms.uRouteProgress.value = state.u;
 
@@ -383,12 +571,13 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 			// projection
 			proj.copy(s.position).project(cam);
 			const onScreen = proj.z < 1 && Math.abs(proj.x) < 1.05 && Math.abs(proj.y) < 1.05;
-			const target = onScreen ? labelA * s.visible : 0;
-			s.labelAlpha = THREE.MathUtils.damp(s.labelAlpha, target, 8, dt);
+			s.seen = THREE.MathUtils.damp(s.seen, onScreen ? s.visible : 0, 8, dt);
+			s.reveal = THREE.MathUtils.damp(s.reveal, labelA, 10, dt);
+			const shown = s.reveal > 0.002 ? s.seen : 0;
+			s.root.style.opacity = shown.toFixed(3);
+			if (shown === 0) return; // nothing to lay out while it is not there
 			const x = (proj.x * 0.5 + 0.5) * w, y = (-proj.y * 0.5 + 0.5) * h;
-			s.el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
-			s.el.style.opacity = s.labelAlpha.toFixed(3);
-			s.el.style.setProperty('--leader', (s.labelAlpha).toFixed(3));
+			paintCallout(s, placeCallout(s, x, y, w, h));
 		});
 	}
 
@@ -396,6 +585,7 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 		routeMat.resolution.copy(res);
 		glowMat.resolution.copy(res);
 		stops.forEach((s) => { s.material.uniforms.uResolution.value = res; });
+		measureCallouts(); // max-width and the hidden sentence change with the viewport
 	}
 
 	return { group, debugGroup, state, stops, probe, occluder, points, total, anchorU, update, resize, timingKeys, pointAt };

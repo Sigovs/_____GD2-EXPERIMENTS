@@ -799,6 +799,16 @@ uniform sampler2D tPhoto;
 uniform float uPhotoBlend, uPhotoExposure, uPhotoFade;
 uniform vec4 uPhotoMap; // x: azimuth span (rad), y: azimuth offset (rad), z: elevation min (rad), w: elevation max (rad)
 #endif
+uniform vec2 uResolution;
+uniform float uMotion; // 1 = animated, 0 = prefers-reduced-motion (no meteors, airglow frozen)
+// Airglow: slow violet veil low in the sky
+uniform vec3 uAirglowColor, uAirglowShiftColor;
+uniform float uAirglowStrength, uAirglowSpeed;
+uniform vec2 uAirglowScale, uAirglowBand;
+// Meteors: rare screen-space streaks, occluded by everything drawn after the sky
+uniform float uMeteorSlot, uMeteorChance, uMeteorTravel, uMeteorTail, uMeteorWidthPx, uMeteorBrightness;
+uniform vec2 uMeteorDuration, uMeteorZone, uMeteorRadiant;
+uniform vec3 uMeteorColor;
 
 varying vec3 vViewDir;
 
@@ -809,6 +819,45 @@ float hash21(vec2 p) {
 	p = fract(p * vec2(123.34, 456.21));
 	p += dot(p, p + 45.32);
 	return fract(p.x * p.y);
+}
+
+/*
+ * Meteors, modelled on how they register on a camera rather than in an
+ * illustration: no glowing head, a hair-thin line whose brightness swells and
+ * burns out along its own path, gone in a fraction of a second, and every one
+ * pointing away from a shared radiant so they read as one shower, not confetti.
+ * Time is cut into slots of uMeteorSlot seconds; each holds at most one meteor
+ * (probability uMeteorChance). The previous slot is tested too, so a late start
+ * is not cut off. Screen units: 1 = screen height.
+ */
+float meteors(vec2 q, float aspect) {
+	float slot = floor(uTime / uMeteorSlot);
+	float px = uMeteorWidthPx / uResolution.y;
+	float acc = 0.;
+	for (int k = 0; k < 2; k++) {
+		float s = slot - float(k);
+		if (hash21(vec2(s, 3.7)) > uMeteorChance) continue;
+		float dur = mix(uMeteorDuration.x, uMeteorDuration.y, hash21(vec2(s, 8.1)));
+		float t0 = (s + hash21(vec2(s, 1.3))) * uMeteorSlot;
+		float lt = (uTime - t0) / dur;
+		if (lt < 0. || lt > 1.25) continue;                           // the extra quarter lets the trail cool after the end
+		vec2 start = vec2(mix(0.1, 0.9, hash21(vec2(s, 5.9))) * aspect, mix(uMeteorZone.x, uMeteorZone.y, hash21(vec2(s, 2.2))));
+		vec2 dir = normalize(start - uMeteorRadiant * vec2(aspect, 1.));
+		float travel = uMeteorTravel * mix(0.5, 1.2, hash21(vec2(s, 4.4)));
+		float head = travel * min(lt, 1.);
+		vec2 rel = q - start;
+		float along = dot(rel, dir);                                  // distance from the start along the path
+		if (along < 0.) continue;
+		float across = abs(dot(rel, vec2(-dir.y, dir.x)));
+		float burn = pow(max(sin(PI * clamp(along / travel, 0., 1.)), 0.), 1.5); // swells, then burns out along the path
+		float trail = exp(-max(head - along, 0.) / uMeteorTail);      // cools behind the leading end
+		float front = smoothstep(head + px, head, along);             // soft leading edge, no head
+		float cool = 1. - smoothstep(1., 1.25, lt);
+		float line = exp(-(across * across) / (px * px)) + 0.1 * exp(-(across * across) / (px * px * 9.));
+		float mag = mix(0.35, 1., pow(hash21(vec2(s, 6.6)), 2.));     // most are faint, a few are bright
+		acc += line * burn * trail * front * cool * mag;
+	}
+	return acc;
 }
 
 /* azimuth / elevation mapping of a world direction (u: 0..1 around, v: 0..1 pole to pole) */
@@ -946,6 +995,24 @@ void main() {
 	lift *= 1. + 1.5 * uAtmoGlowNoiseAmount * aNoise;
 	lift *= smoothstep(-0.06, 0.05, d.y);
 	color += uAtmoGlowColor * max(lift, 0.) * 0.10 * uAtmoGlowStrength;
+
+	/* Airglow: a slow violet veil low in the sky. Two noise layers drift against each
+	   other and a third slides the hue between violet and blue-violet — that slide is
+	   the shimmer. Azimuth scales stay integers so the veil is continuous across the seam. */
+	float at = uTime * uAirglowSpeed * uMotion;
+	float v1 = texture2D(tNoise, duv * uAirglowScale + vec2(at, 0.31)).r;
+	float v2 = texture2D(tNoise, duv * uAirglowScale * vec2(2., 1.7) + vec2(-1.6 * at, 0.73)).r;
+	float veil = smoothstep(0.4, 0.9, v1 * 0.6 + v2 * 0.4);
+	float veilBand = smoothstep(uAirglowBand.x, uAirglowBand.x + 0.08, d.y) * smoothstep(uAirglowBand.y, uAirglowBand.x + 0.12, d.y);
+	float hueSlide = smoothstep(0.35, 0.65, texture2D(tNoise, duv * vec2(1., 0.6) + vec2(0.5 * at, 0.17)).r);
+	color += mix(uAirglowColor, uAirglowShiftColor, hueSlide) * veil * veilBand * uAirglowStrength;
+
+	/* Meteors — the mountain and the clouds occlude them; they only fade out deep in the
+	   horizon haze (the hero camera sees just ~+14° of sky above the horizon, so a mask
+	   at the horizon itself would hide almost every one of them) */
+	vec2 sq = gl_FragCoord.xy / uResolution.y;
+	float met = meteors(sq, uResolution.x / uResolution.y) * uMotion * smoothstep(-0.12, -0.02, d.y);
+	color += uMeteorColor * met * uMeteorBrightness;
 
 	gl_FragColor = vec4(color, 1.);
 	gl_FragColor = linearToOutputTexel(gl_FragColor);

@@ -39,11 +39,28 @@ export const MOUNTAIN_DESCENT = {
 	hover: 0.9,             // world units the line floats above the probed surface
 	samples: 480,           // dense samples along the whole route
 
-	/* Stops: which route anchors get markers + labels */
+	/* Stops: the route anchors that carry a callout.
+	   Callouts follow aan test 4 / index2 (the reference): a glowing anchor dot on the
+	   route, an angular leader and a reading with a 12-unit icon. The copy is carried
+	   verbatim from that page — the figures in STOP 01 have no source recorded in this repo.
+	     icon      'database' | 'scan' | 'nodes' (the reference's glyphs)
+	     register  'readout' = every line in tracked caps (the summit readout)
+	               'reading' = title + one sentence
+	     slot      where the reading holds still: [x, y, ground] — the CENTRE of the reading in
+	               fractions of the viewport, and what it sits on: 'sky' (light ink: cyan +
+	               white) or 'cloud' (dark ink: deep teal + the GD2 ground colour). wide is used
+	               above callout.narrowPx, narrow below. The leader tracks the anchor into it.
+	   The slots were measured, not placed by eye: the scene was captured without callouts
+	   along the whole descent (1440×900 and 390×844, hero orbit). Each slot keeps one kind
+	   of ground in every frame its stop is visible — sky: 95th-percentile luminance ≤ 0.09;
+	   cloud: 5th-percentile ≥ 0.55 — so its ink clears 4.5:1 without any plate behind it.
+	   The readings descend with the route (each fully below the previous one), with no
+	   overlaps, no crossing leaders, the anchor clear of the reading's span, and clear of
+	   the navigation. Re-measure if the camera choreography changes. */
 	stops: [
-		{ id: 'STOP_01', anchor: 'STOP_01', label: 'STOP 01', sub: 'SIGNAL 001', labelSide: 'right' },
-		{ id: 'STOP_02', anchor: 'STOP_02', label: 'STOP 02', sub: 'SIGNAL 002', labelSide: 'right' },
-		{ id: 'STOP_03', anchor: 'STOP_03', label: 'STOP 03', sub: 'SIGNAL 003', labelSide: 'left' },
+		{ id: 'STOP_01', anchor: 'STOP_01', icon: 'database', title: 'Signal 001', lines: ['600M+ Consumer Profiles', 'Updated Daily'], register: 'readout', slot: { wide: [0.4208, 0.1644, 'sky'], narrow: [0.2795, 0.1528, 'sky'] } },   // narrow: the plaque is 230 px wide — centred clear of the left edge and below the stacked nav
+		{ id: 'STOP_02', anchor: 'STOP_02', icon: 'scan', title: 'Signal detected', lines: ['Every visit begins with a trace.'], register: 'reading', slot: { wide: [0.7951, 0.4756, 'cloud'], narrow: [0.5000, 0.7200, 'cloud'] } },   // narrow: this stop's anchor never reaches a phone screen
+		{ id: 'STOP_03', anchor: 'STOP_03', icon: 'nodes', title: 'Behavior identified', lines: ['Anonymous activity becomes actionable insight.'], register: 'reading', slot: { wide: [0.7585, 0.5978, 'cloud'], narrow: [0.5821, 0.6078, 'cloud'] } },   // wide x moved 40 px off the mountain's foggy right flank: at 0.7306 the title's first letters caught it (3.89:1 on the render)
 	],
 
 	/* Normalised scroll timeline (0..1) → route draw parameter (0..1 of the route length).
@@ -83,17 +100,29 @@ export const MOUNTAIN_DESCENT = {
 
 	style: {
 		route: {
-			color: 0xdbe6f5,        // cool white / blue-grey
-			opacity: 0.85,
-			widthPx: 1.6,
-			tipColor: 0x7fd4ff,     // icy cyan
-			tipLength: 6,           // world units of cyan energy behind the tip
-			tipMix: 0.9,
-			glowWidthPx: 7,
-			glowOpacity: 0.16,
-			glowColor: 0x8fd2ff,
+			/* On a snow mountain a light line disappears (the old cool-white 1.6 px route did), so
+			   the route is drawn the way a map draws a road: a dark casing under a bright core.
+			   The core is the instrument cyan — the same ink as the callouts' anchors and leaders;
+			   the casing is the GD2 ground colour. Widths are device pixels. */
+			/* A glow line (after Alex's HUD reference): a thin pale core inside a soft additive glow
+			   whose alpha falls off across its width, so it blooms instead of ending in a hard edge.
+			   A fainter casing stays underneath so the line still separates from lit snow. */
+			color: 0xbff4ff,        // core — pale instrument cyan
+			opacity: 1,
+			widthPx: 1.8,
+			tipColor: 0xffffff,     // hot white where the route is being drawn
+			tipLength: 6,           // world units of tip energy behind the drawing point
+			tipMix: 0.85,
+			glowWidthPx: 18,        // the soft glow's full width
+			glowOpacity: 0.6,
+			glowColor: 0x00ecff,
+			glowSoftness: 2.2,      // falloff exponent across the glow (0 = flat band, higher = tighter bloom)
+			casingColor: 0x0b0f1e,  // under the core: what makes the route read on snow
+			casingWidthPx: 4.5,
+			casingOpacity: 0.4,
 		},
 		marker: {
+			show: false,            // the 3D ring markers — off: the callout's anchor dot marks the stop (one anchor device, as in the reference)
 			sizePx: 44,             // quad size in device pixels (core + ring + halo live inside)
 			color: 0xa9e2ff,        // icy blue core / ring
 			ringRadius: 0.42,       // 0..1 of the quad half-size
@@ -102,9 +131,15 @@ export const MOUNTAIN_DESCENT = {
 			haloStrength: 0.35,
 			scaleFrom: 0.85,        // wake-up scale
 		},
-		label: {
-			offsetPx: [18, -34],    // from the marker, screen px (x flips for labelSide 'left')
-			leaderPx: 26,
+		callout: {
+			gapPx: 14.4,            // leader end → reading (.9rem in the reference)
+			narrowPx: 992,          // ≤ 62rem (the reference's breakpoint): narrow slots, wrapped readings
+			minRunPx: 24,           // the horizontal run into a reading never gets shorter than this
+			/* Turn the mountain by hand and the readings swing in 3D with it: rotateY in perspective,
+			   in the mountain's direction of turn, back to facing the viewer when it stops (off under reduced motion) */
+			swingPerRadPerSec: 12,  // degrees of rotateY per rad/s of orbit angular velocity
+			swingMaxDeg: 28,        // cap — past ~30° the reading foreshortens enough to hurt reading
+			swingDamp: 6,           // how quickly the swing follows and settles back
 		},
 	},
 };
