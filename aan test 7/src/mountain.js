@@ -800,7 +800,7 @@ function tick() {
 	const transP = DESCENT_SHARE < 1 ? Math.max(0, (scroll.value - DESCENT_SHARE) / (1 - DESCENT_SHARE)) : 0;
 	descent.update(descentP, dt, camera, spin);
 	camp?.update(descentP);
-	abyss.update(transP);
+	abyss.update(transP, descentP);
 	cloudMaterial.uniforms.uDusk.value = abyss.state.dusk;
 	routeLabels.style.opacity = abyss.state.labelFade;   // the callouts belong to the mountain and dissolve with it
 	heroText.setFade(abyss.state.heroTextFade);
