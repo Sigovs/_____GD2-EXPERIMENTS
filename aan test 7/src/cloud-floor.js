@@ -52,8 +52,9 @@ const fragment = /* glsl */ `
 precision highp float;
 uniform sampler2D tNoise, tPerlin;
 uniform float uTime, uCoverage, uOpacity, uScale, uSoftness, uSeed, uRadius, uRimFade, uBump;
+uniform float uDusk;            // transition: 0 = hero sea, 1 = cooled to uDuskColor
 uniform vec2 uCenter, uViewFade;
-uniform vec3 uColorDark, uColorLight;
+uniform vec3 uColorDark, uColorLight, uDuskColor;
 varying vec3 vWorld;
 varying vec2 vUv;
 
@@ -74,6 +75,7 @@ void main() {
 	// crests lighter, troughs darker; a touch of extra shadow where the layer is thin
 	vec3 color = mix(uColorDark, uColorLight, smoothstep(0.25, 0.85, n));
 	color *= 0.96 + 0.04 * a;
+	color = mix(color, uDuskColor * (0.8 + 0.4 * smoothstep(0.25, 0.85, n)), uDusk * 0.9);
 	gl_FragColor = vec4(color, a);
 }`;
 
@@ -103,6 +105,8 @@ export function createCloudFloor({ pivot, noise, perlin, cloudTime }) {
 				uViewFade: { value: new THREE.Vector2().fromArray(cfg.viewFade) },
 				uColorDark: { value: new THREE.Color(cfg.colorDark) },
 				uColorLight: { value: new THREE.Color(cfg.colorLight) },
+				uDusk: { value: 0 },
+				uDuskColor: { value: new THREE.Color(0x28364c) },
 			},
 			transparent: true,
 			depthTest: true,

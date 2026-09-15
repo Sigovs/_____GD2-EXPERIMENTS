@@ -12,12 +12,11 @@ import * as THREE from 'three';
  *       the chasm edge is only rocky framing.
  *
  * How it is built (2.5-D layers, each at its own depth in front of the camera):
- *   • the camera TRANSLATES down (position and look-at by the same amount, tiny
- *     zoom-out) — the hero view angle never changes, so the mountain slides out
- *     through the top at its size and its cut base is never seen from below;
- *   • the cloud rig follows most of that drop (`cloudFollow`): the plates linger
- *     as a cooling, thinning haze that keeps hiding the mountain's base;
- *   • the world-fixed cloud sea fades out before the camera passes its level;
+ *   • the camera does NOT move: the whole hero picture (mountain, baby peaks,
+ *     clouds, sea) slides up as one image through a LENS SHIFT of the projection
+ *     (`camera.shift`, in frame heights) plus a tiny zoom-out — nothing new is
+ *     revealed on the models, no undersides, no cut bases;
+ *   • the cloud plates and the sea cool to blue-grey from the bottom up;
  *   • the chasm edge and the video are billboards placed every frame at fixed
  *     distances in front of the camera; their vertical position is choreographed
  *     in FRAME HEIGHTS at their own depth (0 = frame centre, +0.5 = top edge),
@@ -31,11 +30,10 @@ export const ABYSS_TRANSITION = {
 	totalViewports: 13,
 	descentShare: 9 / 13,
 
-	/* Camera: vertical translation added to the descent choreography (world units) and a small zoom-out */
+	/* Camera: lens shift of the projection (frame heights the hero picture moves UP) and a small zoom-out */
 	camera: {
-		drop:    [[0, 0], [0.25, -5], [0.55, -22], [0.8, -62], [1, -125]],   // ≈ 0.2 frame heights per 25 units at the mountain's depth
-		zoomMul: [[0, 1], [1, 1.06]],
-		cloudFollow: 0.5,            // how much of the drop the cloud rig follows (1 = plates screen-locked, 0 = they leave with the mountain)
+		shift:   [[0, 0], [0.25, 0.02], [0.55, 0.15], [0.8, 0.45], [1, 0.9]],
+		zoomMul: [[0, 1], [0.6, 1.12], [1, 1.15]],   // "slightly backward" — a small size reduction, inside the responsive clamp
 	},
 
 	/* Chasm edge — split1.png billboard. `rimY`: the ridge crest in frame heights at its depth (0 = centre, +0.5 = top edge).
@@ -73,8 +71,8 @@ export const ABYSS_TRANSITION = {
 		dusk: [[0, 0], [0.2, 0.2], [0.6, 0.85], [0.8, 1], [1, 1]],
 		duskColor: 0x28364c,         // blue-grey, not black — storyboard 03's fog
 		duskBand: [-80, 120],        // world y (rig-relative, the rig follows the camera): cold below, hero above at dusk = 1
-		duskThin: 0.85,              // plates lose this much density at full dusk — they stay as haze
-		seaFade: [[0, 1], [0.25, 1], [0.5, 0]],   // gone before the camera passes its level; by then the chasm edge covers the base
+		duskThin: 0.6,               // plates lose this much density at full dusk — they stay as haze
+		seaDusk: [[0, 0], [0.2, 0.2], [0.6, 0.8], [1, 1]],   // the sea cools with the plates (it is what shows under the hero picture)
 	},
 
 	/* Callouts and hero statement belong to the mountain world */
@@ -117,17 +115,24 @@ void main() {
 
 const videoFragment = /* glsl */ `
 precision highp float;
-uniform sampler2D tVideo;
-uniform float uAlpha, uFeather;
+uniform sampler2D tVideo, tSplit;
+uniform float uAlpha, uFeather, uRimUv;
+uniform vec2 uSplitScale, uSplitOffset;   // this plate's uv → the chasm edge's uv (both are camera billboards)
 uniform vec3 uHaze;
 varying vec2 vUv;
 void main() {
 	vec3 c = texture2D(tVideo, vUv).rgb;
 	float edge = smoothstep(0.0, uFeather, vUv.x) * smoothstep(1.0, 1.0 - uFeather, vUv.x)
 	           * smoothstep(0.0, uFeather * 0.8, vUv.y) * smoothstep(1.0, 1.0 - uFeather * 1.6, vUv.y);
+	// the canyon exists only INSIDE the chasm: where the edge plate has coverage (its body and lower fade),
+	// and everything below the body; above the crest — over the mountain and the clouds — it is masked out
+	vec2 su = (vUv - 0.5) * uSplitScale + 0.5 + uSplitOffset;
+	float cover = (su.x < 0.0 || su.x > 1.0 || su.y > 1.0 || su.y < 0.0) ? 0.0 : texture2D(tSplit, su).a;
+	float below = 1.0 - smoothstep(uRimUv - 0.34, uRimUv - 0.26, su.y);   // under the body: always open
+	float inside = max(smoothstep(0.05, 0.5, cover), below);
 	// the picture surfaces out of the cloud haze: at low opacity it is haze-coloured, then clears
 	c = mix(uHaze, c, smoothstep(0.0, 1.0, uAlpha));
-	float a = edge * uAlpha;
+	float a = edge * uAlpha * inside;
 	if (a < 0.003) discard;
 	gl_FragColor = vec4(c, a);
 }`;
@@ -166,7 +171,11 @@ export function createAbyssTransition({ textureLoader, pivot }) {
 	const play = () => { if (playing) return; playing = true; video.play().catch(() => { playing = false; }); };
 	const videoMat = new THREE.ShaderMaterial({
 		vertexShader: plateVertex, fragmentShader: videoFragment,
-		uniforms: { tVideo: { value: videoTex }, uAlpha: { value: 0 }, uFeather: { value: cfg.video.edgeFeather }, uHaze: { value: new THREE.Color(cfg.video.hazeColor) } },
+		uniforms: {
+			tVideo: { value: videoTex }, tSplit: { value: splitTex }, uAlpha: { value: 0 }, uFeather: { value: cfg.video.edgeFeather },
+			uRimUv: { value: cfg.split.rimUv }, uSplitScale: { value: new THREE.Vector2(1, 1) }, uSplitOffset: { value: new THREE.Vector2() },
+			uHaze: { value: new THREE.Color(cfg.video.hazeColor) },
+		},
 		transparent: true, depthWrite: false, depthTest: false, side: THREE.DoubleSide,
 	});
 	const canyon = new THREE.Mesh(new THREE.PlaneGeometry(1, 1 / cfg.video.aspect), videoMat);
@@ -187,15 +196,15 @@ export function createAbyssTransition({ textureLoader, pivot }) {
 	group.add(canyon, split, floor);
 	group.visible = false;
 
-	const state = { t: 0, drop: 0, zoomMul: 1, dusk: 0, seaFade: 1, labelFade: 1, heroTextFade: 1, rimY: 0, videoY: 0, baseY: 0 };
+	const state = { t: 0, shift: 0, zoomMul: 1, dusk: 0, seaDusk: 0, labelFade: 1, heroTextFade: 1, rimY: 0, videoY: 0, baseY: 0 };
 
 	function update(transitionProgress) {
 		const t = THREE.MathUtils.clamp(transitionProgress, 0, 1);
 		state.t = t;
-		state.drop = keys(cfg.camera.drop, t);
+		state.shift = keys(cfg.camera.shift, t);
 		state.zoomMul = keys(cfg.camera.zoomMul, t);
 		state.dusk = keys(cfg.clouds.dusk, t);
-		state.seaFade = keys(cfg.clouds.seaFade, t);
+		state.seaDusk = keys(cfg.clouds.seaDusk, t);
 		state.labelFade = keys(cfg.labelFade, t);
 		state.heroTextFade = keys(cfg.heroTextFade, t);
 		state.rimY = keys(cfg.split.rimY, t);
@@ -208,8 +217,15 @@ export function createAbyssTransition({ textureLoader, pivot }) {
 		videoMat.uniforms.uAlpha.value = keys(cfg.video.opacity, t);
 	}
 
+	/** Lens shift: shear the projection so the whole picture moves up by `shift` frame heights. Call every frame. */
+	function applyShift(cam) {
+		cam.projectionMatrix.elements[9] = -2 * state.shift;   // y_ndc += 2·shift (a symmetric frustum has 0 here)
+		cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
+	}
+
 	const dir = new THREE.Vector3(), up = new THREE.Vector3(), basePoint = new THREE.Vector3();
-	/** Place the billboards in front of the camera. Call after camera.lookAt(), before the mouse parallax. */
+	/** Place the billboards in front of the camera. Call after camera.lookAt() and applyShift(), before the mouse parallax.
+	    Frame coordinates are VISIBLE-frame ones (the lens shift moves the geometry up by `shift`, so we place `shift` lower). */
 	function place(cam) {
 		if (!group.visible) return;
 		cam.updateMatrixWorld();
@@ -229,13 +245,17 @@ export function createAbyssTransition({ textureLoader, pivot }) {
 		const splitCentre = rim - (cfg.split.rimUv - 0.5) * plateHFrames;
 		const put = (mesh, d, widthFrames, frameY) => {
 			const frameH = 2 * d * tanHalf, frameW = frameH * cam.aspect;
-			mesh.position.copy(cam.position).addScaledVector(dir, d).addScaledVector(up, frameY * frameH);
+			mesh.position.copy(cam.position).addScaledVector(dir, d).addScaledVector(up, (frameY - state.shift) * frameH);
 			mesh.quaternion.copy(cam.quaternion);
 			mesh.scale.setScalar(widthFrames * frameW);
 		};
 		put(split, cfg.split.distance, cfg.split.widthFrames, splitCentre);
 		put(canyon, cfg.video.distance, cfg.video.widthFrames, state.videoY);
+		// video uv → edge uv, in frame units (widths for x, heights for y)
+		const videoHFrames = cfg.video.widthFrames * cam.aspect / cfg.video.aspect;
+		videoMat.uniforms.uSplitScale.value.set(cfg.video.widthFrames / cfg.split.widthFrames, videoHFrames / plateHFrames);
+		videoMat.uniforms.uSplitOffset.value.set(0, (state.videoY - splitCentre) / plateHFrames);
 	}
 
-	return { group, split, canyon, video, floor, state, update, place, cfg };
+	return { group, split, canyon, video, floor, state, update, place, applyShift, cfg };
 }

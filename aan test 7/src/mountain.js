@@ -599,6 +599,7 @@ scene.add(cloudRig);
 // World-fixed cloud sea under the mountain (hides the base plate and the quad borders when the camera flies in)
 const cloudFloor = createCloudFloor({ pivot: PIVOT, noise, perlin, cloudTime: shared.uCloudTime });
 scene.add(cloudFloor.group);
+cloudFloor.layers.forEach((l) => l.material.uniforms.uDuskColor.value.set(ABYSS_TRANSITION.clouds.duskColor));
 
 // Transition to the canyon / ocean: chasm-edge plate + video billboards placed in front of the camera (see abyss-transition.js)
 const abyss = createAbyssTransition({ textureLoader, pivot: PIVOT });
@@ -746,16 +747,16 @@ function updateCamera(dt) {
 	tmpPos.y += ds.camDrop;
 	tmpLook.y += ds.lookDrop;
 	if (ds.follow > 0) tmpLook.lerp(ds.tip, ds.follow); // steer toward the route tip during the descent
-	// transition: camera and look-at translate down together (view angle unchanged) — the mountain slides out through the top
+	// transition: a small zoom-out only; the picture itself moves up through a lens shift of the projection (abyss.applyShift)
 	const ab = abyss.state;
 	if (ab.t > 0) {
 		tmpPos.copy(baseOffset).multiplyScalar(Math.min(totalZoom * ab.zoomMul, zoomLimit)).applyAxisAngle(THREE.Object3D.DEFAULT_UP, totalAngle).add(PIVOT);
-		tmpPos.y += ds.camDrop + ab.drop;
-		tmpLook.y += ab.drop;
+		tmpPos.y += ds.camDrop;
 	}
 
 	camera.position.copy(tmpPos);
 	camera.lookAt(tmpLook);
+	abyss.applyShift(camera);
 	abyss.place(camera);   // billboards at fixed depths in front of the camera (before the mouse parallax, so they get it like the world does)
 
 	lerpedMouse.lerp(mouse, dt * 0.5);
@@ -765,7 +766,6 @@ function updateCamera(dt) {
 	camera.rotateX(lerpedMouse.y * 0.05 * SETTINGS.parallax);
 
 	cloudRig.rotation.y = totalAngle;
-	cloudRig.position.y = PIVOT.y + ab.drop * ABYSS_TRANSITION.camera.cloudFollow;   // the plates follow the camera down and linger as haze
 	skybox.rotation.y = totalAngle; // keeps the cylinder's UV seam behind the camera
 	gd2Material.uniforms.uLightDir.value.copy(BAKED_LIGHT_DIR).applyAxisAngle(THREE.Object3D.DEFAULT_UP, totalAngle);
 }
@@ -804,7 +804,7 @@ function tick() {
 	cloudMaterial.uniforms.uDusk.value = abyss.state.dusk;
 	routeLabels.style.opacity = abyss.state.labelFade;   // the callouts belong to the mountain and dissolve with it
 	heroText.setFade(abyss.state.heroTextFade);
-	cloudFloor.layers.forEach((l, i) => { l.material.uniforms.uOpacity.value = CLOUD_FLOOR.layers[i].opacity * abyss.state.seaFade; });
+	for (const l of cloudFloor.layers) l.material.uniforms.uDusk.value = abyss.state.seaDusk;
 	updateCamera(dt);
 	heroText.update(dt);
 	if (SETTINGS.debug && debugReadout) debugReadout.textContent = `scroll ${scroll.value.toFixed(3)}  descent ${descentP.toFixed(3)}  abyss ${transP.toFixed(3)}  route u ${descent.state.u.toFixed(3)}  orbit ${(THREE.MathUtils.radToDeg(orbit.angle) + descent.state.angleDeg).toFixed(1)}°  zoom ${Math.min(orbit.zoom * descent.state.zoom, zoomLimit).toFixed(3)}`;
