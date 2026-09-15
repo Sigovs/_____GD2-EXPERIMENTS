@@ -44,8 +44,8 @@ let heroTextRef = null;
 
 const SETTINGS = {
 	autoRotateSpeed: 0.035,  // rad/s, full turn ≈ 180 s. 0 = off
-	cloudSpeed: 0.55,        // time scale of the cloud drift (1 = original mont-fort speed)
-	cloudEdgeFeather: 0.16,  // softness of the cloud quads' solid core edge (0.1 = original mont-fort)
+	cloudSpeed: 0.28,        // time scale of the cloud drift (1 = original mont-fort speed; tuned 2026-09-15)
+	cloudEdgeFeather: 0.15,  // softness of the cloud quads' solid core edge (0.1 = original mont-fort)
 	dragSpeed: 0.005,        // rad per px
 	zoomMin: 0.55,
 	zoomMax: ZOOM_LIMIT.baseMaxZoomOut, // 16:9 value; the live limit is getResponsiveZoomLimit(camera.aspect)
