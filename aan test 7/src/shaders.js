@@ -361,6 +361,9 @@ uniform float uLightK, uLightBase;
 // textures all around. With NO_MIXMAP the slope mask is used everywhere.
 uniform vec2 uPivot, uFrontDir;
 uniform float uSideOnly;
+// expedition camp fire (camp.js): a small warm light on the mountain around the camp; uCampLight 0 = off
+uniform vec3 uCampLightPos, uCampLightColor;
+uniform float uCampLight, uCampLightRange;
 
 varying vec2 vUv, vMap2Uv;
 varying vec3 vNormal, vWorldNormal, vViewPosition, vWorldPosition, vPosition;
@@ -488,6 +491,18 @@ void main() {
 	reflectedLight.indirectSpecular *= computeSpecularOcclusion(dotNV, occlusion, pbrMaterial.roughness);
 
 	vec3 outgoingLight = reflectedLight.indirectDiffuse + reflectedLight.indirectSpecular;
+
+	/* Camp fire: warm light on the ground around the camp only (range-limited, squared falloff) */
+	if (uCampLight > 0.) {
+		vec3 campL = uCampLightPos - vWorldPosition;
+		float campD = length(campL);
+		float campFall = pow(clamp(1. - campD / uCampLightRange, 0., 1.), 2.);
+		float campWrap = max(dot(normalize(vWorldNormal), campL / max(campD, 1e-3)), 0.) * 0.75 + 0.25;
+		float campA = clamp(uCampLight * campFall * campWrap, 0., 1.);
+		// on moonlit snow an added term alone vanishes: the fire also pulls the ground's cool channels down
+		outgoingLight *= mix(vec3(1.), vec3(1.04, 0.84, 0.66), campA * 0.55);
+		outgoingLight += diffuseColor.rgb * uCampLightColor * campA * 0.12;
+	}
 
 	/* Fog toward the light colour */
 	float depth = computeDepth(gl_FragCoord.z, uFogNear, uFogFar);

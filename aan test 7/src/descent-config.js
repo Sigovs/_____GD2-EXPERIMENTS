@@ -23,18 +23,17 @@ export const MOUNTAIN_DESCENT = {
 		{ az: -30,  y: 38 },
 		{ az: -52,  y: 34 },
 		{ az: -64,  y: 30,  name: 'STOP_01' },    // upper right ridge
-		{ az: -68,  y: 24 },
-		{ az: -72,  y: 17,  name: 'HIDE' },       // goes behind the rock rib on the right flank
-		{ az: -75,  y: 11 },
-		{ az: -80,  y: 9 },
-		{ az: -84,  y: 9,   name: 'REAPPEAR' },   // far side of the rib — only visible once the camera has turned
-		{ az: -87,  y: 7,   name: 'STOP_02' },    // saddle behind the rib
-		{ az: -90,  y: 3 },
-		{ az: -82,  y: 0 },                        // long traverse back toward the front
-		{ az: -72,  y: -1 },
-		{ az: -62,  y: 0,   name: 'STOP_03' },    // rocky shelf just above the cloud layer
-		{ az: -64,  y: -6 },
-		{ az: -70,  y: -16, name: 'END' },        // into the clouds
+		{ az: -66,  y: 24 },
+		{ az: -62,  y: 18,  name: 'HIDE' },       // down the right flank (name kept: the timing keys refer to it)
+		{ az: -52,  y: 13 },
+		{ az: -40,  y: 10.5, name: 'REAPPEAR' },  // traverse onto the front, just below the central snow field's lip
+		{ az: -29,  y: 11.25, name: 'STOP_02' },  // the expedition camp on the central snow field (camp-config.js). Above y ≈ 11.3 the probe drops into the plateau — approach and leave from below
+		{ az: -21,  y: 10.4 },                     // from the camp to the left, just under the field's lip (Alex: "от палатки влево, потом вниз")
+		{ az: -15,  y: 8.5 },                      // further left is hidden behind a small rib (az −12…−6, y 7–11) and barely moves on screen
+		{ az: -14,  y: 4 },                        // then down the left flank
+		{ az: -12,  y: 0,   name: 'STOP_03' },    // left flank just above the cloud layer (was the rocky shelf at az −62 on the right)
+		{ az: -10,  y: -7 },
+		{ az: -9,   y: -16, name: 'END' },        // into the clouds
 	],
 	hover: 0.9,             // world units the line floats above the probed surface
 	samples: 480,           // dense samples along the whole route
@@ -59,8 +58,8 @@ export const MOUNTAIN_DESCENT = {
 	   the navigation. Re-measure if the camera choreography changes. */
 	stops: [
 		{ id: 'STOP_01', anchor: 'STOP_01', icon: 'database', title: 'Signal 001', lines: ['600M+ Consumer Profiles', 'Updated Daily'], register: 'readout', slot: { wide: [0.4208, 0.1644, 'sky'], narrow: [0.2795, 0.1528, 'sky'] } },   // narrow: the plaque is 230 px wide — centred clear of the left edge and below the stacked nav
-		{ id: 'STOP_02', anchor: 'STOP_02', icon: 'scan', title: 'Signal detected', lines: ['Every visit begins with a trace.'], register: 'reading', slot: { wide: [0.7951, 0.4756, 'cloud'], narrow: [0.5000, 0.7200, 'cloud'] } },   // narrow: this stop's anchor never reaches a phone screen
-		{ id: 'STOP_03', anchor: 'STOP_03', icon: 'nodes', title: 'Behavior identified', lines: ['Anonymous activity becomes actionable insight.'], register: 'reading', slot: { wide: [0.7585, 0.5978, 'cloud'], narrow: [0.5821, 0.6078, 'cloud'] } },   // wide x moved 40 px off the mountain's foggy right flank: at 0.7306 the title's first letters caught it (3.89:1 on the render)
+		{ id: 'STOP_02', anchor: 'STOP_02', icon: 'scan', title: 'Signal detected', lines: ['Every visit begins with a trace.'], register: 'reading', slot: { wide: [0.6528, 0.6556, 'cloud'], narrow: [0.5000, 0.7200, 'cloud'] } },   // STOP_02 is the camp: the route arrives from the right and leaves down-left, so the only clean way out is down-right to the lit cloud (measured t 0.76–1.00: 5th-pct luminance ≥ 0.60, no route under the reading or its leader). Narrow not re-measured
+		{ id: 'STOP_03', anchor: 'STOP_03', icon: 'nodes', title: 'Behavior identified', lines: ['Anonymous activity becomes actionable insight.'], register: 'reading', slot: { wide: [0.3958, 0.7556, 'cloud'], narrow: [0.5821, 0.6078, 'cloud'] } },   // STOP_03 on the left flank: reading down-left on the lit cloud, below STOP_02's (measured t 0.92–1.00: 5th-pct luminance ≥ 0.73, leaders clear of the route and of each other). Narrow not re-measured   // wide x moved 40 px off the mountain's foggy right flank: at 0.7306 the title's first letters caught it (3.89:1 on the render)
 	],
 
 	/* Normalised scroll timeline (0..1) → route draw parameter (0..1 of the route length).

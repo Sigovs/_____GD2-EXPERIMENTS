@@ -75,8 +75,6 @@
 	top: 0;
 	width: max-content;
 	backface-visibility: hidden;
-	--srf: 0;       /* surface presence while the plane turns */
-	--sheen: -60%;  /* the reflection's travel across it */
 }
 .callout--readout .callout__in {
 	display: grid;
@@ -84,24 +82,8 @@
 }
 .callout--left .callout__in { text-align: right; justify-items: end; }
 
-/* The temporary surface: exists only while the plane is turning. At rest --srf is 0
-   and the reading is unboxed text. */
-.callout__in::before {
-	content: '';
-	position: absolute;
-	inset: -0.55em -0.9em;
-	pointer-events: none;
-	opacity: var(--srf);
-	border: 1px solid rgba(0, 236, 255, 0.16);
-	border-left-color: rgba(0, 236, 255, 0.65);
-	background:
-		linear-gradient(90deg, rgba(0, 236, 255, 0), rgba(0, 236, 255, 0.22) 50%, rgba(0, 236, 255, 0)) var(--sheen) 0 / 45% 100% no-repeat,
-		linear-gradient(90deg, rgba(0, 236, 255, 0.10), rgba(10, 30, 48, 0.18) 35%, rgba(10, 20, 35, 0.04));
-}
-.callout--left .callout__in::before {
-	border-left-color: rgba(0, 236, 255, 0.16);
-	border-right-color: rgba(0, 236, 255, 0.65);
-}
+/* No surface while the plane turns (the framed, tinted flash mid-unfold read as the rejected
+   panel): the reading is unboxed text at every frame. */
 
 .callout__k {
 	margin: 0;

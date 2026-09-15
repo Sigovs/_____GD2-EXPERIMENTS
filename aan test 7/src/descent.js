@@ -503,7 +503,6 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 		const lineP = still ? 1 : phase(a, 0.08, 0.4);
 		const planeP = still ? a : phase(a, 0.35, 0.8);
 		const descP = still ? a : phase(a, 0.62, 0.9);
-		const burn = still ? 1 : phase(a, 0.6, 0.95);
 		const e = 1 - Math.pow(1 - planeP, 3);        // power3.out, as in the reference
 		const turn = still ? 0 : 1 - e;
 		const sign = left ? -1 : 1;
@@ -524,8 +523,6 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 			`scaleX(${(1 - 0.2 * turn).toFixed(3)}) translateZ(${(-55 * turn).toFixed(1)}px)`;
 		s.plane.style.opacity = planeP > 0 ? (still ? a : 0.45 + 0.55 * e).toFixed(3) : '0';
 		s.plane.style.filter = turn > 0.001 ? `blur(${(1.5 * turn).toFixed(2)}px)` : 'none';
-		s.plane.style.setProperty('--srf', planeP > 0 ? (1 - burn).toFixed(3) : '0');
-		s.plane.style.setProperty('--sheen', `${(-60 + 220 * burn).toFixed(1)}%`);
 		const descO = descP.toFixed(3);
 		s.desc.forEach((d) => { d.style.opacity = descO; });
 	}

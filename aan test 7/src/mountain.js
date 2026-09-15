@@ -597,6 +597,25 @@ const descent = createDescent({
 });
 descentRef = descent;
 scene.add(descent.group, descent.debugGroup);
+
+/* Expedition camp on the mountain's central snow field (camp-config.js) — CAMP_CONFIG.enabled, or ?camp in the URL */
+const { CAMP_CONFIG } = await import('./camp-config.js');
+let camp = null;
+if (CAMP_CONFIG.enabled || new URLSearchParams(location.search).has('camp')) {
+	const { createCamp } = await import('./camp.js');
+	camp = createCamp({
+		mountain, gd2Material, camera, noise,
+		resolution: shared.uResolution.value,
+		time: shared.uTime,
+		lightColor: shared.uLightColor,
+		fogNear: gd2Material.uniforms.uFogNear,
+		fogFar: gd2Material.uniforms.uFogFar,
+		reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
+		config: CAMP_CONFIG,
+	});
+	scene.add(camp.group);
+}
+window.__camp = camp;
 const scroll = { target: 0, value: 0 };
 function readScroll() {
 	const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
@@ -739,6 +758,7 @@ function tick() {
 	const spin = dt > 0 ? (orbit.angle - (orbit.lastAngle ?? orbit.angle)) / dt : 0;
 	orbit.lastAngle = orbit.angle;
 	descent.update(scroll.value, dt, camera, spin);
+	camp?.update(scroll.value);
 	updateCamera(dt);
 	if (SETTINGS.debug && debugReadout) debugReadout.textContent = `scroll ${scroll.value.toFixed(3)}  route u ${descent.state.u.toFixed(3)}  orbit ${(THREE.MathUtils.radToDeg(orbit.angle) + descent.state.angleDeg).toFixed(1)}°  zoom ${Math.min(orbit.zoom * descent.state.zoom, zoomLimit).toFixed(3)}`;
 	if (skybox.material === nightSkyMaterial) nightSkyMaterial.uniforms.uSummitDir.value.subVectors(SUMMIT, camera.position).normalize();
