@@ -1,4 +1,5 @@
 import GUI from 'lil-gui';
+import { MOUNTAIN_DESCENT } from './descent-config.js';
 
 /*
  * tune-panel.js — a live tuning panel for the look of the scene: mountain, sky, route, callouts.
@@ -17,8 +18,11 @@ const hexInt = (css) => `0x${css.replace('#', '').toLowerCase()}`;
 const round = (v) => Math.round(v * 1000) / 1000;
 
 export function createTunePanel(ctx) {
-	const { gd2Material, babies, nightSkyMaterial, descent, cloudFloor, cloudMaterial } = ctx;
+	const { gd2Material, babies, nightSkyMaterial, descent, cloudFloor, cloudMaterial, SETTINGS } = ctx;
 	const floorLayers = cloudFloor?.layers ?? [];
+	const conduit = descent.conduit;
+	const cu = conduit?.uniforms ?? null;
+	const ccfg = MOUNTAIN_DESCENT.style.conduit;
 	const m = gd2Material.uniforms;
 	const s = nightSkyMaterial.uniforms;
 	const lines = descent.group.children.filter((o) => o.isLine2);
@@ -34,6 +38,12 @@ export function createTunePanel(ctx) {
 		mountainTint: hex(m.uColor.value),
 		haze: hex(m.uLightColor.value),
 		peaksBrightness: babies[0]?.material.uniforms.uAmbientIntensity.value ?? 0.58,
+		mountainRoughness: m.uRoughness.value,
+		snowCoverage: m.uSnowCoverage?.value ?? 0.35,
+		steepRock: m.uSteepRock?.value ?? 0.7,
+		rockRelief: m.uSrcNormalScale?.value ?? 1,
+		// clouds (the nine camera quads + the sea share one clock)
+		cloudDrift: SETTINGS?.cloudSpeed ?? 0.55,
 		// sky
 		skyZenith: hex(s.uSkyTopColor.value),
 		skyHorizon: hex(s.uSkyHorizonColor.value),
@@ -60,6 +70,22 @@ export function createTunePanel(ctx) {
 		calloutsMatchPath: false,
 		calloutAccent: cssVar('--cyan') || '#00ecff',
 		calloutTitleOnCloud: cssVar('--ink-deep') || '#00505c',
+		// fluid conduit (route tube) — radii need a rebuild, everything else is live
+		conduitFluidColor: cu ? hex(cu.uFluidColor.value) : '#37d6ff',
+		conduitEmission: cu ? cu.uBaseEmission.value : 0.8,
+		conduitFlowSpeed: cu ? cu.uFlowSpeed.value : 0.35,
+		conduitNoise: cu ? cu.uNoiseStrength.value : 0.45,
+		conduitPulseColor: cu ? hex(cu.uPulseColor.value) : '#e8fbff',
+		conduitPulseStrength: cu ? cu.uPulseStrength.value : 3.2,
+		conduitPulseLength: cu ? cu.uPulseLength.value : 9,
+		conduitPulseSpeed: ccfg.pulseSpeed,
+		conduitPulsePause: ccfg.pulsePause,
+		conduitHalo: conduit?.halo ? conduit.halo.material.uniforms.uHalo.value : 0.7,
+		conduitTip: cu ? cu.uTipStrength.value : 0.9,
+		conduitShellOpacity: conduit?.shell ? conduit.shell.material.opacity : 0.3,
+		conduitShellTint: conduit?.shell ? hex(conduit.shell.material.color) : '#cfe6ff',
+		conduitShellRoughness: conduit?.shell ? conduit.shell.material.roughness : 0.12,
+		conduitShellEnv: conduit?.shell ? conduit.shell.material.envMapIntensity : 0.9,
 		// cloud sea under the mountain
 		floorEnabled: cloudFloor ? cloudFloor.group.visible : false,
 		floorTopY: floorLayers[0]?.position.y ?? -1.5,
@@ -84,6 +110,11 @@ export function createTunePanel(ctx) {
 		m.uColor.value.set(params.mountainTint);
 		m.uLightColor.value.set(params.haze);   // shared: the mountain's and the peaks' distance haze
 		babies.forEach((b) => { b.material.uniforms.uAmbientIntensity.value = params.peaksBrightness; });
+		m.uRoughness.value = params.mountainRoughness;
+		if (m.uSnowCoverage) m.uSnowCoverage.value = params.snowCoverage;
+		if (m.uSteepRock) m.uSteepRock.value = params.steepRock;
+		if (m.uSrcNormalScale) m.uSrcNormalScale.value = params.rockRelief;
+		if (SETTINGS) SETTINGS.cloudSpeed = params.cloudDrift;
 
 		s.uSkyTopColor.value.set(params.skyZenith);
 		s.uSkyHorizonColor.value.set(params.skyHorizon);
@@ -126,6 +157,28 @@ export function createTunePanel(ctx) {
 		}
 		if (cloudMaterial) cloudMaterial.uniforms.uEdgeFeather.value = params.quadEdgeFeather;
 
+		if (cu) {
+			cu.uFluidColor.value.set(params.conduitFluidColor);
+			cu.uBaseEmission.value = params.conduitEmission;
+			cu.uFlowSpeed.value = params.conduitFlowSpeed;
+			cu.uNoiseStrength.value = params.conduitNoise;
+			cu.uPulseColor.value.set(params.conduitPulseColor);
+			cu.uPulseStrength.value = params.conduitPulseStrength;
+			cu.uPulseLength.value = params.conduitPulseLength;
+			cu.uTipStrength.value = params.conduitTip;
+			ccfg.pulseSpeed = params.conduitPulseSpeed;      // read every frame by descent.update
+			ccfg.pulsePause = params.conduitPulsePause;
+			ccfg.pulseLength = params.conduitPulseLength;
+			if (conduit.halo) conduit.halo.material.uniforms.uHalo.value = params.conduitHalo;
+			if (conduit.shell) {
+				const sm = conduit.shell.material;
+				sm.opacity = params.conduitShellOpacity;
+				sm.color.set(params.conduitShellTint);
+				sm.roughness = params.conduitShellRoughness;
+				sm.envMapIntensity = params.conduitShellEnv;
+			}
+		}
+
 		if (remember) {
 			try { localStorage.setItem(STORAGE_KEY, JSON.stringify(params)); } catch { /* not remembered */ }
 		}
@@ -142,6 +195,10 @@ export function createTunePanel(ctx) {
 	mountain.addColor(params, 'mountainTint').name('Tint');
 	mountain.addColor(params, 'haze').name('Distance haze');
 	mountain.add(params, 'peaksBrightness', 0.1, 3.5, 0.01).name('Small peaks');
+	mountain.add(params, 'mountainRoughness', 0.04, 1, 0.01).name('Snow roughness');
+	mountain.add(params, 'snowCoverage', 0, 1, 0.01).name('Snow coverage');
+	mountain.add(params, 'steepRock', 0, 1, 0.01).name('Rock on steep faces');
+	mountain.add(params, 'rockRelief', 0, 2.5, 0.01).name('Rock relief');
 
 	const sky = gui.addFolder('Sky');
 	sky.addColor(params, 'skyZenith').name('Zenith');
@@ -175,6 +232,31 @@ export function createTunePanel(ctx) {
 	callouts.addColor(params, 'calloutTitleOnCloud').name('Title on cloud');
 	callouts.close();
 
+	if (cu) {
+		const tube = gui.addFolder('Conduit');
+		tube.addColor(params, 'conduitFluidColor').name('Fluid colour');
+		tube.add(params, 'conduitEmission', 0, 2, 0.01).name('Fluid brightness');
+		tube.add(params, 'conduitFlowSpeed', 0, 1.5, 0.01).name('Flow speed');
+		tube.add(params, 'conduitNoise', 0, 1, 0.01).name('Flow clotting');
+		tube.addColor(params, 'conduitPulseColor').name('Pulse colour');
+		tube.add(params, 'conduitPulseStrength', 0, 6, 0.05).name('Pulse strength');
+		tube.add(params, 'conduitPulseLength', 1, 30, 0.5).name('Pulse length');
+		tube.add(params, 'conduitPulseSpeed', 0, 40, 0.5).name('Pulse speed');
+		tube.add(params, 'conduitPulsePause', 0, 120, 1).name('Pause between pulses');
+		tube.add(params, 'conduitHalo', 0, 2, 0.01).name('Pulse halo');
+		tube.add(params, 'conduitTip', 0, 2, 0.01).name('Drawing tip');
+		tube.add(params, 'conduitShellOpacity', 0, 1, 0.01).name('Shell opacity');
+		tube.addColor(params, 'conduitShellTint').name('Shell tint');
+		tube.add(params, 'conduitShellRoughness', 0, 1, 0.01).name('Shell roughness');
+		tube.add(params, 'conduitShellEnv', 0, 3, 0.01).name('Shell reflections');
+		tube.close();
+	}
+
+	const clouds = gui.addFolder('Clouds');
+	clouds.add(params, 'cloudDrift', 0, 1.5, 0.01).name('Drift speed');
+	clouds.add(params, 'quadEdgeFeather', 0.05, 0.4, 0.01).name('Cloud quad edge');
+	clouds.close();
+
 	const floor = gui.addFolder('Cloud sea');
 	floor.add(params, 'floorEnabled').name('Enabled');
 	floor.add(params, 'floorTopY', -20, 10, 0.5).name('Top layer height');
@@ -184,7 +266,6 @@ export function createTunePanel(ctx) {
 	floor.add(params, 'floorBaseY', -30, 0, 0.5).name('Base layer height');
 	floor.addColor(params, 'floorLight').name('Crest colour');
 	floor.addColor(params, 'floorDark').name('Trough colour');
-	floor.add(params, 'quadEdgeFeather', 0.05, 0.4, 0.01).name('Cloud quad edge');
 	floor.close();
 
 	gui.onChange(() => apply(true));
@@ -209,13 +290,20 @@ export function createTunePanel(ctx) {
 					glowColor: hexInt(params.glowColor), glowOpacity: round(params.glowOpacity), glowWidthPx: round(params.glowWidth), glowSoftness: round(params.glowSoftness),
 					casingColor: hexInt(params.casingColor), casingOpacity: round(params.casingOpacity), casingWidthPx: round(params.casingWidth),
 				},
+				'descent-config.js → style.conduit': {
+					fluidColor: hexInt(params.conduitFluidColor), fluidBaseEmission: round(params.conduitEmission), fluidFlowSpeed: round(params.conduitFlowSpeed), fluidNoiseStrength: round(params.conduitNoise),
+					pulseColor: hexInt(params.conduitPulseColor), pulseStrength: round(params.conduitPulseStrength), pulseLength: round(params.conduitPulseLength), pulseSpeed: round(params.conduitPulseSpeed), pulsePause: round(params.conduitPulsePause),
+					haloStrength: round(params.conduitHalo), tipStrength: round(params.conduitTip),
+					tubeShellOpacity: round(params.conduitShellOpacity), tubeShellTint: hexInt(params.conduitShellTint), shellRoughness: round(params.conduitShellRoughness), shellEnvIntensity: round(params.conduitShellEnv),
+				},
 				'route.css → #route-labels': { '--cyan': accent, '--ink-deep': params.calloutTitleOnCloud },
 				'cloud-floor.js → CLOUD_FLOOR': {
 					enabled: params.floorEnabled, colorLight: hexInt(params.floorLight), colorDark: hexInt(params.floorDark),
 					'layers[0].y': params.floorTopY, 'layers[0].coverage': round(params.floorTopCoverage),
 					'layers[1].y': params.floorMidY, 'layers[1].coverage': round(params.floorMidCoverage), 'layers[2].y': params.floorBaseY,
 				},
-				'mountain.js → SETTINGS': { cloudEdgeFeather: round(params.quadEdgeFeather) },
+				'mountain.js → SETTINGS': { cloudEdgeFeather: round(params.quadEdgeFeather), cloudSpeed: round(params.cloudDrift) },
+				'mountain-config.js → MAIN_MOUNTAIN_GORA_1 (material / hybrid)': { roughness: round(params.mountainRoughness), 'hybrid.snowCoverage': round(params.snowCoverage), 'hybrid.steepRock': round(params.steepRock), 'hybrid.normalScale': round(params.rockRelief) },
 			};
 			const text = JSON.stringify(values, null, 2);
 			console.log('[tune] current values\n' + text);
