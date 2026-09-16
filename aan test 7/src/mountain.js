@@ -631,7 +631,7 @@ if (VARIANT === 'v2') {
 
 // Hero statement: a camera-parented quad drawn between the cloud layers (see hero-text.js)
 scene.add(camera);
-const heroText = await createHeroText({ camera });
+const heroText = await createHeroText({ camera, variant: VARIANT });
 heroTextRef = heroText;
 
 /* ------------------------------------------------------------------ */

@@ -55,6 +55,15 @@ export const HERO_TEXT = {
 		softGain: 1.5,            // the blurred copy's alpha is lifted a little (thin strokes average down)
 		expand: [0.16, 0.95],     // quad grown by this much uv on each side (x, y): room for the soft copy to spread
 	},
+	/* v2 (index_v2.html) — the statement leaves to the RIGHT as a staircase (Alex, 2026-09-15: "в сторону вправо,
+	   ступенькой"): the top line goes first, each next one a step behind, so mid-exit the lines form a diagonal;
+	   almost no rise, the same blur / fray. Overrides `exit` when createHeroText gets variant 'v2'. */
+	exitV2: {
+		rise: 0.04,
+		drift: 0.75,              // viewport widths to the right — clear of the frame
+		grow: 0.06,
+		stagger: 0.26,            // a wider step between lines than v1's rise
+	},
 };
 
 const vertex = /* glsl */ `
@@ -193,8 +202,9 @@ async function makeLineTextures(cfg) {
 	});
 }
 
-export async function createHeroText({ camera }) {
+export async function createHeroText({ camera, variant = null }) {
 	const cfg = HERO_TEXT;
+	if (variant === 'v2') Object.assign(cfg.exit, cfg.exitV2);   // v2: exit to the right, stepped
 	const textures = await makeLineTextures(cfg);
 	const group = new THREE.Group();
 	group.name = 'HeroText';
