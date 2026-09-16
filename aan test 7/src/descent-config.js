@@ -163,6 +163,14 @@ export const MOUNTAIN_DESCENT = {
 			swingPerRadPerSec: 12,  // degrees of rotateY per rad/s of orbit angular velocity
 			swingMaxDeg: 28,        // cap — past ~30° the reading foreshortens enough to hurt reading
 			swingDamp: 6,           // how quickly the swing follows and settles back
+			/* Exit in the abyss transition (Alex, 2026-09-15): never on top of the rising chasm edge, and not the unfold
+			   reversed — 1) the plate with its text disappears, 2) the leader retracts into the anchor, 3) the dot goes.
+			   Each callout leaves as the crest approaches its lowest point (anchor or reading bottom), so they go bottom-up. */
+			exit: {
+				rangePx: 160,         // the exit plays while the crest climbs this far …
+				marginPx: 24,         // … and is done when the crest is still this far below the callout
+				damp: 10,
+			},
 			/* Glass plate under the reading (glass.js + route.css), after Figma's Glass effect */
 			glass: {
 				enabled: true,

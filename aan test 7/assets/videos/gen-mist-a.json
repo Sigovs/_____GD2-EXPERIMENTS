@@ -1,0 +1,11 @@
+{
+  "file": "gen-mist-a.mp4",
+  "origin": "synthetic",
+  "model": "minimax_h3 (Higgsfield MCP)",
+  "job_id": "668aceb6-c321-47b8-ae8a-d12e940fe1ea",
+  "date": "2026-09-15",
+  "output": "3360x1440, 21:9, 5s, 2K",
+  "purpose": "mist/fog veil plate for the mountain-to-ocean transition (index_v2.html only)",
+  "prompt": "Locked-off static camera. Thin veils of cold night fog drifting slowly sideways and lifting, on a pure black background. Pale blue-grey vapour, translucent layered wisps, high-altitude mountain mist at night, large areas of empty black between the wisps, soft edges, no light source, no sun rays, no god rays, no landscape, no rocks, no horizon, no objects, no people, no text, no logos, no watermark. Very slow, calm, continuous drift; cinematic, desaturated, dark.",
+  "notes": "GI4: frame carries no type, UI or logo. GI3: depicts no real place, product or person - atmosphere only."
+}

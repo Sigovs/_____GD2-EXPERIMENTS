@@ -494,18 +494,6 @@ void main() {
 
 	vec3 outgoingLight = reflectedLight.indirectDiffuse + reflectedLight.indirectSpecular;
 
-	/* Camp fire: warm light on the ground around the camp only (range-limited, squared falloff) */
-	if (uCampLight > 0.) {
-		vec3 campL = uCampLightPos - vWorldPosition;
-		float campD = length(campL);
-		float campFall = pow(clamp(1. - campD / uCampLightRange, 0., 1.), 2.);
-		float campWrap = max(dot(normalize(vWorldNormal), campL / max(campD, 1e-3)), 0.) * 0.75 + 0.25;
-		float campA = clamp(uCampLight * campFall * campWrap, 0., 1.);
-		// on moonlit snow an added term alone vanishes: the fire also pulls the ground's cool channels down
-		outgoingLight *= mix(vec3(1.), vec3(1.04, 0.84, 0.66), campA * 0.55);
-		outgoingLight += diffuseColor.rgb * uCampLightColor * campA * 0.12;
-	}
-
 	/* Fog toward the light colour */
 	float depth = computeDepth(gl_FragCoord.z, uFogNear, uFogFar);
 	depth = smoothstep(0.01, .3, depth) * uFog;
@@ -516,6 +504,20 @@ void main() {
 		vec3 nightMix = mix(outgoingLight, vec3(nl), 0.35 * uNight);          // desaturate a touch
 		nightMix = mix(nightMix, vec3(nl * 0.55 + 0.03), 0.3 * uNight);           // contrast down
 		outgoingLight = mix(nightMix, uNightColor * (0.7 + 0.6 * nl), uNight); // darkness and cold atmosphere consume it
+	}
+
+	/* Camp fire: warm light on the ground around the camp only (range-limited, squared falloff). Applied AFTER the fog
+	   and the night, so in the dark of the abyss transition it is the one light left on the mountain. */
+	if (uCampLight > 0.) {
+		vec3 campL = uCampLightPos - vWorldPosition;
+		float campD = length(campL);
+		float campFall = pow(clamp(1. - campD / uCampLightRange, 0., 1.), 2.);
+		float campWrap = max(dot(normalize(vWorldNormal), campL / max(campD, 1e-3)), 0.) * 0.75 + 0.25;
+		float campA = clamp(uCampLight * campFall * campWrap, 0., 1.);
+		// on moonlit snow an added term alone vanishes: the fire also pulls the ground's cool channels down (by day);
+		// at night the added warmth carries it
+		outgoingLight *= mix(vec3(1.), vec3(1.04, 0.84, 0.66), campA * 0.55 * (1.0 - uNight));
+		outgoingLight += diffuseColor.rgb * uCampLightColor * campA * (0.12 + 0.3 * uNight);
 	}
 
 	gl_FragColor = vec4(outgoingLight, 1.);
@@ -858,6 +860,7 @@ uniform float uAirglowStrength, uAirglowSpeed;
 uniform vec2 uAirglowScale, uAirglowBand;
 // Meteors: rare screen-space streaks, occluded by everything drawn after the sky
 uniform float uMeteorSlot, uMeteorChance, uMeteorTravel, uMeteorTail, uMeteorWidthPx, uMeteorBrightness;
+uniform float uNightFall, uNightSky;   // abyss transition: the night falls (0..1) and how much of the sky's light it takes
 uniform vec2 uMeteorDuration, uMeteorZone, uMeteorRadiant;
 uniform vec3 uMeteorColor;
 
@@ -1064,6 +1067,8 @@ void main() {
 	vec2 sq = gl_FragCoord.xy / uResolution.y;
 	float met = meteors(sq, uResolution.x / uResolution.y) * uMotion * smoothstep(-0.12, -0.02, d.y);
 	color += uMeteorColor * met * uMeteorBrightness;
+	// abyss transition: the night falls — the sky sinks toward black, stars and all
+	color *= 1.0 - uNightFall * uNightSky;
 
 	gl_FragColor = vec4(color, 1.);
 	gl_FragColor = linearToOutputTexel(gl_FragColor);

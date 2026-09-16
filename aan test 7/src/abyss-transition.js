@@ -9,8 +9,8 @@ import { createRockRim, ROCK_LAYER } from './rock-rim.js';
  *       the lower clouds start to cool;
  *   02  mountain in the upper part, the chasm edge frames the lower part, the
  *       canyon video is clearly visible through the opening;
- *   03  the mountain world has left through the TOP, the canyon is the scene,
- *       the chasm edge is only rocky framing.
+ *   03  the rising section has covered the mountain world (which never moved),
+ *       the canyon is the scene, the chasm edge is only rocky framing.
  *
  * Depth choreography (this pass): the mountain world recedes into night (uNight on its materials: darker, flatter,
  * cooler — never an opacity fade) while it rises; the CLOUDS come forward (the rig slides toward the camera and
@@ -19,10 +19,9 @@ import { createRockRim, ROCK_LAYER } from './rock-rim.js';
  * scale 1.05 → 1, opacity up). Layer order front→back: split · clouds · canyon · mountain.
  *
  * How it is built (2.5-D layers, each at its own depth in front of the camera):
- *   • the camera does NOT move: the whole hero picture (mountain, baby peaks,
- *     clouds, sea) slides up as one image through a LENS SHIFT of the projection
- *     (`camera.shift`, in frame heights) plus a tiny zoom-out — nothing new is
- *     revealed on the models, no undersides, no cut bases;
+ *   • the camera does NOT move and the mountain world STAYS in the background: the new
+ *     section rises over it and covers it (Alex, 2026-09-15). `camera.shift` — a lens shift
+ *     of the projection that used to slide the whole hero picture up — is kept, at 0;
  *   • the cloud plates and the sea cool to blue-grey from the bottom up;
  *   • the chasm edge and the video are billboards placed every frame at fixed
  *     distances in front of the camera; their vertical position is choreographed
@@ -41,7 +40,7 @@ export const ABYSS_TRANSITION = {
 	   `mouseParallax` — APPROVED, KEEP: the chasm edge and the canyon video are placed BEFORE the mouse parallax is applied
 	   to the camera, so they swing with the mouse like the world does (the video reacts to mouse move). Never place them after it. */
 	/* CHOREOGRAPHY (mountain → split → ocean), with a held middle:
-	     mountain world  — far background: drifts UP slowly (lens shift), no visible scaling, a little into darkness / haze
+	     mountain world  — far background: holds still (no lens shift, no zoom), only a little into darkness / haze
 	     clouds          — the glue: come forward through the middle, overlap the lower mountain and the split's crest
 	     split           — solid foreground rim: rises in front of the viewer, faster than the world, never dissolves
 	     ocean           — a separate deep scene: mostly stays, revealed from BENEATH the rising split (masked by the
@@ -49,15 +48,31 @@ export const ABYSS_TRANSITION = {
 	     hold            — t ≈ 0.35 … 0.65: mountain above, clouds in the middle, split in front, ocean glow below */
 	camera: {
 		mouseParallax: true,
-		// one continuous descent: the picture rises steadily, no rush at the end, a full frame by t = 1
-		shift:   [[0, 0], [0.35, 0.2], [0.65, 0.36], [0.85, 0.7], [1, 1]],   // slow drift up through the hold, then it leaves through the top
-		zoomMul: [[0, 1], [1, 1.03]],                // extremely subtle — the mountain must not read as a scaled object
+		// the mountain stays put behind the rising section (Alex, 2026-09-15: "гора должна стоять на заднем плане, новая секция
+		// должна её накрывать, а не двигать вверх"). Was a lens shift up to a full frame: [[0,0],[0.35,0.2],[0.65,0.36],[0.85,0.7],[1,1]]
+		shift:   [[0, 0], [1, 0]],
+		// … but it recedes a little: a gentle zoom-out of the mountain world only (the rim, glow and ocean are camera
+		// billboards and keep their size) — Alex: "немного zoom out на скролл". Clamped by the responsive zoom limit.
+		zoomMul: [[0, 1], [0.65, 1.08], [1, 1.12]],
 	},
 
 	/* The mountain world recedes into night: uNight on the mountain / peak materials (see shaders.js) */
 	mountain: {
-		night: [[0.1, 0], [0.45, 0.3], [0.75, 0.55], [1, 0.7]],   // slightly into darkness / haze, never gone by fading
-		nightColor: 0x0b1222,        // the darkness it dissolves into (linear-space tint)
+		// Alex, 2026-09-15: a dramatic night by the time the rim is in (≈ t 0.3) — "всё темнеет, только свет палатки"
+		night: [[0.03, 0], [0.3, 0.88], [1, 0.9]],   // was [[0.1,0],[0.45,0.3],[0.75,0.55],[1,0.7]]; 0.72 still read as grey-white snow
+		nightColor: 0x060a14,        // the darkness it dissolves into (linear-space tint; was 0x0b1222)
+	},
+
+	/* NIGHT FALLS over the whole mountain world as the new section arrives: the sky sinks toward black, the clouds and the
+	   sea go dark, the route dims, the cold light from below is cut — the expedition camp is the only light left
+	   (camp-config.js `night`: a twitching fire, a stronger warm pool on the snow, a small glow). `fall` 0..1 drives it all. */
+	night: {
+		fall: [[0.03, 0], [0.3, 1]],
+		sky: 0.86,                   // share of the sky's light taken (stars included)
+		clouds: 0.85,                // how far the clouds and the cloud sea sink into cloudColor
+		cloudColor: 0x070a12,
+		route: 0.75,                 // share of the conduit's light taken
+		oceanGlow: 1,                // share of the cold light from below that is cut — all of it (Alex: "убери это свечение", "это светящееся снизу убери")
 	},
 
 	/* THE COLD LIGHT FROM BELOW — the ocean is a light source before it is a picture. Three carriers:
@@ -74,6 +89,26 @@ export const ABYSS_TRANSITION = {
 		rim:    [[0.15, 0], [0.4, 1.2], [0.7, 1.6], [1, 1.2]],                // the rim's underside / crest lit from below
 		lumMix: 0.5,                 // how much the light follows the footage's brightness (0 = constant)
 		renderOrder: 0.45,           // over the sea and the mid plates, under the ocean (0.5), the rim (1.5) and the foreground plates (1.6)
+	},
+
+	/* THE DARK BASIN (Alex, 2026-09-15: "сделай dark gradient там, с эффектом liquid на mouse"): where the cold light used to
+	   glow, a dark gradient under the rim — near-black at the crest, deep navy lower — with a slow dark flow and a liquid
+	   response to the mouse (the scene's mouse trail bends the flow and sends faint rings). Behind the ocean video. */
+	liquid: {
+		enabled: true,
+		distance: 125, widthFrames: 1.5, heightFrames: 1.6,
+		// Alex, 2026-09-15: "эта часть должна быть очень тёмной, не должна так выделяться, тут почти шов видно. не должно быть швов."
+		// The basin is a darkness, not a surface: near-black at the crest, barely-blue at the bottom of the frame, and the ramp
+		// runs past both edges (see uRamp) so its steep middle never lands inside the picture as a readable band.
+		topColor: 0x010207,          // under the crest (was 0x020308)
+		bottomColor: 0x050b16,       // the lowest part of the frame (was 0x0c1b30 — a navy field with a visible upper edge)
+		ramp: [-0.55, 1.15],         // screen y the gradient spans (0 = bottom edge, 1 = top): no knee inside the frame
+		dither: 1.2,                 // ±1.2/255 of noise: 8-bit banding on a near-black ramp is itself a seam
+		sheenColor: 0x6a8fc0,        // the faint light on the moving surface
+		sheen: 0.035,                // the flow's thin creases of light (was 0.08 — they pooled at the bottom and drew the band)
+		ripple: 0.14,                // the mouse's rings and refraction
+		alpha: [[0.06, 0], [0.3, 1], [1, 1]],
+		renderOrder: 0.44,           // over the sea and the mid plates, under the ocean video (0.5), the rim (1.5) and the foreground plates (1.6)
 	},
 
 	/* 3-D rocky rim (rock-rim.js) — the intermediate layer between the mountain and the ocean; a camera-relative card
@@ -124,16 +159,24 @@ export const ABYSS_TRANSITION = {
 		aspect: 16 / 9,
 		// ENTRANCE (frame heights) + parallax.video × the world's rise (deepest layer: slowest). Ends at 0 → the frame is covered.
 		// a separate deep scene: it mostly STAYS (parallax.video 0.15) while the split rises off it; only a slow creep up
-		frameY: [[0, -0.5], [0.35, -0.42], [0.65, -0.32], [1, -0.2]],
-		opacity: [[0.3, 0], [0.5, 0.4], [0.65, 0.9], [0.85, 1], [1, 1]],     // the light comes first (glow), the picture after
-		haze: [[0, 1], [0.45, 0.7], [0.65, 0.4], [0.85, 0.1], [1, 0]],        // haze over its upper part, toward the rim
+		// the former lens-shift share (parallax.video 0.15 × shift) is folded in, so the ocean keeps the same on-screen path
+		// now that the world no longer rises (was [[0,-0.5],[0.35,-0.42],[0.65,-0.32],[1,-0.2]] + 0.15 × shift) — its top edge stays out of frame at t = 1
+		frameY: [[0, -0.5], [0.35, -0.39], [0.65, -0.266], [0.85, -0.14], [1, -0.05]],
+		// no glow before the picture any more (Alex, 2026-09-15: "это светящееся снизу убери"): the bottom stays dark through the
+		// night and the ocean surfaces from darkness as the rim rises (was [[0.3,0],[0.5,0.4],[0.65,0.9],[0.85,1],[1,1]])
+		// Alex, 2026-09-15: "поставь наше видео океана на index.html под горой, а то ты его убрал куда-то". Measured before this
+		// pass: uAlpha 0 at t 0.35 — the ocean was decoded and playing but invisible until t 0.45, and the dark basin stood in
+		// its place. It is now under the mountain from the moment the rim is in, and it is held DARK by a low opacity over the
+		// near-black basin rather than by being absent — a layer that arrives at 0.55 in one step is a seam.
+		opacity: [[0.08, 0], [0.3, 0.32], [0.5, 0.6], [0.72, 0.9], [0.85, 1], [1, 1]],   // was [[0.45,0],[0.65,0.7],[0.8,1],[1,1]]
+		haze: [[0, 1], [0.3, 0.8], [0.55, 0.5], [0.8, 0.15], [1, 0]],         // haze over its upper part, toward the rim
 		blurPx: [[0, 5], [0.65, 3], [0.9, 0], [1, 0]],                         // soft in the depth, sharp when it is the scene
 		focusScale: [[0, 1.04], [0.9, 1], [1, 1]],
 		prewarmAt: 0.6,              // descent progress at which the (hidden) video starts playing, so it is decoded before it is needed
 		edgeFeather: 0.06,           // soft border (uv units); the top edge lives behind the split body
-		hazeColor: 0x2e66a6,         // the blue light that shows first         // canyon-blue atmosphere the video surfaces from (blended in where opacity / haze say so)
+		hazeColor: 0x04060b,         // the darkness the video surfaces from (was the canyon-blue light 0x2e66a6 — it glowed at the bottom)
 		renderOrder: 0.5,            // behind the foreground cloud plates (+1): clouds pass over it; masked by the split above it
-		edgeColor: 0xe4eaf1,         // the top edge dissolves into this (the cloud white) before it goes transparent
+		edgeColor: 0x04060b,         // the top edge dissolves into this before it goes transparent (was the cloud white 0xe4eaf1 — a light fringe at night)
 	},
 
 	/* Depth hierarchy — how much of the world's rise (camera.shift) each layer takes:
@@ -155,8 +198,10 @@ export const ABYSS_TRANSITION = {
 	},
 
 	/* Callouts and hero statement belong to the mountain world */
-	labelFade: [[0.1, 1], [0.45, 0]],   // the callouts fold back (reverse unfold, descent.js) before the strong overlap
-	heroTextFade: [[0.05, 1], [0.4, 0]],
+	// backstop only: each callout already leaves as the rising crest approaches it (descent-config.js callout.exit), bottom-up;
+	// this late global exit catches the ones the crest never reaches (was [[0.1,1],[0.45,0]], which dimmed all three at once)
+	labelFade: [[0.45, 1], [0.75, 0]],
+	heroTextExit: [[0.06, 0], [0.42, 1]],   // the hero statement flies up and away into blur like the clouds (hero-text.js exit); was a plain fade 0.05 → 0.4
 	floorColor: 0x05070d,          // the void under everything (the sky cylinder is open at the bottom)
 };
 
@@ -183,6 +228,9 @@ uniform vec3 uCrestColor, uTint, uFogColor;
 varying vec2 vUv;
 // the V-shaped central opening between the two rims: 1 inside
 float opening(vec2 uv, vec4 o, float below) {
+	// width 0 = no opening. Without this guard the feather straddled 0 and cut a 50 % see-through column down the
+	// middle of the rim — the vertical light shaft under the crest (Alex: "убери это свечение")
+	if (o.x <= 0.0) return 0.0;
 	float d = abs(uv.x - 0.5) + max(0.0, uv.y - o.y) * o.z - max(0.0, o.y - uv.y) * below;
 	return 1.0 - smoothstep(o.x - o.w, o.x + o.w, d);
 }
@@ -237,6 +285,42 @@ void main() {
 	gl_FragColor = vec4(c * a, a * 0.0 + a);   // premultiplied for additive blending
 }`;
 
+const liquidFragment = /* glsl */ `
+precision highp float;
+uniform sampler2D tNoise, tSplit, tMouse;
+uniform float uAlpha, uTime, uRimUv, uSheen, uRipple, uDither;
+uniform vec2 uSplitScale, uSplitOffset, uResolution, uRamp;
+uniform vec3 uTop, uBottom, uSheenColor;
+varying vec2 vUv;
+void main() {
+	// the basin only: within the rim's silhouette and below it, never above the crest (the ocean's own mask)
+	vec2 su = (vUv - 0.5) * uSplitScale + 0.5 + uSplitOffset;
+	float cover = (su.x < 0.0 || su.x > 1.0 || su.y > 1.0 || su.y < 0.0) ? 0.0 : texture2D(tSplit, su).a;
+	float below = 1.0 - smoothstep(uRimUv - 0.2, uRimUv - 0.14, su.y);
+	float inside = max(smoothstep(0.45, 0.85, cover), below) * (1.0 - smoothstep(uRimUv + 0.02, uRimUv + 0.08, su.y));
+	if (inside < 0.003) discard;
+	// a darkness, not a surface. The ramp runs past BOTH edges of the frame (uRamp), so its steep middle never lands inside
+	// the picture: the old smoothstep(0.0, 0.75) put its knee about two thirds down and that knee was the visible seam.
+	vec2 s = gl_FragCoord.xy / uResolution;
+	vec3 col = mix(uBottom, uTop, smoothstep(uRamp.x, uRamp.y, s.y));
+	// the mouse (screen-space trail): its gradient bends the flow, its body rings like disturbed water
+	vec2 e = vec2(1.5 / 512.0, 0.0);
+	float m = clamp(texture2D(tMouse, s).r, 0.0, 1.0);
+	vec2 grad = vec2(texture2D(tMouse, s + e.xy).r - texture2D(tMouse, s - e.xy).r, texture2D(tMouse, s + e.yx).r - texture2D(tMouse, s - e.yx).r);
+	// a slow dark flow with thin creases of light where it folds
+	vec2 p = vUv * vec2(3.2, 2.2) + grad * 1.5;
+	float n1 = texture2D(tNoise, p * 0.35 + vec2(uTime * 0.008, -uTime * 0.005)).r;
+	float n2 = texture2D(tNoise, p * 0.9 + vec2(-uTime * 0.012, uTime * 0.007) + n1 * 0.3).g;
+	float crease = pow(1.0 - abs(n2 - 0.5) * 2.0, 6.0);
+	float ring = sin(m * 22.0 - uTime * 4.0) * 0.5 + 0.5;
+	// the creases keep an even weight over the height — pooling them low (0.35 + 0.65·(1−s.y)) was the second half of the band
+	col += uSheenColor * (crease * uSheen + ring * m * uRipple + clamp(length(grad) * 3.0, 0.0, 1.0) * uRipple);
+	vec4 outCol = linearToOutputTexel(vec4(col, inside * uAlpha));
+	// dither in OUTPUT space (after the transfer function): on a near-black ramp, 8-bit banding is a seam of its own
+	outCol.rgb += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * (uDither / 255.0);
+	gl_FragColor = outCol;
+}`;
+
 const videoFragment = /* glsl */ `
 precision highp float;
 uniform sampler2D tVideo, tSplit;
@@ -250,6 +334,7 @@ uniform vec3 uEdgeColor;
 uniform vec3 uHaze;
 varying vec2 vUv;
 float opening(vec2 uv, vec4 o, float below) {
+	if (o.x <= 0.0) return 0.0;   // width 0 = no opening (the feather must not straddle 0)
 	float d = abs(uv.x - 0.5) + max(0.0, uv.y - o.y) * o.z - max(0.0, o.y - uv.y) * below;
 	return 1.0 - smoothstep(o.x - o.w, o.x + o.w, d);
 }
@@ -290,7 +375,7 @@ void main() {
 	gl_FragColor = vec4(c, a);
 }`;
 
-export function createAbyssTransition({ textureLoader, pivot, noise, envMap }) {
+export function createAbyssTransition({ textureLoader, pivot, noise, envMap, mouse, resolution }) {
 	const cfg = ABYSS_TRANSITION;
 	const group = new THREE.Group();
 	group.name = 'AbyssTransition';
@@ -383,15 +468,36 @@ export function createAbyssTransition({ textureLoader, pivot, noise, envMap }) {
 	floor.frustumCulled = false;
 	floor.onBeforeRender = (_r, _s, cam) => { floor.position.set(cam.position.x, cam.position.y - 350, cam.position.z); floor.updateMatrixWorld(); };
 
+	/* the dark basin with a liquid response to the mouse (cfg.liquid) */
+	const lq = cfg.liquid;
+	const liquidMat = new THREE.ShaderMaterial({
+		vertexShader: plateVertex, fragmentShader: liquidFragment,
+		uniforms: {
+			tNoise: { value: noise ?? splitTex }, tSplit: { value: splitTex }, tMouse: { value: mouse ?? splitTex },
+			uAlpha: { value: 0 }, uTime: { value: 0 }, uRimUv: { value: cfg.split.rimUv },
+			uSheen: { value: lq.sheen }, uRipple: { value: mouse ? lq.ripple : 0 },
+			uDither: { value: lq.dither ?? 0 }, uRamp: { value: new THREE.Vector2().fromArray(lq.ramp ?? [0, 0.75]) },
+			uSplitScale: { value: new THREE.Vector2(1, 1) }, uSplitOffset: { value: new THREE.Vector2() },
+			uResolution: { value: resolution ?? new THREE.Vector2(1, 1) },
+			uTop: { value: new THREE.Color(lq.topColor) }, uBottom: { value: new THREE.Color(lq.bottomColor) }, uSheenColor: { value: new THREE.Color(lq.sheenColor) },
+		},
+		transparent: true, depthWrite: false, depthTest: false,
+	});
+	const liquid = new THREE.Mesh(new THREE.PlaneGeometry(1, lq.heightFrames / lq.widthFrames), liquidMat);
+	liquid.name = 'AbyssLiquid';
+	liquid.renderOrder = lq.renderOrder;
+	liquid.frustumCulled = false;
+
 	group.add(glow, canyon, floor);
+	if (lq.enabled) group.add(liquid);
 	if (cfg.split.enabled !== false) group.add(split);
 	const rim = cfg.rocks?.enabled ? createRockRim({ textureLoader, envMap }) : null;
 	if (rim) { rim.group.visible = true; group.add(rim.group); }
 	group.visible = false;
 
-	const state = { t: 0, shift: 0, zoomMul: 1, dusk: 0, seaDusk: 0, labelFade: 1, heroTextFade: 1, rimY: 0, videoY: 0, baseY: 0,
+	const state = { t: 0, shift: 0, zoomMul: 1, dusk: 0, seaDusk: 0, labelFade: 1, heroTextExit: 0, rimY: 0, videoY: 0, baseY: 0,
 		night: 0, cloudForward: 0, cloudScale: 1, cloudThin: 0, blurPx: 0, focusScale: 1,
-		glowY: 0, glowAlpha: 0, glowClouds: 0, glowSea: 0, glowRim: 0, oceanLum: 1, crest: -1 };
+		glowY: 0, glowAlpha: 0, glowClouds: 0, glowSea: 0, glowRim: 0, oceanLum: 1, crest: -1, nightFall: 0 };
 
 	const fogCloud = new THREE.Color(cfg.split.fogCloud), fogDusk = new THREE.Color(cfg.clouds.duskColor);
 	let ready = 0, everReady = false, lastNow = performance.now();
@@ -409,7 +515,7 @@ export function createAbyssTransition({ textureLoader, pivot, noise, envMap }) {
 		state.dusk = keys(cfg.clouds.dusk, t);
 		state.seaDusk = keys(cfg.clouds.seaDusk, t);
 		state.labelFade = keys(cfg.labelFade, t);
-		state.heroTextFade = keys(cfg.heroTextFade, t);
+		state.heroTextExit = keys(cfg.heroTextExit, t);
 		state.rimY = keys(cfg.split.rimY, t);
 		state.videoY = keys(cfg.video.frameY, t);
 		state.night = keys(cfg.mountain.night, t);
@@ -425,6 +531,10 @@ export function createAbyssTransition({ textureLoader, pivot, noise, envMap }) {
 		state.glowClouds = keys(cfg.glow.clouds, t) * lumK;
 		state.glowSea = keys(cfg.glow.sea, t) * lumK;
 		state.glowRim = keys(cfg.glow.rim, t) * lumK;
+		// the night: one 0..1 that the sky, clouds, sea, route and camp read (mountain.js); it also cuts the cold light from below
+		state.nightFall = keys(cfg.night.fall, t);
+		const oceanCut = 1 - cfg.night.oceanGlow * state.nightFall;
+		state.glowAlpha *= oceanCut; state.glowClouds *= oceanCut; state.glowSea *= oceanCut; state.glowRim *= oceanCut;
 		group.visible = cfg.enabled && t > 0.001;
 		if (!group.visible) return;
 		play();
@@ -435,6 +545,8 @@ export function createAbyssTransition({ textureLoader, pivot, noise, envMap }) {
 		splitMat.uniforms.uGlowUp.value = state.glowRim;
 		glowMat.uniforms.uAlpha.value = state.glowAlpha;
 		glowMat.uniforms.uTime.value = now / 1000;
+		liquidMat.uniforms.uAlpha.value = keys(lq.alpha, t);
+		liquidMat.uniforms.uTime.value = now / 1000;
 		videoMat.uniforms.uAlpha.value = keys(cfg.video.opacity, t);
 		videoMat.uniforms.uHazeAmt.value = keys(cfg.video.haze, t);
 		splitMat.uniforms.uOpen.value.x = videoMat.uniforms.uOpen.value.x = keys(cfg.split.opening.width, t);
@@ -508,7 +620,13 @@ export function createAbyssTransition({ textureLoader, pivot, noise, envMap }) {
 		glow.scale.y = cfg.glow.widthFrames * (2 * cfg.glow.distance * tanHalf);   // plate height = heightFrames of the frame (put() scaled it by width)
 		glowMat.uniforms.uSplitScale.value.set(cfg.glow.widthFrames / cfg.split.widthFrames, cfg.glow.heightFrames / plateHFrames);
 		glowMat.uniforms.uSplitOffset.value.set(0, (state.glowY - splitCentre) / plateHFrames);
+		// the dark basin: its top a little above the crest (masked there), reaching well below the frame
+		const lqY = rimCrest + 0.1 - lq.heightFrames / 2;
+		put(liquid, lq.distance, lq.widthFrames, lqY);
+		liquid.scale.y = lq.widthFrames * (2 * lq.distance * tanHalf);   // plate height = heightFrames of the frame
+		liquidMat.uniforms.uSplitScale.value.set(lq.widthFrames / cfg.split.widthFrames, lq.heightFrames / plateHFrames);
+		liquidMat.uniforms.uSplitOffset.value.set(0, (lqY - splitCentre) / plateHFrames);
 	}
 
-	return { group, split, canyon, video, floor, glow, rim, state, update, place, applyShift, cfg };
+	return { group, split, canyon, video, floor, glow, liquid, rim, state, update, place, applyShift, cfg };
 }

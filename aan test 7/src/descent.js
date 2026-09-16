@@ -605,6 +605,7 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 		if (s.narrow !== narrow) { s.narrow = narrow; s.planeWidth = 0; }
 		if (!s.planeWidth) {
 			s.planeWidth = s.plane.offsetWidth;
+			s.planeHeight = s.plane.offsetHeight;
 			if (s.glass) {
 				// refraction map at the plate's size; the plain blur in route.css stays the fallback where url() is refused
 				s.glass.fit(s.plane.offsetWidth, s.plane.offsetHeight);
@@ -651,10 +652,16 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 		const e = 1 - Math.pow(1 - planeP, 3);        // power3.out, as in the reference
 		const turn = still ? 0 : 1 - e;
 		const sign = left ? -1 : 1;
+		// the exit is NOT the unfold reversed (Alex, 2026-09-15): 1) the plate with its text disappears, 2) the leader
+		// retracts into the anchor the way it drew out, 3) the dot goes. No turn, no blur on the way out.
+		const x = still ? ((s.exit ?? 0) > 0.5 ? 1 : 0) : (s.exit ?? 0);
+		const plateOut = still ? x : phase(x, 0, 0.45);
+		const lineOut = still ? x : phase(x, 0.4, 0.85);
+		const dotOut = still ? x : phase(x, 0.82, 1);
 
-		s.dot.style.opacity = dotP.toFixed(3);
-		s.dot.style.transform = `scale(${still ? 1 : dotP.toFixed(3)})`;
-		s.line.style.strokeDashoffset = (s.length * (1 - lineP)).toFixed(2);
+		s.dot.style.opacity = (dotP * (1 - dotOut)).toFixed(3);
+		s.dot.style.transform = `scale(${still ? 1 : (dotP * (1 - dotOut)).toFixed(3)})`;
+		s.line.style.strokeDashoffset = (s.length * (1 - lineP * (1 - lineOut))).toFixed(2);
 
 		s.plane.style.transformOrigin = left ? 'right center' : 'left center';
 		// the hand-turned swing: a rotateY about the reading's own centre (the unfold keeps its hinge
@@ -666,9 +673,9 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 			`translateX(${half.toFixed(1)}px) rotateY(${swing.toFixed(2)}deg) translateZ(${(-Math.abs(swing) * 1.2).toFixed(1)}px) translateX(${(-half).toFixed(1)}px) ` +
 			`translateX(${(-5 * sign * turn).toFixed(2)}px) rotateY(${(75 * sign * turn).toFixed(2)}deg) ` +
 			`scaleX(${(1 - 0.2 * turn).toFixed(3)}) translateZ(${(-55 * turn).toFixed(1)}px)`;
-		s.plane.style.opacity = planeP > 0 ? (still ? a : 0.45 + 0.55 * e).toFixed(3) : '0';
+		s.plane.style.opacity = planeP > 0 && plateOut < 1 ? ((still ? a : 0.45 + 0.55 * e) * (1 - plateOut)).toFixed(3) : '0';
 		s.plane.style.filter = turn > 0.001 ? `blur(${(1.5 * turn).toFixed(2)}px)` : 'none';
-		const descO = descP.toFixed(3);
+		const descO = (descP * (1 - plateOut)).toFixed(3);
 		s.desc.forEach((d) => { d.style.opacity = descO; });
 	}
 
@@ -692,6 +699,13 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 			conduit.pulseClock += dt * cc.pulseSpeed;
 			const cycle = total + cc.pulsePause + 2 * cc.pulseLength;
 			u.uPulsePos.value = (conduit.pulseClock % cycle) - cc.pulseLength;
+			// the night of the abyss transition dims the conduit so the camp is the only light (state.night 0..1, mountain.js)
+			const dim = 1 - (state.night ?? 0);
+			u.uBaseEmission.value = cc.fluidBaseEmission * dim;
+			u.uPulseStrength.value = cc.pulseStrength * dim;
+			u.uTipStrength.value = cc.tipStrength * dim;
+			if (conduit.halo) conduit.halo.material.uniforms.uHalo.value = cc.haloStrength * dim;
+			if (conduit.shell) conduit.shell.material.opacity = cc.tubeShellOpacity * (0.35 + 0.65 * dim);
 		}
 
 		const c = cfg.camera;
@@ -725,14 +739,21 @@ export function createDescent({ scene, camera, mountain, pivot, resolution, labe
 			proj.copy(s.position).project(cam);
 			const onScreen = proj.z < 1 && Math.abs(proj.x) < 1.05 && Math.abs(proj.y) < 1.05;
 			s.seen = THREE.MathUtils.damp(s.seen, onScreen ? s.visible : 0, 8, dt);
-			// state.labelFold (abyss transition): the readings fold back the way they unfolded — plane turns edge-on,
-			// leader retracts, dot goes — instead of fading; the route itself stays
-			s.reveal = THREE.MathUtils.damp(s.reveal, labelA * (1 - (state.labelFold ?? 0)), 10, dt);
+			s.reveal = THREE.MathUtils.damp(s.reveal, labelA, 10, dt);
 			const shown = s.reveal > 0.002 ? s.seen : 0;
-			s.root.style.opacity = shown.toFixed(3);
-			if (shown === 0) return; // nothing to lay out while it is not there
+			if (shown === 0) { s.root.style.opacity = '0'; return; } // nothing to lay out while it is not there
 			const x = (proj.x * 0.5 + 0.5) * w, y = (-proj.y * 0.5 + 0.5) * h;
-			paintCallout(s, placeCallout(s, x, y, w, h));
+			const geo = placeCallout(s, x, y, w, h);
+			// exit (abyss transition): the callouts belong to the mountain and must never sit on the rising chasm edge.
+			// state.coverY = the crest's screen y (null when there is none): each callout leaves before the crest reaches
+			// its lowest point (anchor or reading bottom) — lower callouts first. state.labelFold is the global backstop.
+			const ex = co.exit ?? {};
+			const bottom = Math.max(y, y + geo.py + (s.planeHeight ?? 0) / 2);
+			const cover = state.coverY == null ? 0
+				: 1 - THREE.MathUtils.clamp((state.coverY - bottom - (ex.marginPx ?? 24)) / (ex.rangePx ?? 160), 0, 1);
+			s.exit = THREE.MathUtils.damp(s.exit ?? 0, Math.max(cover, state.labelFold ?? 0), ex.damp ?? 10, dt);
+			s.root.style.opacity = (s.exit > 0.999 ? 0 : shown).toFixed(3);
+			paintCallout(s, geo);
 		});
 	}
 

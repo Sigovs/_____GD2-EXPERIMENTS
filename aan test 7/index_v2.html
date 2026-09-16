@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Mountain — v2</title>
+	<style>
+		html, body { margin: 0; background: #04070f; }
+		html { scrollbar-width: none; }
+		html::-webkit-scrollbar { display: none; }
+		/* The page scrolls (its height is set from descent-config.js); the scene stays fixed and reads scroll progress. */
+		#scene { position: fixed; inset: 0; display: block; width: 100vw; height: 100vh; touch-action: pan-y; cursor: grab; opacity: 0; transition: opacity 1.2s ease; }
+		body.is-ready #scene { opacity: 1; }
+		#scene:active { cursor: grabbing; }
+	</style>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<!-- one family across the site: Inter Tight — Regular 400, SemiBold 600, ExtraBold 800 -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
+	<link rel="stylesheet" href="src/nav.css">
+	<link rel="stylesheet" href="src/route.css">
+	<script type="importmap">
+	{
+		"imports": {
+			"three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+			"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+			"lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.21.0/+esm"
+		}
+	}
+	</script>
+	<!--
+		v2 — the same scene as index.html, plus the layers that are still being art-directed.
+		The flag is read by src/mountain.js; index.html renders exactly as before, pixel for pixel.
+		Currently in v2: the moving mist veil across the chasm crest (src/mist.js).
+	-->
+	<script>window.__VARIANT = 'v2';</script>
+</head>
+<body>
+	<canvas id="scene"></canvas>
+	<!-- route callouts: real text (the readings carry information), decorative parts are aria-hidden inside -->
+	<div id="route-labels"></div>
+	<pre id="debug-readout" hidden></pre>
+	<nav class="nav" aria-label="Primary">
+		<ul>
+			<li><a href="https://sigovs.github.io/_____GD2-EXPERIMENTS/aan%20test%204/index2/#main">Products &amp; Services</a></li>
+			<li><a href="https://sigovs.github.io/_____GD2-EXPERIMENTS/aan%20test%204/index2/#main">Grow your Business</a></li>
+			<li><a href="https://sigovs.github.io/_____GD2-EXPERIMENTS/aan%20test%204/index2/#main">Compliance</a></li>
+			<li><a href="https://sigovs.github.io/_____GD2-EXPERIMENTS/aan%20test%204/index2/#main">Contact</a></li>
+		</ul>
+	</nav>
+	<script type="module" src="src/mountain.js"></script>
+	<script type="module">import { initLetterSwap } from './src/nav-letter-swap.js'; initLetterSwap();</script>
+</body>
+</html>

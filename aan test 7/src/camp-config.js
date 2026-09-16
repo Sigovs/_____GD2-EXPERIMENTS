@@ -61,5 +61,10 @@ export const CAMP_CONFIG = {
 
 	puff: { count: 22, radius: 3.4, rise: 1.2, size: 1.4, window: 0.024 },   // landing powder at the moment of contact
 
-	light: { color: 0xff9448, intensity: 1.4, range: 12 },   // warm term on the mountain around the camp; range in world units
+	light: { color: 0xff9448, intensity: 1.4, range: 12 },
+
+	/* Night of the abyss transition (ABYSS_TRANSITION.night.fall): the mountain world goes dark and the camp is the only
+	   light left — a twitching fire, a stronger and wider warm pool on the snow, the tent lit from inside, a small glow.
+	   Multipliers at full night; `flicker` is the extra flicker amplitude (reduced motion: no flicker). */
+	night: { light: 2.4, range: 1.5, glow: 1.8, halo: 3.2, haloSize: 1.7, flicker: 0.45 },   // warm term on the mountain around the camp; range in world units
 };

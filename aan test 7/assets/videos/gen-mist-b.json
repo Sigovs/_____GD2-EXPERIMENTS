@@ -1,0 +1,13 @@
+{
+  "file": "gen-mist-b.mp4",
+  "origin": "synthetic",
+  "model": "minimax_h3 (Higgsfield MCP)",
+  "job_id": "f5677a21-e889-4250-8932-3d630c5778fe",
+  "date": "2026-09-15",
+  "output": "21:9, 5s, 2K",
+  "audio": "none - audio track stripped locally with tools/strip-audio.swift (Alex: every generated video is silent)",
+  "purpose": "mist veil plate across the chasm crest (index_v2.html, src/mist.js)",
+  "prompt": "Camera inside the fog, locked off, no movement of the camera itself. Sparse thin streaks of cold vapour drifting slowly across the frame from left to right, seen against pure black emptiness. Most of the frame stays black; only a few separate translucent wisps cross it, very faint at their edges, dissolving as they go. No cloud bank, no cloud tops, no cumulus, no horizon line, no ground, no mountains, no water, no sky, no light source, no sun, no god rays, no objects, no people, no text, no logos, no watermark. Pale blue-grey, desaturated, very dark, calm and continuous.",
+  "supersedes": "gen-mist-a.mp4 - that one came back as a dense cloud deck with a near-horizontal top edge, which would have read as a new seam",
+  "notes": "GI4: no type, UI or logo in frame. GI3: depicts no real place, product or person - atmosphere only."
+}

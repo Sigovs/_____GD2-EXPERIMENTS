@@ -47,7 +47,7 @@ void main() {
 
 const propFragment = /* glsl */ `
 uniform vec3 uColor, uLightColor, uFirePos, uFireColor, uLightDir;
-uniform float uOpacity, uFire, uFireRange, uFogNear, uFogFar, uGlow;
+uniform float uOpacity, uFire, uFireRange, uFogNear, uFogFar, uGlow, uNight;
 varying vec3 vN;
 varying vec3 vWorld;
 #ifdef CAMP_MAP
@@ -62,6 +62,7 @@ void main() {
 	// matched to the mountain's snow: a cool sky fill plus the mountain's baked key light, so the props sit in the same exposure
 	vec3 ambient = mix(vec3(0.16, 0.18, 0.24), vec3(0.52, 0.57, 0.68), hemi);
 	ambient += vec3(0.95, 0.97, 1.0) * max(dot(n, normalize(uLightDir)), 0.) * 0.75;
+	ambient *= 1.0 - 0.85 * uNight;   // the night takes the moonlight; the fire and the inner glow stay
 	vec3 L = uFirePos - vWorld;
 	float d = length(L);
 	float fire = uFire * max(dot(n, L / max(d, 1e-3)), 0.) * pow(clamp(1. - d / uFireRange, 0., 1.), 2.);
@@ -115,12 +116,12 @@ void main() {
 	gl_Position = projectionMatrix * mv;
 }`;
 const haloFragment = /* glsl */ `
-uniform float uFire;
+uniform float uFire, uHaloGain;
 uniform vec3 uFireColor;
 varying vec2 vUv;
 void main() {
 	float r = length(vUv - 0.5) * 2.;
-	float a = exp(-r * r * 5.) * uFire * 0.22;
+	float a = exp(-r * r * 5.) * uFire * 0.22 * uHaloGain;
 	gl_FragColor = vec4(uFireColor * a, 1.);
 	gl_FragColor = linearToOutputTexel(gl_FragColor);
 }`;
@@ -207,9 +208,11 @@ export function createCamp({ mountain, gd2Material, camera, noise, resolution, t
 
 	/* --- shared uniforms --- */
 	const fireUniform = { value: 0 };
+	const nightUniform = { value: 0 };   // abyss transition night (0..1): the props lose the moonlight
+	const haloGain = { value: 1 };
 	const fireColor = new THREE.Color(c.light.color);
 	const common = {
-		uLightColor: lightColor, uFogNear: fogNear, uFogFar: fogFar, uLightDir: gd2Material.uniforms.uLightDir,
+		uLightColor: lightColor, uFogNear: fogNear, uFogFar: fogFar, uLightDir: gd2Material.uniforms.uLightDir, uNight: nightUniform,
 		uFirePos: { value: firePosUp }, uFireColor: { value: fireColor }, uFire: fireUniform, uFireRange: { value: c.light.range },
 	};
 	const propMaterial = (hex) => new THREE.ShaderMaterial({
@@ -288,7 +291,7 @@ export function createCamp({ mountain, gd2Material, camera, noise, resolution, t
 		fire.add(card);
 	});
 	const halo = new THREE.Mesh(new THREE.PlaneGeometry(c.light.range * 0.45, c.light.range * 0.45), new THREE.ShaderMaterial({
-		vertexShader: haloVertex, fragmentShader: haloFragment, uniforms: { uFire: fireUniform, uFireColor: { value: fireColor } },
+		vertexShader: haloVertex, fragmentShader: haloFragment, uniforms: { uFire: fireUniform, uFireColor: { value: fireColor }, uHaloGain: haloGain },
 		transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
 	}));
 	halo.position.y = c.fire.height * 0.4;
@@ -332,9 +335,10 @@ export function createCamp({ mountain, gd2Material, camera, noise, resolution, t
 	const landT = c.revealStart + c.impact * (c.revealEnd - c.revealStart);   // scroll progress of the first ground contact
 
 	/** Every state from scroll progress — forward and backward are the same function. */
-	let lastProgress = 0;
-	function update(progress) {
+	let lastProgress = 0, lastNight = 0;
+	function update(progress, night = lastNight) {
 		lastProgress = progress;
+		lastNight = night;
 		const still = reducedMotion?.matches;
 		const drop = span(progress, c.revealStart, c.revealEnd);
 		group.visible = drop > 0;
@@ -373,13 +377,23 @@ export function createCamp({ mountain, gd2Material, camera, noise, resolution, t
 		const lit = smooth(span(progress, c.fireStart, c.fireEnd));
 		state.fire = lit;
 		const t = time.value;
-		const flicker = still ? 1 : 0.86 + 0.14 * (0.5 * Math.sin(t * 13.1) + 0.3 * Math.sin(t * 7.3 + 1.7) + 0.2 * Math.sin(t * 23.7 + 0.4));
+		// night (abyss transition): the camp is the only light left — the fire twitches, its pool of light grows, the tent glows
+		const nb = c.night ?? {};
+		const boost = (k) => 1 + ((nb[k] ?? 1) - 1) * night;
+		const wave = 0.5 * Math.sin(t * 13.1) + 0.3 * Math.sin(t * 7.3 + 1.7) + 0.2 * Math.sin(t * 23.7 + 0.4);   // −1..1, the calm flicker
+		const twitch = (Math.sin(Math.floor(t * 11) * 12.9898) * 43758.5453) % 1;                                // −1..1, a new value 11×/s
+		const amp = 0.14 + (nb.flicker ?? 0) * night;
+		const flicker = still ? 1 : Math.max(0.35, 1 - amp * 0.3 + amp * (0.6 * wave + 0.6 * twitch * night));
 		fire.visible = lit > 0.001;
 		fire.scale.setScalar(still ? 1 : Math.max(0.001, easeOutBack(span(progress, c.fireStart, c.fireEnd), c.firePop)));   // ignition pop
 		fireUniform.value = lit * flicker;
-		gd2Material.uniforms.uCampLight.value = c.light.intensity * lit * flicker;
-		const glow = c.tent.glow * lit * (0.9 + 0.1 * flicker);   // the camp comes alive with the fire
+		gd2Material.uniforms.uCampLight.value = c.light.intensity * lit * flicker * boost('light');
+		gd2Material.uniforms.uCampLightRange.value = common.uFireRange.value = c.light.range * boost('range');
+		const glow = c.tent.glow * lit * (0.9 + 0.1 * flicker) * boost('glow');   // the camp comes alive with the fire
 		glowMaterials.forEach((m) => { m.uniforms.uGlow.value = glow; });
+		nightUniform.value = night;
+		haloGain.value = boost('halo');
+		halo.scale.setScalar(boost('haloSize'));
 	}
 
 	return { group, update, state, firePosition: firePos, groundNormal: base.normal };

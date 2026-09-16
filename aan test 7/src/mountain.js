@@ -513,6 +513,8 @@ const nightSkyMaterial = new THREE.ShaderMaterial({
 		uPhotoBlend: { value: ns.photo?.blend ?? 0 },
 		uPhotoExposure: { value: ns.photo?.exposure ?? 1 },
 		uPhotoFade: { value: ns.photo?.proceduralFade ?? 0 },
+		uNightFall: { value: 0 },
+		uNightSky: { value: ABYSS_TRANSITION.night.sky },
 		uPhotoMap: { value: new THREE.Vector4(
 			THREE.MathUtils.degToRad(ns.photo?.azimuthSpanDeg ?? 180),
 			THREE.MathUtils.degToRad(ns.photo?.azimuthOffsetDeg ?? 0),
@@ -612,9 +614,20 @@ scene.add(cloudFloor.group);
 cloudFloor.layers.forEach((l) => { l.material.uniforms.uDuskColor.value.set(ABYSS_TRANSITION.clouds.duskColor); l.material.uniforms.uGlowColor.value.set(ABYSS_TRANSITION.glow.color); });
 
 // Transition to the canyon / ocean: chasm-edge plate + video billboards placed in front of the camera (see abyss-transition.js)
-const abyss = createAbyssTransition({ textureLoader, pivot: PIVOT, noise: perlin, envMap });
+const abyss = createAbyssTransition({ textureLoader, pivot: PIVOT, noise: perlin, envMap, mouse: mouseTrail.texture, resolution: shared.uResolution.value });
 camera.layers.enable(3);   // the rock rim's private light layer (rock-rim.js ROCK_LAYER)
 scene.add(abyss.group);
+
+/* v2 only — index_v2.html sets window.__VARIANT (or ?v=2): the moving mist veil that crosses the chasm crest, so the rock
+   surfaces out of vapour that actually moves instead of out of a tint (src/mist.js). index.html is untouched by it. */
+const VARIANT = window.__VARIANT ?? (new URLSearchParams(location.search).get('v') === '2' ? 'v2' : null);
+let mist = null;
+if (VARIANT === 'v2') {
+	const { createMist } = await import('./mist.js');
+	mist = createMist({ reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)') });
+	scene.add(mist.mesh);
+	console.info('[variant] v2 — mist veil on');
+}
 
 // Hero statement: a camera-parented quad drawn between the cloud layers (see hero-text.js)
 scene.add(camera);
@@ -759,7 +772,7 @@ function updateCamera(dt) {
 	tmpPos.y += ds.camDrop;
 	tmpLook.y += ds.lookDrop;
 	if (ds.follow > 0) tmpLook.lerp(ds.tip, ds.follow); // steer toward the route tip during the descent
-	// transition: a small zoom-out only; the picture itself moves up through a lens shift of the projection (abyss.applyShift)
+	// transition: the mountain world holds its place (no lens shift) and only recedes a little (ABYSS_TRANSITION.camera.zoomMul); the new section rises over it
 	const ab = abyss.state;
 	if (ab.t > 0) {
 		tmpPos.copy(baseOffset).multiplyScalar(Math.min(totalZoom * ab.zoomMul, zoomLimit)).applyAxisAngle(THREE.Object3D.DEFAULT_UP, totalAngle).add(PIVOT);
@@ -771,14 +784,14 @@ function updateCamera(dt) {
 	abyss.applyShift(camera);
 	// billboards at fixed depths in front of the camera — placed BEFORE the mouse parallax so the chasm edge and the canyon
 	// video react to mouse move like the world does (ABYSS_TRANSITION.camera.mouseParallax — approved, keep it this way)
-	if (ABYSS_TRANSITION.camera.mouseParallax) abyss.place(camera);
+	if (ABYSS_TRANSITION.camera.mouseParallax) { abyss.place(camera); mist?.place(camera, abyss.state.crest, abyss.state.shift); }
 
 	lerpedMouse.lerp(mouse, dt * 0.5);
 	camera.translateX(lerpedMouse.x * 0.1 * SETTINGS.parallax);
 	camera.translateY(lerpedMouse.y * 0.2 * SETTINGS.parallax);
 	camera.rotateY(-lerpedMouse.x * 0.05 * SETTINGS.parallax);
 	camera.rotateX(lerpedMouse.y * 0.05 * SETTINGS.parallax);
-	if (!ABYSS_TRANSITION.camera.mouseParallax) abyss.place(camera);   // (locked to the frame instead — not the approved look)
+	if (!ABYSS_TRANSITION.camera.mouseParallax) { abyss.place(camera); mist?.place(camera, abyss.state.crest, abyss.state.shift); }   // (locked to the frame instead — not the approved look)
 
 	cloudRig.rotation.y = totalAngle;
 	// abyss transition: the cloud layer comes FORWARD toward the viewer (the rig slides along the camera axis and grows
@@ -805,6 +818,10 @@ const meteorBrightness = ns.meteors?.brightness ?? 0;
 let meteorGate = 1;
 let scrollRestSince = 0;
 
+// the night of the abyss transition: the clouds' and the sea's dusk colour sinks from here toward the night colour
+const CLOUD_DUSK = new THREE.Color(ABYSS_TRANSITION.clouds.duskColor);
+const NIGHT_CLOUD = new THREE.Color(ABYSS_TRANSITION.night.cloudColor);
+
 const clock = new THREE.Clock();
 function tick() {
 	const dt = Math.min(clock.getDelta(), 0.1);
@@ -823,19 +840,32 @@ function tick() {
 	const descentP = Math.min(1, scroll.value / DESCENT_SHARE);
 	const transP = DESCENT_SHARE < 1 ? Math.max(0, (scroll.value - DESCENT_SHARE) / (1 - DESCENT_SHARE)) : 0;
 	descent.update(descentP, dt, camera, spin);
-	camp?.update(descentP);
+	camp?.update(descentP, abyss.state.nightFall);   // at night the camp is the only light: the fire twitches, its glow grows
 	abyss.update(transP, descentP);
+	mist?.update(transP, descentP, abyss.state.dusk, abyss.state.nightFall);   // v2: the veil takes the world's light (dusk → night)
 	cloudMaterial.uniforms.uDusk.value = abyss.state.dusk;
 	cloudMaterial.uniforms.uDuskThin.value = abyss.state.cloudThin;   // the cooled plates thin late, to reveal the depth
 	cloudMaterial.uniforms.uGlow.value = abyss.state.glowClouds;     // the cold light from below, in the clouds
 	cloudMaterial.uniforms.uCrestNdc.value = abyss.state.t > 0 ? 2 * abyss.state.crest : -2;
 	gd2Material.uniforms.uNight.value = abyss.state.night;           // the mountain world recedes into night
-	descent.state.labelFold = 1 - abyss.state.labelFade;   // the callouts belong to the mountain: they fold back (reverse unfold) as it goes
+	// the night falls over the whole mountain world (ABYSS_TRANSITION.night): sky toward black, clouds dark, route dimmed
+	const nightFall = abyss.state.nightFall, nightCfg = ABYSS_TRANSITION.night;
+	nightSkyMaterial.uniforms.uNightFall.value = nightFall;
+	descent.state.night = nightFall * nightCfg.route;
+	cloudMaterial.uniforms.uDusk.value = Math.max(abyss.state.dusk, nightFall * nightCfg.clouds);
+	cloudMaterial.uniforms.uDuskUpper.value = THREE.MathUtils.lerp(ABYSS_TRANSITION.clouds.duskUpper, 1, nightFall);
+	cloudMaterial.uniforms.uDuskColor.value.lerpColors(CLOUD_DUSK, NIGHT_CLOUD, nightFall);
+	descent.state.labelFold = 1 - abyss.state.labelFade;   // the callouts belong to the mountain: they leave (plate out, leader retracts) as it goes
+	descent.state.coverY = abyss.state.t > 0 && abyss.group.visible ? (0.5 - abyss.state.crest) * window.innerHeight : null;   // the rising crest's screen y: callouts leave before it reaches them
 	// the glass plates' light follows the mouse (route.css reads --glass-angle): the sweep and the lit bevel turn with it
 	const glassAngle = 135 - lerpedMouse.x * 40 + lerpedMouse.y * 25;
 	if (Math.abs(glassAngle - (routeLabels.__glassAngle ?? 0)) > 0.25) { routeLabels.__glassAngle = glassAngle; routeLabels.style.setProperty('--glass-angle', `${glassAngle.toFixed(1)}deg`); }
-	heroText.setFade(abyss.state.heroTextFade);
-	for (const l of cloudFloor.layers) { l.material.uniforms.uDusk.value = abyss.state.seaDusk; l.material.uniforms.uGlow.value = abyss.state.glowSea; }
+	heroText.setExit(abyss.state.heroTextExit);   // the statement flies up and away into blur like the clouds
+	for (const l of cloudFloor.layers) {
+		l.material.uniforms.uDusk.value = Math.max(abyss.state.seaDusk, nightFall * nightCfg.clouds);
+		l.material.uniforms.uDuskColor.value.lerpColors(CLOUD_DUSK, NIGHT_CLOUD, nightFall);
+		l.material.uniforms.uGlow.value = abyss.state.glowSea;
+	}
 	updateCamera(dt);
 	heroText.update(dt);
 	if (SETTINGS.debug && debugReadout) debugReadout.textContent = `scroll ${scroll.value.toFixed(3)}  descent ${descentP.toFixed(3)}  abyss ${transP.toFixed(3)}  route u ${descent.state.u.toFixed(3)}  orbit ${(THREE.MathUtils.radToDeg(orbit.angle) + descent.state.angleDeg).toFixed(1)}°  zoom ${Math.min(orbit.zoom * descent.state.zoom, zoomLimit).toFixed(3)}`;
@@ -860,4 +890,4 @@ window.addEventListener('keydown', (e) => {
 	if ((e.key === 't' || e.key === 'T') && !window.__tune && !e.target.closest?.('input, textarea, select')) openTune();
 });
 
-window.__mountain = { SETTINGS, orbit, scene, camera, renderer, mouseTrail, cloudsGroup, mountain, peaksRoot, babies, debug, gd2Material, materialMode, skyMode, nightSkyMaterial, daySkyMaterial, skybox, ZOOM_LIMIT, getResponsiveZoomLimit, get zoomLimit() { return zoomLimit; }, descent, scroll, setDebug, cloudFloor, CLOUD_FLOOR, cloudMaterial, heroText, HERO_TEXT, abyss, ABYSS_TRANSITION, cloudRig };
+window.__mountain = { SETTINGS, orbit, scene, camera, renderer, mouseTrail, cloudsGroup, mountain, peaksRoot, babies, debug, gd2Material, materialMode, skyMode, nightSkyMaterial, daySkyMaterial, skybox, ZOOM_LIMIT, getResponsiveZoomLimit, get zoomLimit() { return zoomLimit; }, descent, scroll, setDebug, cloudFloor, CLOUD_FLOOR, cloudMaterial, heroText, HERO_TEXT, abyss, ABYSS_TRANSITION, cloudRig, mist, VARIANT, MIST_CFG: mist?.cfg ?? null };
