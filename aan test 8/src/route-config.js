@@ -98,7 +98,7 @@ export const ROUTE = {
 	   a clotted flow along it and an energy packet travelling its filled length — and machined
 	   FITTINGS: a cap at the summit, a collar at every stop. Widths in CSS px at scale 1. */
 	style: {
-		tube: 11,
+		tube: 5.5,
 		shell: true,
 		shellFill: 'rgba(190, 214, 245, 0.12)',    // the glass body: nearly nothing
 		wallUpper: 'rgba(255, 255, 255, 0.8)',     // the wall the moon hits — a specular, in front of the liquid
@@ -109,16 +109,16 @@ export const ROUTE = {
 		fluidWarm: '#ff8a26',                      // …and what it turns toward near the tent's lamp
 		warmRadius: 0.75,                          // of the viewport height: the lamp's reach on the fluid
 		fluidCore: 'rgba(210, 246, 255, 0.95)',    // the bright thread down the middle
-		fluidWidth: 5,
-		glow: [[24, 0.14], [12, 0.3]],             // [width, alpha] of the bleed through the glass, additive
-		flow: { dash: [9, 13], speed: 22, alpha: 0.16 },   // px/s the clots travel
-		pulse: { speed: 170, halfLen: 44, gap: 240, alpha: 1, glow: 0.5 },   // px/s, px, px between packets
+		fluidWidth: 2.4,
+		glow: [[14, 0.12], [7, 0.26]],             // [width, alpha] of the bleed through the glass, additive
+		flow: { dash: [7, 11], speed: 20, alpha: 0.16 },   // px/s the clots travel
+		pulse: { speed: 170, halfLen: 40, gap: 240, alpha: 1, glow: 0.45 },   // px/s, px, px between packets
 		front: 'rgba(240, 253, 255, 1)',           // the meniscus
-		frontHalo: 12,
+		frontHalo: 8,
 		shadow: null,                              // { dx, dy, width, alpha } — a contact shadow on the snow
 		atmosphere: 0,                             // 0..1: how much the far end fades toward the sky
 		fittings: true,
-		fitting: { len: 12, width: 12, light: 'rgba(214, 224, 238, 0.98)', dark: 'rgba(58, 68, 84, 0.98)', edge: 'rgba(255, 255, 255, 0.5)', groove: 'rgba(10, 14, 22, 0.75)' },
+		fitting: { len: 9, width: 8, light: 'rgba(214, 224, 238, 0.98)', dark: 'rgba(58, 68, 84, 0.98)', edge: 'rgba(255, 255, 255, 0.5)', groove: 'rgba(10, 14, 22, 0.75)' },
 	},
 
 	/* three resolved directions on the same trace and renderer — ?path=… picks one */
