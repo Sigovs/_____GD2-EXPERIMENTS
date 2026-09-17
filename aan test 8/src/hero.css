@@ -105,7 +105,21 @@ body {
 .hero__title { transition: text-shadow 400ms ease-out; }
 .hero__line .ch { display: inline-block; will-change: transform; }
 /* the rotating word (text-rise.js → rotateWord): its own mask, always — the words travel through it */
-.hero__rotate { display: inline-block; overflow: hidden; vertical-align: top; white-space: nowrap; padding: 0.08em 0.3em 0.14em; margin: -0.08em -0.3em -0.14em; }   /* the mask sits wide of the glyphs so the title's shadow is not cut at their edge */
+/* the rotating word sits on a plate: the accent green, 5 px corners; ink on it is the page's ground
+   (white on #97C82C is 1.96:1 — under AA even for display type; the ground is ≈ 10:1) */
+.hero__rotate {
+	display: inline-block;
+	box-sizing: border-box;            /* text-rise.js owns the width as a border-box */
+	overflow: hidden;
+	vertical-align: top;
+	white-space: nowrap;
+	padding: 0.02em 0.18em 0.08em;
+	margin: -0.02em 0 -0.08em;
+	background: #97C82C;
+	border-radius: 5px;
+	color: #05080f;
+	text-shadow: none;
+}
 .hero__rotate .hero__word { display: inline-block; white-space: nowrap; }
 .hero__line .ch--space { width: 0.26em; }
 .is-intro .hero__line .ch { transform: translateY(110%); }   /* under the mask until the intro lifts them */
