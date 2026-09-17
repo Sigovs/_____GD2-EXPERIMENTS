@@ -176,21 +176,49 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 	}
 
 	/* ---- the conduit ---- */
-	function strokeRuns(samples, width, color, pick = () => true, offset = 0, alphaOf = (p) => p.alpha) {
-		// consecutive samples with the same (quantised) alpha become one path; offset moves the run along the normal
+	function strokeRuns(samples, width, color, pick = () => true, offset = 0, alphaOf = (p) => p.alpha, colorOf = null) {
+		// consecutive samples with the same (quantised) alpha — and colour, when it varies — become one path;
+		// offset moves the run along the normal
 		ctx.lineWidth = width; ctx.strokeStyle = color;
-		let run = null, runA = -1;
-		const flush = () => { if (run && run.length > 1) { ctx.globalAlpha = runA; ctx.beginPath(); run.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); } run = null; };
+		let run = null, runA = -1, runC = null;
+		const flush = () => { if (run && run.length > 1) { ctx.globalAlpha = runA; if (runC) ctx.strokeStyle = runC; ctx.beginPath(); run.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); } run = null; runA = -1; runC = null; };
 		for (let i = 0; i < samples.length; i++) {
 			const p = samples[i];
 			if (!pick(p)) { flush(); continue; }
 			const a = Math.round(clamp(alphaOf(p), 0, 1) * 16) / 16;
 			if (a <= 0) { flush(); continue; }
-			if (a !== runA) { flush(); runA = a; run = []; }
+			const c = colorOf ? colorOf(p) : null;
+			if (a !== runA || c !== runC) {
+				flush(); runA = a; runC = c; run = [];
+				// a new run starts at the previous sample, so consecutive runs meet without a gap
+				if (i > 0 && pick(samples[i - 1])) { const q = samples[i - 1]; run.push(offset ? [q.x + q.nx * offset, q.y + q.ny * offset] : [q.x, q.y]); }
+			}
 			run.push(offset ? [p.x + p.nx * offset, p.y + p.ny * offset] : [p.x, p.y]);
 		}
 		flush();
 		ctx.globalAlpha = 1;
+	}
+	/* the fluid's colour: icy cyan, turning warm within the lamp's reach of the tent (screen distance) */
+	const CYAN = [0x37, 0xd6, 0xff], WARM = [0xff, 0xa0, 0x3c];
+	function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+	let tentPx = null;   // set per frame from the glow keys
+	function warmth(p) {
+		if (!tentPx) return 0;
+		const d = Math.hypot(p.x - tentPx[0], p.y - tentPx[1]);
+		return 1 - smooth(d, 0, st.warmRadius * H);
+	}
+	function coreColor(p) {
+		// the bright thread: cyan-white, turning to a warm white by the lamp
+		const w = Math.round(warmth(p) * 8) / 8;
+		const a = [210, 246, 255], b = [255, 226, 190];
+		const c = a.map((v, i) => Math.round(lerp(v, b[i], w)));
+		return `rgba(${c[0]}, ${c[1]}, ${c[2]}, 0.95)`;
+	}
+	function fluidColor(p, alphaScale = 1) {
+		const w = Math.round(warmth(p) * 8) / 8;   // eight steps: few runs, no visible banding at these widths
+		const a = hexRgb(st.fluid), b = hexRgb(st.fluidWarm || st.fluid);
+		const c = a.map((v, i) => Math.round(lerp(v, b[i], w)));
+		return alphaScale === 1 ? `rgb(${c[0]}, ${c[1]}, ${c[2]})` : `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${alphaScale})`;
 	}
 	function normals(samples) {
 		for (let i = 0; i < samples.length; i++) {
@@ -201,7 +229,7 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 			samples[i].nx = nx; samples[i].ny = ny; samples[i].tx = tx / l; samples[i].ty = ty / l;
 		}
 	}
-	function drawChain(samples, fill, now, k, chainName) {
+	function drawChain(samples, fill, now, k, chainName, layerAlpha = 1) {
 		normals(samples);
 		const half = (st.tube * k) / 2;
 		const fw = st.fluidWidth * k;
@@ -211,7 +239,7 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 		// atmosphere: the far end (the summit, u 0) sits in more air than the near end
 		const range = cfg.chains[chainName].u;
 		const air = (p) => chainName === 'ridge' ? 1 - st.atmosphere * 0.6 * (1 - (p.u - range[0]) / (range[1] - range[0])) : 1;
-		const base = (p) => p.alpha * air(p);
+		const base = (p) => p.alpha * air(p) * layerAlpha;
 		const shellAlpha = (p) => base(p) * (p.u <= fill ? 1 : st.emptyAlpha) * shown(p);
 		ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
@@ -234,10 +262,10 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 		const last = samples.filter(filled).pop();
 		if (last) {
 			ctx.save(); ctx.globalCompositeOperation = 'lighter';
-			for (const [w, a] of st.glow) strokeRuns(samples, w * k, st.fluid, filled, 0, (p) => base(p) * a);
+			for (const [w, a] of st.glow) strokeRuns(samples, w * k, st.fluid, filled, 0, (p) => base(p) * a, fluidColor);
 			ctx.restore();
-			strokeRuns(samples, fw, st.fluid, filled, 0, base);
-			strokeRuns(samples, Math.max(0.8, 1.2 * k), st.fluidCore, filled, 0.4 * k, (p) => base(p) * 0.9);
+			strokeRuns(samples, fw, st.fluid, filled, 0, base, fluidColor);
+			strokeRuns(samples, Math.max(0.8, 1.2 * k), st.fluidCore, filled, 0.4 * k, (p) => base(p) * 0.9, (p) => coreColor(p));
 			if (!reduced) {
 				// the clotted flow: two dash layers on different periods, drifting
 				const fl = st.flow;
@@ -252,14 +280,14 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 				const sp = (now * pu.speed) % span;
 				const packet = (p) => Math.exp(-Math.pow((p.s - sp) / pu.halfLen, 2));
 				ctx.save(); ctx.globalCompositeOperation = 'lighter';
-				strokeRuns(samples, 14 * k, st.fluid, filled, 0, (p) => base(p) * pu.glow * packet(p));
+				strokeRuns(samples, 16 * k, st.fluid, filled, 0, (p) => base(p) * pu.glow * packet(p), fluidColor);
 				ctx.restore();
 				strokeRuns(samples, fw + 0.6, st.front, filled, 0, (p) => base(p) * pu.alpha * packet(p));
 			}
 			// the meniscus: a bright cap where the fluid ends
 			if (last.alpha > 0.02 && fill < 0.999) {
 				ctx.save(); ctx.globalCompositeOperation = 'lighter';
-				ctx.fillStyle = st.fluid; ctx.globalAlpha = base(last) * 0.35; ctx.beginPath(); ctx.arc(last.x, last.y, st.frontHalo * k, 0, Math.PI * 2); ctx.fill();
+				ctx.fillStyle = fluidColor(last); ctx.globalAlpha = base(last) * 0.35; ctx.beginPath(); ctx.arc(last.x, last.y, st.frontHalo * k, 0, Math.PI * 2); ctx.fill();
 				ctx.restore();
 				ctx.globalAlpha = base(last); ctx.fillStyle = st.front; ctx.beginPath(); ctx.arc(last.x, last.y, Math.max(1.2, fw * 0.7), 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
 			}
@@ -282,12 +310,12 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 			}
 		}
 	}
-	function drawFitting(p, k, len = st.fitting.len) {
+	function drawFitting(p, k, len = st.fitting.len, layerAlpha = 1) {
 		// a machined ring around the tube: a cylinder's shading across the normal, a groove at each end
 		const f = st.fitting;
 		ctx.save();
 		ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(p.ty, p.tx)); ctx.scale(k, k);
-		ctx.globalAlpha = p.alpha;
+		ctx.globalAlpha = p.alpha * layerAlpha;
 		const g = ctx.createLinearGradient(0, -f.width / 2, 0, f.width / 2);
 		g.addColorStop(0, f.light); g.addColorStop(0.45, f.dark); g.addColorStop(1, f.light);
 		ctx.fillStyle = g; ctx.strokeStyle = f.edge; ctx.lineWidth = 1;
@@ -295,6 +323,12 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 		ctx.strokeStyle = f.groove;
 		for (const gx of [-len / 2 + 3, len / 2 - 3]) { ctx.beginPath(); ctx.moveTo(gx, -f.width / 2 + 1); ctx.lineTo(gx, f.width / 2 - 1); ctx.stroke(); }
 		ctx.restore();
+	}
+	function tentAt(f) {
+		const k = live.glowKeys;
+		if (f <= k[0][0]) return k[0][1];
+		for (let i = 1; i < k.length; i++) if (f <= k[i][0]) { const a = k[i - 1], b = k[i], q = (f - a[0]) / (b[0] - a[0]); return [lerp(a[1][0], b[1][0], q), lerp(a[1][1], b[1][1], q)]; }
+		return k[k.length - 1][1];
 	}
 	function drawGlow(f, fill, t) {
 		// the lamp in the tent: alive whenever the tent is in frame, lifted when the route arrives.
@@ -306,10 +340,7 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 		const lit = smooth(f, g.lit[0], g.lit[1]);   // the tent rises into the frame
 		if (lit <= 0.001) return;
 		const arrive = smooth(fill, resolveU(g.arrive), stopById.STOP_03.u);
-		let c = k[k.length - 1][1];
-		if (f <= k[0][0]) c = k[0][1];
-		else for (let i = 1; i < k.length; i++) if (f <= k[i][0]) { const a = k[i - 1], b = k[i], q = (f - a[0]) / (b[0] - a[0]); c = [lerp(a[1][0], b[1][0], q), lerp(a[1][1], b[1][1], q)]; break; }
-		const [x, y] = toScreen(c);
+		const [x, y] = toScreen(tentAt(f));
 		// firelight: a slow breath under two faster, unrelated flickers — never the same twice
 		const flicker = reduced ? 0 : 0.55 * Math.sin((t / g.breath) * Math.PI * 2)
 			+ 0.30 * Math.sin((t / 0.83) * Math.PI * 2 + 1.3)
@@ -343,12 +374,12 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 		ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
 		ctx.restore();
 	}
-	function drawFitting(p, k, len = st.fitting.len) {
+	function drawFitting(p, k, len = st.fitting.len, layerAlpha = 1) {
 		// a machined ring around the tube: a cylinder's shading across the normal, a groove at each end
 		const f = st.fitting;
 		ctx.save();
 		ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(p.ty, p.tx)); ctx.scale(k, k);
-		ctx.globalAlpha = p.alpha;
+		ctx.globalAlpha = p.alpha * layerAlpha;
 		const g = ctx.createLinearGradient(0, -f.width / 2, 0, f.width / 2);
 		g.addColorStop(0, f.light); g.addColorStop(0.45, f.dark); g.addColorStop(1, f.light);
 		ctx.fillStyle = g; ctx.strokeStyle = f.edge; ctx.lineWidth = 1;
@@ -356,6 +387,12 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 		ctx.strokeStyle = f.groove;
 		for (const gx of [-len / 2 + 3, len / 2 - 3]) { ctx.beginPath(); ctx.moveTo(gx, -f.width / 2 + 1); ctx.lineTo(gx, f.width / 2 - 1); ctx.stroke(); }
 		ctx.restore();
+	}
+	function tentAt(f) {
+		const k = live.glowKeys;
+		if (f <= k[0][0]) return k[0][1];
+		for (let i = 1; i < k.length; i++) if (f <= k[i][0]) { const a = k[i - 1], b = k[i], q = (f - a[0]) / (b[0] - a[0]); return [lerp(a[1][0], b[1][0], q), lerp(a[1][1], b[1][1], q)]; }
+		return k[k.length - 1][1];
 	}
 	function drawGlow(f, fill, t) {
 		const g = cfg.glow;
@@ -383,6 +420,23 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 	/* ---- frame ---- */
 	let toScreen = null;
 	let reveal = 1;   // intro.js: how much of the route's empty glass is drawn on (u)
+	/* the scroll's direction owns the route: scrolling down, it is there and the fluid follows;
+	   scrolling up, it fades out; turning down again, it comes back and the fluid refills from the
+	   summit to where the scroll is (a short catch-up), then follows again */
+	let lastF = -1, dirDown = true, vis = 1, fillShown = 0, lastNow = 0;
+	function transport(f, fill, now) {
+		const dt = lastNow ? Math.min(0.1, (now - lastNow) / 1000) : 0; lastNow = now;
+		if (lastF >= 0) {
+			const d = f - lastF;
+			if (d > 0.0005 && !dirDown) { dirDown = true; fillShown = 0; }   // turned down: start over
+			else if (d < -0.0005 && dirDown) dirDown = false;               // turned up: leave
+		}
+		lastF = f;
+		vis += ((dirDown ? 1 : 0) - vis) * Math.min(1, dt * (dirDown ? 5 : 8));
+		fillShown += (fill - fillShown) * Math.min(1, dt * 6);
+		if (Math.abs(fill - fillShown) < 0.002) fillShown = fill;
+		return { vis, fill: fillShown };
+	}
 	function setReveal(r) { reveal = clamp(r, 0, 1); if (reduced) draw(performance.now()); }
 	function resize() {
 		const box = size ? size() : { w: window.innerWidth, h: window.innerHeight };
@@ -408,7 +462,9 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 			s.u = at.u; s.sample = at; s.anchor = [at.x, at.y];
 			s.onScreen = at.alpha > 0.5 && at.x > 8 && at.x < W - 8 && at.y > 8 && at.y < H - 8;
 		}
-		const fill = reduced ? resolveU(cfg.reducedU) : fillFor(f);
+		const wanted = reduced ? resolveU(cfg.reducedU) : fillFor(f);
+		const tr = reduced ? { vis: 1, fill: wanted } : transport(f, wanted, now);
+		const fill = tr.fill;
 		// the instrument's scale follows the mountain's apparent size (the camera pushes in, then descends)
 		const sr = cfg.scaleRef, pts = keyedPoints(sr.chain, f).map(toScreen);
 		const k = clamp(Math.hypot(pts[sr.to][0] - pts[sr.from][0], pts[sr.to][1] - pts[sr.from][1]) / (sr.px * W / 1440), sr.min, sr.max);
@@ -416,11 +472,16 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 		ctx.clearRect(0, 0, W, H);
 		const t = now / 1000;
+		tentPx = toScreen(tentAt(f));
 		drawGlow(f, fill, t);   // under the conduit: the camp's light is the film's, brightened
-		for (const [name, samples] of Object.entries(chains)) drawChain(samples, fill, t, k, name);
-		if (st.fittings) {
-			if (reveal > 0.02) drawFitting(chains.ridge[1], k, st.fitting.len + 2);   // the cap at the summit
-			for (const s of stops) if (s.sample && s.sample.alpha > 0.5 && (s.u <= fill || reveal >= s.u)) drawFitting(s.sample, k);
+		if (tr.vis > 0.01) {
+			// scrolling up takes the whole instrument away: every stroke carries the same transparency
+			const layerAlpha = tr.vis;
+			for (const [name, samples] of Object.entries(chains)) drawChain(samples, fill, t, k, name, layerAlpha);
+			if (st.fittings) {
+				if (reveal > 0.02) drawFitting(chains.ridge[1], k, st.fitting.len + 2, layerAlpha);   // the cap at the summit
+				for (const s of stops) if (s.sample && s.sample.alpha > 0.5 && (s.u <= fill || reveal >= s.u)) drawFitting(s.sample, k, undefined, layerAlpha);
+			}
 		}
 		if (cfg.callouts) updateCallouts(fill);
 	}
@@ -435,5 +496,5 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 	/* tools/route-editor: replace the keys live (the editor's own copy; nothing here writes the config) */
 	function setKeys(keys, glowKeys) { live.keys = keys; if (glowKeys) live.glowKeys = glowKeys; if (reduced) draw(performance.now()); }
 
-	return { stops, draw, resize, setReveal, setKeys, cfg, live };
+	return { stops, draw, resize, setReveal, setKeys, cfg, live, get transport() { return { dirDown, vis, fillShown, lastF }; } };
 }

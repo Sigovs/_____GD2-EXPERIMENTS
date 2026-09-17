@@ -25,16 +25,16 @@ export const ROUTE = {
 	   ridge: summit, three on the crest, the col, two into the cloud (the crest is read off
 	   the frames; the odd points sit a touch onto the lit face so the line is not a ruler) */
 	keys: [
-		// laid by hand in tools/route-editor (Alex, 17 Sep 2026 23:29): the crest to the right of the summit, down into the cloud sea; the camp as a switchback to the tent
-		{ f: 0.000, ridge: [[67.5, 24.3], [70.8, 31.4], [73.2, 38.9], [70.8, 45.1], [71.4, 57.7], [61.5, 64.8], [56.7, 86.9]],  camp: [[94.1, 103.8], [89.3, 110], [104.7, 102.3], [99.6, 109.2], [83.3, 113.7]] },
-		{ f: 0.125, ridge: [[67.5, 21.3], [70.8, 29.4], [73.2, 36.9], [70.8, 44.1], [70.4, 58.7], [60.5, 65.8], [55.7, 87.9]],  camp: [[94.1, 103.8], [89.3, 110], [104.7, 102.3], [99.6, 109.2], [83.3, 113.7]] },
-		{ f: 0.250, ridge: [[66.5, 17.3], [69.8, 26.4], [72.2, 33.9], [68.8, 41.1], [69.4, 54.7], [59.5, 62.8], [54.7, 84.9]],  camp: [[94.1, 103.8], [89.3, 110], [104.7, 102.3], [99.6, 109.2], [83.3, 113.7]] },
-		{ f: 0.375, ridge: [[65.5, 13.3], [68.8, 21.4], [71.2, 28.9], [68.8, 36.1], [69.4, 50.7], [59.5, 58.8], [54.7, 80.9]],  camp: [[94.1, 103.8], [89.3, 110], [104.7, 102.3], [99.6, 109.2], [83.3, 113.7]] },
-		{ f: 0.500, ridge: [[63.5, 8.3], [65.8, 17.4], [68.2, 24.9], [65.8, 32.1], [66.4, 45.7], [56.5, 53.8], [51.7, 75.9]],  camp: [[94.1, 103.8], [89.3, 110], [104.7, 102.3], [99.6, 109.2], [83.3, 113.7]] },
-		{ f: 0.625, ridge: [[62.5, 3.3], [65.8, 11.4], [68.2, 18.9], [65.8, 26.1], [66.4, 38.7], [56.5, 45.8], [51.7, 67.9]],  camp: [[102.1, 101.8], [97.3, 108], [112.7, 100.3], [107.6, 107.2], [91.3, 111.7]] },
-		{ f: 0.750, ridge: [[61.5, -0.7], [64.8, 7.4], [67.2, 14.9], [64.8, 21.1], [65.4, 34.7], [55.5, 40.8], [50.7, 62.9]],  camp: [[110.1, 83.8], [105.3, 92], [120.7, 86.3], [115.6, 93.2], [98.3, 97.7]] },
-		{ f: 0.875, ridge: [[58.5, -3.7], [61.8, 4.4], [64.2, 10.9], [61.8, 17.1], [62.4, 30.7], [53.5, 36.8], [48.7, 58.9]],  camp: [[82.1, 71.8], [77.3, 81], [92.7, 76.3], [86.6, 83.2], [70.3, 87.7]],  alpha: { ridge: [1, 1, 1, 0.5, 0, 0, 0] } },   // the cloud has climbed the crest
-		{ f: 1.000, ridge: [[57.5, -7.7], [60.8, 0.4], [63.2, 6.9], [60.8, 13.1], [61.4, 26.7], [52.5, 32.8], [47.7, 54.9]],  camp: [[68.1, 63.9], [63.3, 74], [78.7, 69.3], [72.6, 77.2], [56.3, 81.7]],  alpha: { ridge: [1, 0.8, 0.3, 0, 0, 0, 0] } },
+		// laid by hand in tools/route-editor (Alex, 17 Sep 2026 23:36): the crest to the right of the summit, down into the cloud sea; the camp from the valley's left slope to the tent
+		{ f: 0.000, ridge: [[67.5, 24.3], [70.8, 31.4], [73.2, 38.9], [70.8, 45.1], [71.4, 57.7], [61.5, 64.8], [56.7, 86.9]],  camp: [[22.4, 94.1], [32.4, 97.9], [45.3, 100.5], [52.5, 111.9], [76.7, 115.9]] },
+		{ f: 0.125, ridge: [[67.5, 21.3], [70.8, 29.4], [73.2, 36.9], [70.8, 44.1], [70.4, 58.7], [60.5, 65.8], [55.7, 87.9]],  camp: [[22.4, 94.1], [32.4, 97.9], [45.3, 100.5], [52.5, 111.9], [76.7, 115.9]] },
+		{ f: 0.250, ridge: [[66.5, 17.3], [69.8, 26.4], [72.2, 33.9], [68.8, 41.1], [69.4, 54.7], [59.5, 62.8], [54.7, 84.9]],  camp: [[22.4, 94.1], [32.4, 97.9], [45.3, 100.5], [52.5, 111.9], [76.7, 115.9]] },
+		{ f: 0.375, ridge: [[65.5, 13.3], [68.8, 21.4], [71.2, 28.9], [68.8, 36.1], [69.4, 50.7], [59.5, 58.8], [54.7, 80.9]],  camp: [[22.4, 94.1], [32.4, 97.9], [45.3, 100.5], [52.5, 111.9], [76.7, 115.9]] },
+		{ f: 0.500, ridge: [[63.5, 8.3], [65.8, 17.4], [68.2, 24.9], [65.8, 32.1], [66.4, 45.7], [56.5, 53.8], [51.7, 75.9]],  camp: [[22.4, 94.1], [32.4, 97.9], [45.3, 100.5], [52.5, 111.9], [76.7, 115.9]] },
+		{ f: 0.625, ridge: [[62.5, 3.3], [65.8, 11.4], [68.2, 18.9], [65.8, 26.1], [66.4, 38.7], [56.5, 45.8], [51.7, 67.9]],  camp: [[30.4, 92.1], [40.4, 95.9], [53.3, 98.5], [60.5, 109.9], [84.7, 113.9]] },
+		{ f: 0.750, ridge: [[61.5, -0.7], [64.8, 7.4], [67.2, 14.9], [64.8, 21.1], [65.4, 34.7], [55.5, 40.8], [50.7, 62.9]],  camp: [[38.4, 74.1], [48.4, 79.9], [61.3, 84.5], [68.5, 95.9], [91.7, 99.9]] },
+		{ f: 0.875, ridge: [[58.5, -3.7], [61.8, 4.4], [64.2, 10.9], [61.8, 17.1], [62.4, 30.7], [53.5, 36.8], [48.7, 58.9]],  camp: [[10.3, 62.1], [20.4, 68.9], [33.3, 74.5], [39.5, 85.9], [63.7, 89.9]],  alpha: { ridge: [1, 1, 1, 0.5, 0, 0, 0] } },   // the cloud has climbed the crest
+		{ f: 1.000, ridge: [[57.5, -7.7], [60.8, 0.4], [63.2, 6.9], [60.8, 13.1], [61.4, 26.7], [52.5, 32.8], [47.7, 54.9]],  camp: [[-3.6, 54.1], [6.4, 61.9], [19.3, 67.5], [25.5, 79.9], [49.7, 83.9]],  alpha: { ridge: [1, 0.8, 0.3, 0, 0, 0, 0] } },
 	],
 	/* a key may carry alpha: { chain: [...] } — per-point alpha at that time, interpolated
 	   to the nearest keys that carry one; otherwise the chain's default below */
@@ -46,7 +46,7 @@ export const ROUTE = {
 	samplesPerChain: 140,
 	/* the tube's width follows the mountain's apparent size: the summit→col distance on
 	   screen, against this reference (px at 1440 wide, ≈ film time 0.5) */
-	scaleRef: { chain: 'ridge', from: 0, to: 4, px: 520, min: 0.55, max: 1.1 },
+	scaleRef: { chain: 'ridge', from: 0, to: 4, px: 520, min: 0.75, max: 1.1 },
 
 	/* Stops: [chain, control-point index]. Copy carried verbatim from aan test 7
 	   (descent-config.js), which carried it from aan test 4 — the figures in STOP 01 have no
@@ -98,21 +98,23 @@ export const ROUTE = {
 	   a clotted flow along it and an energy packet travelling its filled length — and machined
 	   FITTINGS: a cap at the summit, a collar at every stop. Widths in CSS px at scale 1. */
 	style: {
-		tube: 8,
+		tube: 11,
 		shell: true,
-		shellFill: 'rgba(190, 214, 245, 0.10)',    // the glass body: nearly nothing
-		wallUpper: 'rgba(255, 255, 255, 0.72)',    // the wall the moon hits — a specular, in front of the liquid
-		wallLower: 'rgba(255, 255, 255, 0.26)',    // the far wall
-		innerShade: 'rgba(0, 0, 0, 0.28)',         // the glass thickness, inside the lower wall
-		emptyAlpha: 0.6,                           // the shell ahead of the fluid (1 = as visible as behind it)
+		shellFill: 'rgba(190, 214, 245, 0.12)',    // the glass body: nearly nothing
+		wallUpper: 'rgba(255, 255, 255, 0.8)',     // the wall the moon hits — a specular, in front of the liquid
+		wallLower: 'rgba(255, 255, 255, 0.3)',     // the far wall
+		innerShade: 'rgba(0, 0, 0, 0.3)',          // the glass thickness, inside the lower wall
+		emptyAlpha: 0.5,                           // the shell ahead of the fluid (1 = as visible as behind it)
 		fluid: '#37d6ff',                          // icy cyan (test 7 fluidColor)
-		fluidCore: 'rgba(196, 244, 255, 0.95)',    // the bright thread down the middle
-		fluidWidth: 2.8,
-		glow: [[12, 0.10], [7, 0.20]],             // [width, alpha] of the bleed through the glass, additive
-		flow: { dash: [7, 11], speed: 18, alpha: 0.15 },   // px/s the clots travel
-		pulse: { speed: 150, halfLen: 38, gap: 260, alpha: 0.9, glow: 0.35 },   // px/s, px, px between packets
-		front: 'rgba(235, 252, 255, 1)',           // the meniscus
-		frontHalo: 8,
+		fluidWarm: '#ff8a26',                      // …and what it turns toward near the tent's lamp
+		warmRadius: 0.75,                          // of the viewport height: the lamp's reach on the fluid
+		fluidCore: 'rgba(210, 246, 255, 0.95)',    // the bright thread down the middle
+		fluidWidth: 5,
+		glow: [[24, 0.14], [12, 0.3]],             // [width, alpha] of the bleed through the glass, additive
+		flow: { dash: [9, 13], speed: 22, alpha: 0.16 },   // px/s the clots travel
+		pulse: { speed: 170, halfLen: 44, gap: 240, alpha: 1, glow: 0.5 },   // px/s, px, px between packets
+		front: 'rgba(240, 253, 255, 1)',           // the meniscus
+		frontHalo: 12,
 		shadow: null,                              // { dx, dy, width, alpha } — a contact shadow on the snow
 		atmosphere: 0,                             // 0..1: how much the far end fades toward the sky
 		fittings: true,
@@ -120,7 +122,7 @@ export const ROUTE = {
 	},
 
 	/* three resolved directions on the same trace and renderer — ?path=… picks one */
-	variant: 'alpine',
+	variant: 'conduit',
 	variants: {
 		/* the glass conduit as above: the product shot */
 		conduit: {},
