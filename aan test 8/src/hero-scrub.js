@@ -60,24 +60,35 @@ function frame() {
 function schedule() { if (!raf) raf = requestAnimationFrame(frame); }
 
 video.addEventListener('seeked', () => { seeking = false; });
-video.addEventListener('loadedmetadata', () => {
+
+function onMetadata() {
 	duration = video.duration || 0;
-	apply(scrollProgress());
-	current = target;
-	video.currentTime = current;
+	if (reduced.matches) {
+		// one frame, no transport: the picture the page opens on
+		video.currentTime = duration * 0.25;
+	} else {
+		apply(scrollProgress());
+		current = target;
+		video.currentTime = current;
+	}
 	document.body.classList.add('is-ready');
-});
-
+	document.body.dispatchEvent(new Event('ready'));
+}
 // decode ahead: a muted play/pause primes the pipeline so the first scrub is not a stutter
-video.addEventListener('canplay', () => { video.play().then(() => video.pause()).catch(() => {}); }, { once: true });
+function prime() { video.play().then(() => video.pause()).catch(() => {}); }
 
-window.addEventListener('scroll', () => { apply(scrollProgress()); schedule(); }, { passive: true });
-window.addEventListener('resize', () => { apply(scrollProgress()); schedule(); });
+// This module runs after parsing, and the film is `preload="auto"`: on a cached or local load
+// its metadata is already in before we can listen, and the events never come. Check first.
+if (video.readyState >= 1) onMetadata(); else video.addEventListener('loadedmetadata', onMetadata, { once: true });
+if (video.readyState >= 3) prime(); else video.addEventListener('canplay', prime, { once: true });
 
-if (reduced.matches) {
-	// one frame, no transport: the picture the page opens on
-	window.removeEventListener('scroll', schedule);
-	video.addEventListener('loadedmetadata', () => { video.currentTime = duration * 0.25; }, { once: true });
+if (!reduced.matches) {
+	const onScroll = () => { apply(scrollProgress()); schedule(); };
+	window.addEventListener('scroll', onScroll, { passive: true });
+	window.addEventListener('resize', onScroll);
+	// a reload mid-page: the browser restores the scroll position after we first read it, without a scroll event
+	window.addEventListener('load', onScroll);
+	window.addEventListener('pageshow', onScroll);
 }
 
 export {};

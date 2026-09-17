@@ -1,152 +1,140 @@
 /*
- * nav.css — primary navigation floating over the hero.
+ * nav.css — the navigation: a fixed header (brand + hamburger) and a full-screen panel that
+ * wipes open with clip-path (nav.js). After the "immersive full-screen nav" component, done
+ * natively: the shell, the panel, the per-character hover on the links, the hamburger's cross.
  *
- * A quiet interface layer: no bar, no container, transparent ground. It sits
- * above the WebGL canvas and never touches the scene. Tokens up top so the
- * whole treatment can be tuned in one place.
+ * The panel is the page's own ground colour; the links are the site's one family at display
+ * size; nothing glows. Under prefers-reduced-motion the wipe is a fade and the reveals are
+ * instant (nav.js). Tokens up top.
  */
 
 :root {
-	--nav-top: clamp(32px, 4vh, 48px);
-	--nav-right: clamp(48px, 4.5vw, 64px);
-	--nav-gap: clamp(28px, 3vw, 44px);
-
+	--nav-top: clamp(24px, 3.5vh, 40px);
+	--nav-x: clamp(24px, 4.5vw, 64px);
 	--nav-font: "Inter Tight", "Helvetica Neue", system-ui, sans-serif;   /* the site's one family */
-	--nav-size: 0.9375rem;            /* 15px — above the 14px floor for functional text */
-	--nav-tracking: 0.03em;
-
-	--nav-ink: #e6edf8;               /* very light cool grey */
-	--nav-ink-rest: 0.7;              /* resting opacity */
-	--nav-ink-hover: 1;
-	--nav-glow: rgba(160, 190, 235, 0.45);
-	--nav-shadow: 0 1px 10px rgba(2, 4, 10, 0.55);   /* legibility over stars, not decoration */
-
-	--nav-ease: cubic-bezier(0.22, 0.61, 0.36, 1);    /* soft, precise, no overshoot */
-	--nav-dur: 320ms;
+	--nav-ink: #e6edf8;
+	--nav-ink-2: rgba(230, 237, 248, 0.62);
+	--nav-ground: #05080f;             /* the page's ground (hero.css --ground) */
+	--nav-accent: #00ECFF;
+	--nav-ease: cubic-bezier(0.77, 0, 0.175, 1);         /* the wipe: slow in, slow out */
+	--nav-ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+	--nav-wipe: 1000ms;
+	--nav-shadow: 0 1px 10px rgba(2, 4, 10, 0.55);       /* legibility over stars, not decoration */
 }
 
+/* ---- the header: always there, above the panel ---- */
 .nav {
 	position: fixed;
-	top: var(--nav-top);
-	right: var(--nav-right);
-	z-index: 10;
-	pointer-events: none;             /* the canvas keeps every gesture except on the links themselves */
-	opacity: 0;
-	transform: translateY(-4px);
-	transition: opacity 900ms var(--nav-ease) 400ms, transform 900ms var(--nav-ease) 400ms;
-}
-body.is-ready .nav {
-	opacity: 1;
-	transform: none;
-}
-
-.nav ul {
+	left: 0; right: 0; top: 0;
+	z-index: 30;
 	display: flex;
-	justify-content: flex-end;
-	align-items: baseline;
-	gap: var(--nav-gap);
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.nav a {
-	pointer-events: auto;
-	position: relative;
-	display: inline-block;
-	padding: 6px 0;                   /* comfortable hit area without a visible box */
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--nav-top) var(--nav-x) 0;
+	pointer-events: none;              /* the scene keeps every gesture except on the controls */
 	font-family: var(--nav-font);
-	font-size: var(--nav-size);
-	font-weight: 400;
-	letter-spacing: var(--nav-tracking);
-	line-height: 1.2;
 	color: var(--nav-ink);
-	opacity: var(--nav-ink-rest);
+}
+.nav__brand {
+	pointer-events: auto;
+	font-size: 1rem;
+	font-weight: 600;
+	letter-spacing: 0.15em;
+	text-transform: uppercase;
+	color: var(--nav-ink);
 	text-decoration: none;
 	text-shadow: var(--nav-shadow);
-	white-space: nowrap;
-	-webkit-font-smoothing: antialiased;
-	transition:
-		opacity var(--nav-dur) var(--nav-ease),
-		text-shadow var(--nav-dur) var(--nav-ease);
+	padding: 8px 0;
 }
+.nav__brand:focus-visible, .nav__toggle:focus-visible, .nav__link:focus-visible { outline: 2px solid var(--nav-accent); outline-offset: 4px; }
 
-/* hairline indicator — scales in from the left, never moves the text */
-.nav a::after {
-	content: "";
-	position: absolute;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	height: 1px;
-	background: currentColor;
-	opacity: 0;
-	transform: scaleX(0);
-	transform-origin: left center;
-	transition:
-		transform var(--nav-dur) var(--nav-ease),
-		opacity var(--nav-dur) var(--nav-ease);
+.nav__toggle {
+	pointer-events: auto;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 6px;
+	width: 44px; height: 44px;         /* the hit area */
+	padding: 10px;
+	margin-right: -10px;
+	background: none; border: 0; cursor: pointer;
+	color: inherit;
 }
-
-.nav a:hover,
-.nav a:focus-visible {
-	opacity: var(--nav-ink-hover);
-	text-shadow: var(--nav-shadow), 0 0 14px var(--nav-glow);
-}
-.nav a:hover::after,
-.nav a:focus-visible::after {
-	opacity: 0.55;
-	transform: scaleX(1);
-}
-
-/* random letter swap (nav-letter-swap.js): each letter is a two-line column clipped to one line;
-   on hover the column rolls up one line — letters in a random order, staggered, with a springy ease */
-.nav a .ls-word { display: inline-flex; white-space: pre; }
-.nav a .ls-space { display: inline-block; white-space: pre; }
-.nav a .ls {
-	position: relative;
-	display: inline-block;
-	overflow: hidden;
-	vertical-align: top;
-	line-height: 1.2;
-	height: 1.2em;
-	transition-property: none;
-}
-.nav a .ls__a,
-.nav a .ls__b {
+.nav__toggle span {
 	display: block;
-	transition: transform 0.6s cubic-bezier(0.34, 1.4, 0.64, 1);
-	transition-duration: inherit;
-	transition-timing-function: inherit;
-	transition-delay: inherit;
-	will-change: transform;
+	height: 2px; width: 100%;
+	background: currentColor;
+	box-shadow: var(--nav-shadow);
+	transform-origin: center;
+	transition: transform 700ms var(--nav-ease) 300ms, opacity 500ms var(--nav-ease) 300ms;
 }
-.nav a .ls__b { position: absolute; left: 0; top: 100%; }
-.nav a.is-swapped .ls__a { transform: translateY(-100%); }
-.nav a.is-swapped .ls__b { transform: translateY(-100%); }
+.nav.is-open .nav__toggle span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.nav.is-open .nav__toggle span:nth-child(2) { transform: scaleX(0); opacity: 0; }
+.nav.is-open .nav__toggle span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+/* ---- the panel: wipes open from the right (nav.js sets the clip-path), exits to the left ---- */
+.nav__panel {
+	position: fixed;
+	inset: 0;
+	z-index: 20;
+	background: var(--nav-ground);
+	color: var(--nav-ink);
+	font-family: var(--nav-font);
+	overflow-y: auto;
+	pointer-events: none;
+	clip-path: polygon(100% 0%, 100% 0%, 100% 100%, 100% 100%);
+	visibility: hidden;
+}
+.nav__panel.is-open { pointer-events: auto; visibility: visible; }
+.nav__panel:focus { outline: none; }
+.nav__panel.is-moving { visibility: visible; }
+
+.nav__inner {
+	box-sizing: border-box;
+	min-height: 100vh;
+	min-height: 100dvh;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 40px;
+	padding: calc(var(--nav-top) + 64px) var(--nav-x) 40px;
+	transform-origin: center;
+}
+
+.nav__head { display: flex; flex-direction: column; gap: 4px; }
+.nav__name { margin: 0; font-size: 0.875rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.9; }
+.nav__tagline { margin: 0; font-size: 0.9375rem; color: var(--nav-ink-2); }
+
+.nav__body { display: flex; align-items: center; justify-content: space-between; gap: 40px; }
+.nav__links { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.nav__links li { font-size: clamp(2rem, 4.6vw, 5.4rem); line-height: 1.08; letter-spacing: -0.02em; font-weight: 400; white-space: nowrap; }   /* our labels are long: sized so the longest fits beside the images */
+.nav__link { color: inherit; text-decoration: none; display: inline-block; white-space: nowrap; }
+/* the hover: every character slides up out of the line, its shadow copy sliding in beneath — staggered */
+.nav__link .w { display: inline-block; overflow: hidden; vertical-align: top; line-height: 1.08; }
+.nav__link .c { display: inline-block; white-space: pre; text-shadow: 0 1.2em currentColor; transition: transform 500ms cubic-bezier(0.625, 0.05, 0, 1); transition-delay: calc(var(--i) * 15ms); }
+.nav__link:hover .c, .nav__link:focus-visible .c { transform: translateY(-1.2em); }
+
+.nav__images { display: flex; align-items: flex-end; gap: 24px; }
+.nav__image { position: relative; width: 19vw; height: 13vw; overflow: hidden; border-radius: 6px; }
+.nav__image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 500ms var(--nav-ease-out); }
+.nav__image:hover img { transform: scale(1.05); }
+
+.nav__foot { display: flex; align-items: flex-end; justify-content: space-between; font-size: 0.875rem; color: var(--nav-ink-2); }
+
+/* what the reveal animates (nav.js) starts hidden */
+.nav__panel [data-reveal] { opacity: 0; }
+
+@media (max-width: 1025px) {
+	.nav__body { flex-direction: column; align-items: flex-start; gap: 56px; }
+	.nav__links li { font-size: clamp(2.2rem, 8vw, 5rem); }
+	.nav__images { width: 100%; flex-direction: column; align-items: flex-start; gap: 12px; }
+	.nav__image { width: 60vw; height: 30vw; border-radius: 4px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-	.nav a .ls__a, .nav a .ls__b { transition: none; }
-	.nav a.is-swapped .ls__a, .nav a.is-swapped .ls__b { transform: none; }
-}
-
-/* keyboard focus: same state as hover, plus a visible ring that does not draw a box in the resting state */
-.nav a:focus-visible {
-	outline: 1px solid rgba(200, 216, 245, 0.6);
-	outline-offset: 6px;
-	border-radius: 2px;
-}
-
-/* Smaller screens: keep it horizontal as long as it fits, then stack top-right.
-   The WebGL scene is untouched either way. */
-@media (max-width: 1100px) {
-	:root { --nav-gap: 24px; --nav-right: 32px; --nav-top: 28px; }
-}
-@media (max-width: 760px) {
-	.nav ul { flex-direction: column; align-items: flex-end; gap: 10px; }
-	:root { --nav-right: 24px; --nav-top: 24px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.nav, .nav a, .nav a::after { transition: none; }
-	.nav { transform: none; }
+	.nav__toggle span { transition: none; }
+	.nav__link .c { transition: none; }
+	.nav__link:hover .c, .nav__link:focus-visible .c { transform: none; text-shadow: none; opacity: 0.7; }
+	.nav__image img { transition: none; }
+	.nav__image:hover img { transform: none; }
 }

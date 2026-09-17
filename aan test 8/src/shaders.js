@@ -272,9 +272,10 @@ void main() {
 
 	float distFromMouse = length(uv - mouseUv);
 
-	float circle = smoothstep(.05, 0., distFromMouse);
-	float smoothcircle = smoothstep(.1, 0., distFromMouse);
-	float smoothercircle = smoothstep(.15, 0., distFromMouse);
+	// test 8: a wider brush than the 3-D build's — the wake has to part a plate, not tickle it
+	float circle = smoothstep(.08, 0., distFromMouse);
+	float smoothcircle = smoothstep(.16, 0., distFromMouse);
+	float smoothercircle = smoothstep(.24, 0., distFromMouse);
 
 	float noise = texture2D(tNoise, uv * .5 + uTime * .01).r * 2. - 1.;
 

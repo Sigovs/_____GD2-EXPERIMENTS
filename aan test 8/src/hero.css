@@ -47,6 +47,14 @@ body {
 	display: block;
 	pointer-events: none;
 }
+.stage__route {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	display: block;
+	pointer-events: none;
+}
 .stage__vignette {
 	position: absolute;
 	inset: 0;
@@ -63,18 +71,46 @@ body {
 	left: clamp(24px, 6vw, 96px);
 	top: 50%;
 	transform: translateY(-50%);
-	max-width: min(46rem, 60vw);
+	max-width: none;
 	pointer-events: none;
 	will-change: opacity, transform;
 }
 .hero__title {
 	margin: 0;
-	font-size: clamp(2.4rem, 5.2vw, 5.6rem);
+	font-size: clamp(2.2rem, 5.6vw, 6.6rem);
 	font-weight: 800;
-	line-height: 0.98;
+	line-height: 0.96;
 	letter-spacing: -0.025em;
 	text-wrap: balance;
 	text-shadow: 0 2px 40px rgba(2, 5, 12, 0.75);
+}
+
+/* ---- the intro (intro.js): what is not yet arrived is held here, so nothing flashes before its cue.
+        The html class is removed once the intro has landed; under reduced motion it never applies. ---- */
+.is-intro .stage,
+.is-intro .hero__line,
+.is-intro .nav { opacity: 0; animation: intro-safety 0s 3s forwards; }   /* the safety: whatever happens to the script, the page is there by 3 s */
+@keyframes intro-safety { to { opacity: 1; } }
+.hero__line {
+	display: inline-block;
+	white-space: nowrap;
+	will-change: opacity, transform;           /* one line each; so a line can move on its own */
+	vertical-align: top;
+	padding-bottom: 0.14em;
+	margin-bottom: -0.14em;
+}
+/* the mask the letters rise from (text-rise.js) — only while they rise: a mask would clip the title's shadow into a box */
+.is-intro .hero__line { overflow: hidden; }
+.is-intro .hero__title { text-shadow: none; }
+.hero__title { transition: text-shadow 400ms ease-out; }
+.hero__line .ch { display: inline-block; will-change: transform; }
+/* the rotating word (text-rise.js → rotateWord): its own mask, always — the words travel through it */
+.hero__rotate { display: inline-block; overflow: hidden; vertical-align: top; white-space: nowrap; padding: 0.08em 0.3em 0.14em; margin: -0.08em -0.3em -0.14em; }   /* the mask sits wide of the glyphs so the title's shadow is not cut at their edge */
+.hero__rotate .hero__word { display: inline-block; white-space: nowrap; }
+.hero__line .ch--space { width: 0.26em; }
+.is-intro .hero__line .ch { transform: translateY(110%); }   /* under the mask until the intro lifts them */
+@media (prefers-reduced-motion: reduce) {
+	.is-intro .stage, .is-intro .hero__line, .is-intro .nav { opacity: 1; }
 }
 
 /* ---- the scroll track ---- */

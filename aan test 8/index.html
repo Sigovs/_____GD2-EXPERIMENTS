@@ -5,12 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GD2 — the mountain</title>
 <meta name="description" content="The deeper you go, the more you know.">
+<!-- the intro (src/intro.js) holds the scene until its cue; the class is set here, only where scripts run, so a page without them is never blank -->
+<script>document.documentElement.classList.add('is-intro');</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="stylesheet" href="src/nav.css">
 <link rel="stylesheet" href="src/hero.css">
+<link rel="stylesheet" href="src/route.css">
 </head>
 <body>
 
@@ -20,22 +23,48 @@
 		       poster="previews/hero-gora-poster.jpg" aria-hidden="true">
 			<source src="assets/videos/hero-gora.mp4" type="video/mp4">
 		</video>
+		<!-- the descent route over the film — an instrument, rotoscoped to the film's frames (src/route-layer.js) -->
+		<canvas id="route-canvas" class="stage__route" aria-hidden="true"></canvas>
 		<!-- the one 3-D thing we keep: the scene's own clouds, over the film (src/cloud-layer.js) -->
 		<canvas id="cloud-canvas" class="stage__clouds" aria-hidden="true"></canvas>
 		<div class="stage__vignette" aria-hidden="true"></div>
 	</div>
 
-	<nav class="nav" aria-label="Primary">
-		<ul>
-			<li><a href="#main">Products &amp; Services</a></li>
-			<li><a href="#main">Grow your Business</a></li>
-			<li><a href="#main">Compliance</a></li>
-			<li><a href="#main">Contact</a></li>
-		</ul>
+	<!-- the route's callouts (route.css); the leaders are drawn in here by route-layer.js -->
+	<div id="route-labels" aria-hidden="true"></div>
+
+	<!-- the navigation (src/nav.css, src/nav.js): the header and the full-screen panel it opens.
+	     The previous inline link row with the letter-swap hover (src/nav-letter-swap.js) is cut, not deleted:
+	     restore the <ul> here and its script at the foot to bring it back. -->
+	<header class="nav">
+		<a class="nav__brand" href="#main">GD2</a>
+		<button class="nav__toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-panel"><span></span><span></span><span></span></button>
+	</header>
+	<nav class="nav__panel" id="nav-panel" aria-label="Primary" aria-hidden="true">
+		<div class="nav__inner">
+			<div class="nav__head">
+				<h2 class="nav__name" data-reveal="head" data-i="0">GD2</h2>
+				<p class="nav__tagline" data-reveal="head" data-i="1">The deeper you go, the more you know.</p>
+			</div>
+			<div class="nav__body">
+				<ul class="nav__links">
+					<li data-reveal="link" data-i="0"><a class="nav__link" href="#main">Products &amp; Services</a></li>
+					<li data-reveal="link" data-i="1"><a class="nav__link" href="#main">Grow your Business</a></li>
+					<li data-reveal="link" data-i="2"><a class="nav__link" href="#main">Compliance</a></li>
+					<li data-reveal="link" data-i="3"><a class="nav__link" href="#main">Contact</a></li>
+				</ul>
+				<div class="nav__images">
+					<div class="nav__image" data-reveal="image" data-i="0"><img src="previews/hero-gora-poster.jpg" alt="" loading="lazy"></div>
+					<div class="nav__image" data-reveal="image" data-i="1"><img src="previews/camp.jpg" alt="" loading="lazy"></div>
+				</div>
+			</div>
+			<div class="nav__foot"><span data-reveal="head" data-i="2">GD2</span></div>
+		</div>
 	</nav>
 
 	<main id="main" class="hero">
-		<h1 class="hero__title">The deeper you go,<br>the more you know.</h1>
+		<!-- the last word rotates (text-rise.js → rotateWord): the words in data-words are PLACEHOLDERS — replace with the client's -->
+		<h1 class="hero__title"><span class="hero__line">The deeper</span><br><span class="hero__line">you go,</span><br><span class="hero__line">the more you <span class="hero__rotate" data-words="know.|see.|learn.|find.">know.</span></span></h1>
 	</main>
 
 	<!-- the scroll length: how much travel the film gets -->
@@ -51,17 +80,31 @@
 	</script>
 	<script type="module" src="src/hero-scrub.js"></script>
 	<script type="module">
+		// one module, in order: the route over the film, the cloud plates over the route, then the intro
+		// that drives both. The clouds may fail (no WebGL): the intro still runs, without them.
+		import { createRouteLayer } from './src/route-layer.js';
+		import { runIntro } from './src/intro.js';
 		import * as THREE from 'three';
 		import { createCloudLayer } from './src/cloud-layer.js';
-		const loader = new THREE.TextureLoader();
-		const load = (f) => new Promise((res) => loader.load(f, (t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; res(t); }));
-		const [noise, perlin] = await Promise.all([load('assets/textures/noise.webp'), load('assets/textures/perlinNoise.webp')]);
-		const layer = await createCloudLayer({ canvas: document.getElementById('cloud-canvas'), textures: { noise, perlin } });
-		const progress = () => { const max = document.documentElement.scrollHeight - window.innerHeight; return max > 0 ? window.scrollY / max : 0; };
-		layer.setProgress(progress());
-		addEventListener('scroll', () => layer.setProgress(progress()), { passive: true });
-		window.__clouds = layer;
+
+		window.__route = createRouteLayer({ canvas: document.getElementById('route-canvas'), video: document.getElementById('hero-video'), labelRoot: document.getElementById('route-labels') });
+
+		const cloudsUp = (async () => {
+			const loader = new THREE.TextureLoader();
+			const load = (f) => new Promise((res, rej) => loader.load(f, (t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; res(t); }, undefined, rej));
+			const [noise, perlin] = await Promise.all([load('assets/textures/noise.webp'), load('assets/textures/perlinNoise.webp')]);
+			const clouds = await createCloudLayer({ canvas: document.getElementById('cloud-canvas'), textures: { noise, perlin }, hold: document.querySelector('.hero') });
+			const progress = () => { const max = document.documentElement.scrollHeight - window.innerHeight; return max > 0 ? window.scrollY / max : 0; };
+			clouds.setProgress(progress());
+			addEventListener('scroll', () => clouds.setProgress(progress()), { passive: true });
+			window.__clouds = clouds;
+			return clouds;
+		})().catch((e) => { console.warn('cloud layer off:', e); return null; });
+
+		// the intro opens inside the cloud, so it waits for the plates — but not past 2.5 s on a slow line
+		const clouds = await Promise.race([cloudsUp, new Promise((r) => setTimeout(() => r(null), 2500))]);
+		runIntro({ route: window.__route, clouds });
 	</script>
-	<script type="module">import { initLetterSwap } from './src/nav-letter-swap.js'; initLetterSwap();</script>
+	<script type="module">import { initNav } from './src/nav.js'; window.__nav = initNav();</script>
 </body>
 </html>
