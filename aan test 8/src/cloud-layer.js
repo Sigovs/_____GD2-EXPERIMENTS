@@ -69,6 +69,9 @@ export const CLOUD_LAYER = {
 	holdPad: [0.06, 0.05],     // NDC padding around the statement's box (x, y)
 	/* the intro's cloud mass (intro.js → setIntro): where the rig goes and how big it gets at k = 1 */
 	introMass: { rise: 34, scale: 1.5 },
+	/* standby: with no scroll and no mouse for a while, the plates stir more on their own —
+	   the breath and the vapour's drift multiplied; the first input eases them back */
+	standby: { after: 1.5, over: 2.5, sway: 4.0, tempo: 1.35, drift: 1.8, rock: 0.03, drift_x: 10, bob: 3 },   // sway ×, breath tempo ×, vapour drift ×, rig roll (rad), rig side-drift and bob (world units)
 };
 
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -234,8 +237,10 @@ export async function createCloudLayer({ canvas, textures, hold = null }) {
 
 	const mouse = new THREE.Vector2();
 	const lerped = new THREE.Vector2();
+	let lastInput = performance.now();   // standby clock: reset by the mouse and by the scroll
 	if (!reduced) window.addEventListener('pointermove', (e) => {
 		mouse.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+		lastInput = performance.now();
 	}, { passive: true });
 
 	/* the hold: the statement's box in NDC, re-measured on resize (it moves at the phone breakpoint) */
@@ -264,7 +269,9 @@ export async function createCloudLayer({ canvas, textures, hold = null }) {
 
 	let progress = 0;
 	function setProgress(p) {
-		progress = THREE.MathUtils.clamp(p, 0, 1);
+		const q = THREE.MathUtils.clamp(p, 0, 1);
+		if (q !== progress) lastInput = performance.now();
+		progress = q;
 		if (reduced) render();
 	}
 	/* intro.js: 1 = inside the cloud mass, 0 = the everyday layer; never under reduced motion */
@@ -291,15 +298,27 @@ export async function createCloudLayer({ canvas, textures, hold = null }) {
 		renderer.render(scene, camera);
 	}
 
-	let last = performance.now();
+	let last = performance.now(), idle = 0;
 	function frame(now) {
 		const dt = Math.min(0.1, (now - last) / 1000); last = now;
+		// standby: how long since the last input, eased in over cfg.standby.over seconds
+		const sb = cfg.standby, since = (now - lastInput) / 1000;
+		const idleTarget = THREE.MathUtils.smoothstep(since, sb.after, sb.after + sb.over);
+		idle += (idleTarget - idle) * Math.min(1, dt * (idleTarget > idle ? 0.8 : 3));   // slow to stir, quick to settle
 		shared.uTime.value += dt;
-		shared.uSwayTime.value += dt;
-		for (const kind of Object.values(kinds)) kind.uTime.value += dt * kind.k.drift;
+		shared.uSwayTime.value += dt * (1 + (sb.tempo - 1) * idle);   // the breath a touch quicker, never jittery
+		for (const kind of Object.values(kinds)) {
+			kind.uTime.value += dt * kind.k.drift * (1 + (sb.drift - 1) * idle);
+			kind.material.uniforms.uSway.value = kind.k.sway * (1 + (sb.sway - 1) * idle);   // …and much wider: the plates float
+		}
 
 		applyScroll();
 		focus(dt);
+		// standby: the whole rig rocks — a slow roll and a side-drift on unrelated periods
+		const ts = shared.uSwayTime.value;
+		rig.rotation.z = idle * sb.rock * Math.sin(ts / 7.3);
+		rig.position.x = idle * sb.drift_x * Math.sin(ts / 9.1 + 1.2);
+		rig.position.y += idle * sb.bob * Math.sin(ts / 5.7 + 0.4);   // on top of the scroll's rise (applyScroll set it this frame)
 
 		// mouse: the whole rig sways, and the wake pushes the vapour (tMouse)
 		lerped.lerp(mouse, dt * 2.2);
