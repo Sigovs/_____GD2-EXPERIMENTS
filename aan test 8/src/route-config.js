@@ -70,6 +70,9 @@ export const ROUTE = {
 		{ f: 0.95, u: 'STOP_03' },
 		{ f: 1.00, u: 1 },
 	],
+	/* once the fluid has reached the end, the route has done its work: it erases itself, from the
+	   end back (from: 'end') or from the summit on (from: 'start'), after a pause — seconds */
+	done: { delay: 1.0, duration: 4.2, from: 'end', edge: 0.06 },
 	/* a stop wakes as the fluid arrives: ramps from (u − before) to (u + after) */
 	stopReveal: { before: 0.03, after: 0.012 },
 	/* the still for prefers-reduced-motion: the film holds 25 %, the route holds this */

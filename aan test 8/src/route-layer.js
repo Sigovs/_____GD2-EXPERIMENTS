@@ -239,7 +239,7 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 		// atmosphere: the far end (the summit, u 0) sits in more air than the near end
 		const range = cfg.chains[chainName].u;
 		const air = (p) => chainName === 'ridge' ? 1 - st.atmosphere * 0.6 * (1 - (p.u - range[0]) / (range[1] - range[0])) : 1;
-		const base = (p) => p.alpha * air(p) * layerAlpha;
+		const base = (p) => p.alpha * air(p) * layerAlpha * kept(p);
 		const shellAlpha = (p) => base(p) * (p.u <= fill ? 1 : st.emptyAlpha) * shown(p);
 		ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
@@ -423,19 +423,31 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 	/* the scroll's direction owns the route: scrolling down, it is there and the fluid follows;
 	   scrolling up, it fades out; turning down again, it comes back and the fluid refills from the
 	   summit to where the scroll is (a short catch-up), then follows again */
-	let lastF = -1, dirDown = true, vis = 1, fillShown = 0, lastNow = 0;
+	let lastF = -1, dirDown = true, vis = 1, fillShown = 0, lastNow = 0, doneT = 0;
 	function transport(f, fill, now) {
 		const dt = lastNow ? Math.min(0.1, (now - lastNow) / 1000) : 0; lastNow = now;
 		if (lastF >= 0) {
 			const d = f - lastF;
-			if (d > 0.0005 && !dirDown) { dirDown = true; fillShown = 0; }   // turned down: start over
-			else if (d < -0.0005 && dirDown) dirDown = false;               // turned up: leave
+			if (d > 0.0005 && !dirDown) { dirDown = true; fillShown = 0; doneT = 0; }   // turned down: start over
+			else if (d < -0.0005 && dirDown) { dirDown = false; doneT = 0; }            // turned up: leave
 		}
 		lastF = f;
 		vis += ((dirDown ? 1 : 0) - vis) * Math.min(1, dt * (dirDown ? 5 : 8));
 		fillShown += (fill - fillShown) * Math.min(1, dt * 6);
 		if (Math.abs(fill - fillShown) < 0.002) fillShown = fill;
-		return { vis, fill: fillShown };
+		// done: the fluid has reached the end and stayed — after a pause the route erases itself
+		if (fillShown >= 0.995 && dirDown) doneT += dt; else doneT = 0;
+		const dn = cfg.done, erase = clamp((doneT - dn.delay) / dn.duration, 0, 1);
+		return { vis, fill: fillShown, erase };
+	}
+	/* how much of a sample survives the erase: a soft front moving from the end back, or from the start on */
+	let eraseNow = 0;
+	function kept(p) {
+		if (eraseNow <= 0) return 1;
+		const dn = cfg.done;
+		if (dn.from === 'start') return smooth(p.u, eraseNow - dn.edge, eraseNow);
+		const cut = 1 - eraseNow;
+		return 1 - smooth(p.u, cut - dn.edge, cut);
 	}
 	function setReveal(r) { reveal = clamp(r, 0, 1); if (reduced) draw(performance.now()); }
 	function resize() {
@@ -463,8 +475,9 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 			s.onScreen = at.alpha > 0.5 && at.x > 8 && at.x < W - 8 && at.y > 8 && at.y < H - 8;
 		}
 		const wanted = reduced ? resolveU(cfg.reducedU) : fillFor(f);
-		const tr = reduced ? { vis: 1, fill: wanted } : transport(f, wanted, now);
+		const tr = reduced ? { vis: 1, fill: wanted, erase: 0 } : transport(f, wanted, now);
 		const fill = tr.fill;
+		eraseNow = tr.erase;
 		// the instrument's scale follows the mountain's apparent size (the camera pushes in, then descends)
 		const sr = cfg.scaleRef, pts = keyedPoints(sr.chain, f).map(toScreen);
 		const k = clamp(Math.hypot(pts[sr.to][0] - pts[sr.from][0], pts[sr.to][1] - pts[sr.from][1]) / (sr.px * W / 1440), sr.min, sr.max);
@@ -479,8 +492,8 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 			const layerAlpha = tr.vis;
 			for (const [name, samples] of Object.entries(chains)) drawChain(samples, fill, t, k, name, layerAlpha);
 			if (st.fittings) {
-				if (reveal > 0.02) drawFitting(chains.ridge[1], k, st.fitting.len + 2, layerAlpha);   // the cap at the summit
-				for (const s of stops) if (s.sample && s.sample.alpha > 0.5 && (s.u <= fill || reveal >= s.u)) drawFitting(s.sample, k, undefined, layerAlpha);
+				if (reveal > 0.02) drawFitting(chains.ridge[1], k, st.fitting.len + 2, layerAlpha * kept(chains.ridge[1]));   // the cap at the summit
+				for (const s of stops) if (s.sample && s.sample.alpha > 0.5 && (s.u <= fill || reveal >= s.u)) drawFitting(s.sample, k, undefined, layerAlpha * kept(s.sample));
 			}
 		}
 		if (cfg.callouts) updateCallouts(fill);
@@ -496,5 +509,5 @@ export function createRouteLayer({ canvas, video, labelRoot, fit = 'cover', size
 	/* tools/route-editor: replace the keys live (the editor's own copy; nothing here writes the config) */
 	function setKeys(keys, glowKeys) { live.keys = keys; if (glowKeys) live.glowKeys = glowKeys; if (reduced) draw(performance.now()); }
 
-	return { stops, draw, resize, setReveal, setKeys, cfg, live, get transport() { return { dirDown, vis, fillShown, lastF }; } };
+	return { stops, draw, resize, setReveal, setKeys, cfg, live, get transport() { return { dirDown, vis, fillShown, lastF, doneT, erase: eraseNow }; } };
 }
