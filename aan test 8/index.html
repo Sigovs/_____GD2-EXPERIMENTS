@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GD2 — the mountain</title>
+<meta name="description" content="The deeper you go, the more you know.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="src/nav.css">
+<link rel="stylesheet" href="src/hero.css">
+</head>
+<body>
+
+	<!-- ONE SCENE. The film is the scene; the scroll is its transport (src/hero-scrub.js). -->
+	<div class="stage">
+		<video id="hero-video" class="stage__video" playsinline muted preload="auto"
+		       poster="previews/hero-gora-poster.jpg" aria-hidden="true">
+			<source src="assets/videos/hero-gora.mp4" type="video/mp4">
+		</video>
+		<!-- the one 3-D thing we keep: the scene's own clouds, over the film (src/cloud-layer.js) -->
+		<canvas id="cloud-canvas" class="stage__clouds" aria-hidden="true"></canvas>
+		<div class="stage__vignette" aria-hidden="true"></div>
+	</div>
+
+	<nav class="nav" aria-label="Primary">
+		<ul>
+			<li><a href="#main">Products &amp; Services</a></li>
+			<li><a href="#main">Grow your Business</a></li>
+			<li><a href="#main">Compliance</a></li>
+			<li><a href="#main">Contact</a></li>
+		</ul>
+	</nav>
+
+	<main id="main" class="hero">
+		<h1 class="hero__title">The deeper you go,<br>the more you know.</h1>
+	</main>
+
+	<!-- the scroll length: how much travel the film gets -->
+	<div class="spacer" aria-hidden="true"></div>
+
+	<script type="importmap">
+	{
+		"imports": {
+			"three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+			"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+		}
+	}
+	</script>
+	<script type="module" src="src/hero-scrub.js"></script>
+	<script type="module">
+		import * as THREE from 'three';
+		import { createCloudLayer } from './src/cloud-layer.js';
+		const loader = new THREE.TextureLoader();
+		const load = (f) => new Promise((res) => loader.load(f, (t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; res(t); }));
+		const [noise, perlin] = await Promise.all([load('assets/textures/noise.webp'), load('assets/textures/perlinNoise.webp')]);
+		const layer = await createCloudLayer({ canvas: document.getElementById('cloud-canvas'), textures: { noise, perlin } });
+		const progress = () => { const max = document.documentElement.scrollHeight - window.innerHeight; return max > 0 ? window.scrollY / max : 0; };
+		layer.setProgress(progress());
+		addEventListener('scroll', () => layer.setProgress(progress()), { passive: true });
+		window.__clouds = layer;
+	</script>
+	<script type="module">import { initLetterSwap } from './src/nav-letter-swap.js'; initLetterSwap();</script>
+</body>
+</html>
