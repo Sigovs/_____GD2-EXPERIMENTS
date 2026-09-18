@@ -24,6 +24,8 @@
 	     (src/hero-scrub.js) — swap the two script tags below to go back. -->
 	<div class="stage">
 		<canvas id="hero-film" class="stage__video" aria-hidden="true"></canvas>
+		<!-- the tent's light, breathing and flickering over the film's tent (src/tent-glow.js) - under the clouds, in the fog -->
+		<canvas id="tent-glow" class="stage__glow" aria-hidden="true"></canvas>
 		<!-- the descent route over the film — an instrument, rotoscoped to the film's frames (src/route-layer.js) -->
 		<canvas id="route-canvas" class="stage__route" aria-hidden="true"></canvas>
 		<!-- the one 3-D thing we keep: the scene's own clouds, over the film (src/cloud-layer.js) -->
@@ -82,7 +84,9 @@
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
 		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18e';
-		createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp' });
+		import { createTentGlow } from './src/tent-glow.js?v=2026-09-18f';
+		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp' });
+		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), film });
 	</script>
 	<script type="module">
 		// the vignette, dithered on a canvas — a CSS gradient banded (src/vignette.js)
