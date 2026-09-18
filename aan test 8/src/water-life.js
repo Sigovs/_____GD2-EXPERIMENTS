@@ -23,7 +23,8 @@ export const WATER_LIFE = {
 	enabled: true,
 	caustics: { alpha: 0.085, scale: 0.7, speed: [0.011, -0.007], tint: '#9fd8ff', depthFade: [0.62, 0.86] },   // faint, fine — light on rock, never a pattern   // depthFade in page progress
 	motes: { count: 90, size: [0.6, 2.2], alpha: [0.18, 0.6], rise: [4, 14], sway: 6, parallax: 18, scrollPush: 0.9 },
-	bubbles: { max: 12, every: [0.6, 2.2], size: [5, 34], rise: [26, 70], wobble: 0.35, magnify: 1.7, rim: 0.7, parallax: 26, scrollPush: 1.1 },
+	bubbles: { enabled: false,   // OFF (Alex, 18 Sep: "убери пузыри") — the code stays; true brings them back
+		max: 12, every: [0.6, 2.2], size: [5, 34], rise: [26, 70], wobble: 0.35, magnify: 1.7, rim: 0.7, parallax: 26, scrollPush: 1.1 },
 	mouseEase: 2.0,
 };
 
@@ -188,7 +189,7 @@ export function createWaterLife({ canvas, waterCanvas, textureUrl = 'assets/text
 		if (cfg.enabled && on > 0.002 && !reduced) {
 			caustics(t);
 			drawMotes(dt, t, push);
-			drawBubbles(dt, t, push);
+			if (cfg.bubbles.enabled) drawBubbles(dt, t, push);
 		}
 		requestAnimationFrame(frame);
 	}

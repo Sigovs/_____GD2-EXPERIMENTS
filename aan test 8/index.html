@@ -104,7 +104,7 @@
 		window.__water = water;
 		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), film });
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
-		import { createWaterLife } from './src/water-life.js?v=2026-09-18s';
+		import { createWaterLife } from './src/water-life.js?v=2026-09-18t';
 		const life = createWaterLife({ canvas: document.getElementById('water-life'), waterCanvas: document.getElementById('water-film') });
 		window.__life = life;
 		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: film, waterFilm: water, clouds: null, onWater: (w, P) => life.setPresence(w, P) });
