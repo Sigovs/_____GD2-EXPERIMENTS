@@ -107,7 +107,7 @@ void main() {
 	// gets the widest feather (Alex, 18 Sep: a straight seam across the screen at the end of the scroll)
 	// The core is NOT a rectangle any more (Alex, 18 Sep — photographed: two straight bands across the whole
 	// screen, one per plate group; the plates are wider than the frame, so any straight uv bound is a line
-	// across it). The core takes the shape of the cloud itself: its band is multiplied by the ragged `clouds`
+	// across it). The core takes the shape of the cloud itself: its band is multiplied by the ragged "clouds"
 	// contour, and its bounds are pushed around by two noises — no fragment row shares an edge.
 	float coreN = texture2D(tNoise, ratioedUv * 0.15 + vec2(0.01, -0.02) * time).r - 0.5;
 	float coreM = texture2D(tPerlin, ratioedUv * 0.06 - vec2(0.02, 0.01) * time).r - 0.5;
