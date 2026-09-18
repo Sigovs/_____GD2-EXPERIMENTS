@@ -22,9 +22,9 @@ export const WATER_WAVES = {
 	simWidth: 384,              // the field's width in texels (height follows the viewport's aspect)
 	steps: 2,                   // simulation steps per frame: the rings' speed
 	damping: 0.99,              // per step: how long a ring lives
-	refract: 0.22,              // uv units of bend at a slope of 1 — the strength of the lens (Alex, 18 Sep: "очень сильные, сбавь")
-	highlight: 1.1,             // the crest's light (soft-limited in the shader)
-	drop: { move: [0.2, 0.55], press: 1.1, radius: [0.016, 0.028], spacing: 22, minGap: 30, speedFull: 700 },   // move: [min, max] depth by cursor speed; radius in uv of the width; spacing: px and minGap: ms between drops
+	refract: 0.12,              // uv units of bend at a slope of 1 — the strength of the lens (Alex, 18 Sep: "очень сильные, сбавь" → "меньше")
+	highlight: 0.6,             // the crest's light (soft-limited in the shader)
+	drop: { move: [0.12, 0.35], press: 0.7, radius: [0.016, 0.028], spacing: 22, minGap: 40, speedFull: 700 },   // move: [min, max] depth by cursor speed; radius in uv of the width; spacing: px and minGap: ms between drops
 	still: 0.01,                // below this remaining drop energy the field counts as still and the layer sleeps
 };
 
