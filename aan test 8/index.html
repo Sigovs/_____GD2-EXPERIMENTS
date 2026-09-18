@@ -90,9 +90,9 @@
 		import { createRouteLayer } from './src/route-layer.js';
 		import { runIntro } from './src/intro.js';
 		import * as THREE from 'three';
-		import { createCloudLayer } from './src/cloud-layer.js';   // the plate rig (parked)
-		import { createCloudStack } from './src/cloud-stack.js';   // the layered field (on) — no plates, no straight edges
-		const CLOUDS = 'stack';   // 'stack' | 'plates'
+		import { createCloudLayer } from './src/cloud-layer.js';   // the plate rig from the 3-D build — the clouds Alex approved
+		import { createCloudStack } from './src/cloud-stack.js';   // procedural fbm layers (parked — "не те облака")
+		const CLOUDS = 'plates';   // 'plates' (the rig's white breathing clouds — Alex: "это те облака") | 'stack' (procedural, parked)
 
 		// the route is OFF for now (Alex, 18 Sep: "уберём path вообще на данном этапе" — smooth scrolling first); the
 		// layer stays in the tree, one line brings it back
@@ -105,7 +105,7 @@
 			const [noise, perlin, cloudNoise] = await Promise.all([load('assets/textures/noise.webp'), load('assets/textures/perlinNoise.webp'), load('assets/textures/cloud-noise.png')]);
 			const clouds = CLOUDS === 'stack'
 				? createCloudStack({ canvas: document.getElementById('cloud-canvas'), noise: cloudNoise })
-				: await createCloudLayer({ canvas: document.getElementById('cloud-canvas'), textures: { noise, perlin }, hold: document.querySelector('.hero') });
+				: await createCloudLayer({ canvas: document.getElementById('cloud-canvas'), textures: { noise, perlin }, hold: null });   // no hold: no statement on the page, and its rect was a straight edge
 			const progress = () => { const max = document.documentElement.scrollHeight - window.innerHeight; return max > 0 ? window.scrollY / max : 0; };
 			clouds.setProgress(progress());
 			addEventListener('scroll', () => clouds.setProgress(progress()), { passive: true });
