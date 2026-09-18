@@ -106,7 +106,7 @@
 .nav__name { margin: 0; font-size: 0.875rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.9; }
 .nav__tagline { margin: 0; font-size: 0.9375rem; color: var(--nav-ink-2); }
 
-.nav__body { display: flex; align-items: center; justify-content: space-between; gap: 40px; }
+.nav__body { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 40px; }   /* flex: 1 — without the head the body owns the middle, so the links sit at the vertical centre (Alex, 18 Sep) */
 .nav__links { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
 .nav__links li { font-size: clamp(2rem, 4.6vw, 5.4rem); line-height: 1.08; letter-spacing: -0.02em; font-weight: 400; white-space: nowrap; }   /* our labels are long: sized so the longest fits beside the images */
 .nav__link { color: inherit; text-decoration: none; display: inline-block; white-space: nowrap; }
@@ -126,7 +126,7 @@
 .nav__panel [data-reveal] { opacity: 0; }
 
 @media (max-width: 1025px) {
-	.nav__body { flex-direction: column; align-items: flex-start; gap: 56px; }
+	.nav__body { flex-direction: column; align-items: flex-start; justify-content: center; gap: 56px; }
 	.nav__links li { font-size: clamp(2.2rem, 8vw, 5rem); }
 	.nav__images { width: 100%; flex-direction: column; align-items: flex-start; gap: 12px; }
 	.nav__image { width: 60vw; height: 30vw; border-radius: 4px; }
