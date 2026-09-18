@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="src/nav.css?v=2026-09-18e">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-18m">
+<link rel="stylesheet" href="src/nav.css?v=2026-09-18q">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-18r">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -49,7 +49,7 @@
 	     The previous inline link row with the letter-swap hover (src/nav-letter-swap.js) is cut, not deleted:
 	     restore the <ul> here and its script at the foot to bring it back. -->
 	<header class="nav">
-		<a class="nav__brand" href="#main">GD2</a>
+		<a class="nav__brand" href="#main" aria-label="GD2"><img src="assets/logo.png" srcset="assets/logo.png 1x, assets/logo@2x.png 2x" alt="GD2"></a>
 		<button class="nav__toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-panel"><span></span><span></span><span></span></button>
 	</header>
 	<nav class="nav__panel" id="nav-panel" aria-label="Primary" aria-hidden="true">
@@ -149,5 +149,10 @@
 		runIntro({ route: window.__route, clouds });
 	</script>
 	<script type="module">import { initNav } from './src/nav.js'; window.__nav = initNav();</script>
+	<script type="module">
+		// the captions: text blocks that arrive with the scroll, over the mountain and under the water (src/captions.js)
+		import { createCaptions } from './src/captions.js?v=2026-09-18r';
+		window.__captions = createCaptions();
+	</script>
 </body>
 </html>

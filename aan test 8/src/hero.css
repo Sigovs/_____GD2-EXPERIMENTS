@@ -85,7 +85,7 @@ body {
 }
 
 /* ---- the statement ---- */
-.hero { display: none !important; }   /* the statement is OFF (Alex, 18 Sep: "убери текст полностью, оставь только гору") */
+/* the statement is back (Alex, 18 Sep: "добавь теперь текст на hero"); captions.js takes it out as the scroll begins */
 .hero {
 	position: fixed;
 	z-index: 2;
@@ -155,4 +155,42 @@ body {
 @media (prefers-reduced-motion: reduce) {
 	/* the film holds a frame; the page is a still */
 	.spacer { height: 100vh; }
+}
+
+/* ---- the captions (src/captions.js): text blocks that arrive with the scroll ---- */
+.captions { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+.caption {
+	position: absolute;
+	top: var(--y, 50%);
+	transform: translateY(-50%);
+	max-width: min(46vw, 640px);
+	visibility: hidden;
+}
+.caption--left  { left: clamp(24px, 6vw, 96px); text-align: left; }
+.caption--right { right: clamp(24px, 6vw, 96px); text-align: right; }
+.caption__eyebrow {
+	font-size: 0.875rem;               /* the floor: functional text never smaller */
+	font-weight: 600;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--ink-dim);
+	margin-bottom: 0.9em;
+	text-shadow: 0 1px 24px rgba(2, 5, 12, 0.8);
+}
+.caption__line { padding-bottom: 0.06em; }
+.caption__word { display: inline-block; will-change: opacity, transform, filter; }
+.caption__line {
+	font-size: clamp(1.5rem, 3.1vw, 3.4rem);
+	font-weight: 700;
+	line-height: 1.04;
+	letter-spacing: -0.02em;
+	text-shadow: 0 2px 40px rgba(2, 5, 12, 0.75);
+	will-change: opacity, transform;
+}
+.caption--water .caption__line { color: #dbe9f6; text-shadow: 0 2px 48px rgba(0, 8, 20, 0.9); }
+.caption--closing .caption__line { font-size: clamp(2.2rem, 5.6vw, 6.6rem); font-weight: 800; line-height: 0.96; letter-spacing: -0.025em; }
+.caption--closing { max-width: none; }
+@media (max-width: 700px) {
+	.caption { max-width: 82vw; }
+	.caption--right { right: auto; left: 24px; text-align: left; }
 }
