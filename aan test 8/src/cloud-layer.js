@@ -27,7 +27,7 @@ export const CLOUD_LAYER = {
 	edgeFeather: 0.15,
 	lit: 0xffffff,             // the rim, in the moon
 	shade: 0xe6eef9,           // the body — still white, a touch cold; density does the shading
-	floorCut: [-26, 2],        // rig y: the low plates are gone — the film owns the bottom of the frame
+	floorCut: [-44, 6],        // rig y: the low plates are gone — the film owns the bottom of the frame; a wide band, noise-torn (cloud-shaders.js)
 	parallax: 1.5,             // mouse parallax intensity (the rig sways with the cursor)
 	wake: { push: 0.18, clear: 0.7 },   // the cursor's wake: how far it pushes the vapour, how much of the plate it clears
 	kinds: {

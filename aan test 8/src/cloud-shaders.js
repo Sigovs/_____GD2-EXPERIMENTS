@@ -111,7 +111,12 @@ void main() {
 	vec3 color = mix(uShade, uLit, rim);
 
 	alpha *= 1.0 - uThin * smoothstep(20.0, -45.0, vWorldY);   // the scroll thins the band from the bottom up
-	alpha *= mix(smoothstep(uFloorCut.x, uFloorCut.y, vWorldY), 1.0, uDense);   // the film owns the bottom of the frame (not during the intro's mass)
+	// the film owns the bottom of the frame (not during the intro's mass). The cut is NOT a straight line: a world-y
+	// cut on camera-facing plates would draw a horizontal seam across the screen (Alex, 18 Sep: "полоса посередине"),
+	// so the height is offset per fragment by the plate's own noise — a ragged cloud edge, different on every plate
+	float cutNoise = texture2D(tNoise, vUv * 1.7 + vSeed * 0.03).r - 0.5;
+	float cutY = vWorldY + cutNoise * (uFloorCut.y - uFloorCut.x) * 1.4;
+	alpha *= mix(smoothstep(uFloorCut.x, uFloorCut.y, cutY), 1.0, uDense);
 
 	alpha *= 1.0 - uWakeClear * mouse;
 
