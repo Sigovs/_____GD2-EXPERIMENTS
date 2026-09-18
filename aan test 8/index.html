@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18e">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-18i">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-18m">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -29,6 +29,8 @@
 			<canvas id="hero-film" class="stage__video" aria-hidden="true"></canvas>
 			<!-- the tent's light, breathing and flickering over the film's tent (src/tent-glow.js) - under the clouds, in the fog -->
 			<canvas id="tent-glow" class="stage__glow" aria-hidden="true"></canvas>
+			<!-- the DODGE pass of the same light: mix-blend-mode color-dodge against the film (tent-glow.js → cfg.dodge) -->
+			<canvas id="tent-dodge" class="stage__glow stage__glow--dodge" aria-hidden="true"></canvas>
 		</div>
 		<!-- ACT II — the water: starts under the surface (the tent's light warped above), comes up over the mountain
 		     for a moment, then the scroll scrubs the descent. Same frame transport. -->
@@ -91,20 +93,20 @@
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
 		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18e';
-		import { createTentGlow } from './src/tent-glow.js?v=2026-09-18k';
+		import { createTentGlow } from './src/tent-glow.js?v=2026-09-18m';
 		import { createDescent, ACT } from './src/descent.js?v=2026-09-18j';
 		// the two films: the hero scrubs the first part of the page, the water the rest — they overlap for the hand-over.
 		// Neither listens to the scroll itself: descent.js drives both from one progress.
 		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp', cfg: { range: [0, ACT.heroEnd], scroll: false } });
 		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => (w > 1000 ? 'assets/frames/water/1600' : 'assets/frames/water/960') }, loadAfter: 2500 });
 		window.__water = water;
-		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), film });
+		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), film });
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
 		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: film, waterFilm: water, clouds: null });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
-		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.shape') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-18h'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
+		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.shape') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-18m'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)
-		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-18h'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
+		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-18m'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
 		if (new URLSearchParams(location.search).get('edit') === 'glow') openEditor();
 		addEventListener('keydown', (e) => { if ((e.key === 'g' || e.key === 'G') && !window.__glowEditor && !e.metaKey && !e.ctrlKey) openEditor(); });
 	</script>

@@ -64,6 +64,7 @@ body {
 	display: block;
 	pointer-events: none;
 }
+.stage__glow--dodge { mix-blend-mode: color-dodge; opacity: 0; }
 .stage__route {
 	position: absolute;
 	inset: 0;

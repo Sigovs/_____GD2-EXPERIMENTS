@@ -16,7 +16,8 @@
 export function applySaved(cfg, saved) {
 	if (!saved || Array.isArray(saved)) return;
 	for (const k of ['intensity', 'spread', 'riseScale', 'blur', 'drift', 'parallax', 'anchor']) if (typeof saved[k] === 'number') cfg[k] = saved[k];
-	for (const k of ['breath', 'tremble', 'flare']) if (saved[k]) Object.assign(cfg[k], saved[k]);
+	for (const k of ['breath', 'tremble', 'flare', 'dodge']) if (saved[k]) Object.assign(cfg[k], saved[k]);
+	if (typeof saved.blend === 'string') cfg.blend = saved.blend;
 	if (saved.palette) cfg.palette = { ...saved.palette };
 	if (saved.shape) cfg.shape = saved.shape;
 }
@@ -65,7 +66,7 @@ export function openGlowEditor({ glow, film }) {
 	function resize() { canvas.width = innerWidth * devicePixelRatio; canvas.height = innerHeight * devicePixelRatio; }
 	addEventListener('resize', resize); resize();
 
-	const settings = () => ({ shape, intensity: cfg.intensity, spread: cfg.spread, riseScale: cfg.riseScale, blur: cfg.blur, breath: cfg.breath, tremble: cfg.tremble, flare: cfg.flare, drift: cfg.drift, parallax: cfg.parallax, anchor: cfg.anchor, palette: cfg.palette });
+	const settings = () => ({ shape, intensity: cfg.intensity, spread: cfg.spread, riseScale: cfg.riseScale, blur: cfg.blur, breath: cfg.breath, tremble: cfg.tremble, flare: cfg.flare, drift: cfg.drift, parallax: cfg.parallax, anchor: cfg.anchor, palette: cfg.palette, blend: cfg.blend, dodge: cfg.dodge });
 	function save() {
 		cfg.shape = shape;
 		try { localStorage.setItem(KEY, JSON.stringify(settings())); } catch {}
@@ -79,7 +80,10 @@ export function openGlowEditor({ glow, film }) {
 	const DIALS = [
 		['intensity', 'Brightness', 0, 3, 0.01, 1], ['spread', 'Spread', 0.2, 2.5, 0.01, 1], ['riseScale', 'Rise', 0, 2.5, 0.01, 1], ['blur', 'Blur', 0.05, 1.5, 0.01, 0.55],
 		['breath.depth', 'Breath', 0, 0.5, 0.01, 0.14], ['tremble.depth', 'Tremble', 0, 0.4, 0.01, 0.07], ['flare.depth', 'Flare', 0, 1, 0.01, 0.25], ['drift', 'Drift', 0, 0.15, 0.001, 0.035], ['parallax', 'Mouse lean', 0, 40, 1, 8], ['anchor', 'Anchor Y', -0.6, 0.6, 0.01, -0.02],
+		// DODGE — a separate pass on its own canvas, mix-blend-mode: color-dodge
+		['dodge.amount', 'Dodge', 0, 1, 0.01, 0], ['dodge.spread', 'Dodge spread', 0.2, 2.5, 0.01, 1], ['dodge.intensity', 'Dodge bright', 0, 3, 0.01, 1],
 	];
+	const BLENDS = ['normal', 'screen', 'plus-lighter', 'overlay', 'soft-light', 'hard-light', 'color-dodge', 'lighten'];
 	const COLORS = [['core', 'Core', '#fefcc9'], ['mid', 'Mid', '#ffae34'], ['ember', 'Ember', '#451b0e']];
 	const get = (path) => path.split('.').reduce((o, k) => o[k], cfg);
 	const set = (path, v) => { const ks = path.split('.'); const o = ks.slice(0, -1).reduce((o, k) => o[k], cfg); o[ks[ks.length - 1]] = v; };
@@ -101,12 +105,22 @@ export function openGlowEditor({ glow, film }) {
 		row(label, inp, out);
 	});
 	glow.setPalette(cfg.palette);
+	// the stack's own blend with the film (CSS mix-blend-mode on the glow canvas)
+	{
+		const sel = document.createElement('select'); sel.style.cssText = 'width:150px;font:inherit;background:#0b1018;color:#e8eef6;border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:2px 4px';
+		BLENDS.forEach((b) => { const o = document.createElement('option'); o.value = b; o.textContent = b; sel.append(o); });
+		sel.value = cfg.blend || 'normal';
+		const out = document.createElement('span'); out.textContent = ''; out.dataset.blend = '1';
+		sel.addEventListener('change', () => { cfg.blend = sel.value; save(); });
+		row('Blend', sel, out);
+	}
 	function syncDials() {
+		const sel = dials.querySelector('select'); if (sel) sel.value = cfg.blend || 'normal';
 		[...dials.querySelectorAll('input[type=range]')].forEach((inp, i) => { const [path, , , , step] = DIALS[i]; inp.value = get(path); dials.querySelector('span[data-path="' + path + '"]').textContent = fmt(get(path), step); });
 		[...dials.querySelectorAll('input[type=color]')].forEach((inp, i) => { const k = COLORS[i][0]; inp.value = cfg.palette[k]; dials.querySelector('span[data-color="' + k + '"]').textContent = cfg.palette[k]; });
 	}
 	const reset = document.createElement('button'); reset.textContent = 'Reset dials'; reset.style.cssText = 'font:inherit;padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:#1c2634;color:#fff;cursor:pointer;grid-column:1/-1;justify-self:start';
-	reset.addEventListener('click', () => { DIALS.forEach(([path]) => set(path, DEFAULTS[path])); cfg.palette = Object.fromEntries(COLORS.map(([k, , v]) => [k, v])); glow.setPalette(cfg.palette); syncDials(); save(); });
+	reset.addEventListener('click', () => { DIALS.forEach(([path]) => set(path, DEFAULTS[path])); cfg.palette = Object.fromEntries(COLORS.map(([k, , v]) => [k, v])); cfg.blend = 'normal'; glow.setPalette(cfg.palette); syncDials(); save(); });
 	dials.append(reset);
 
 	function draw() {

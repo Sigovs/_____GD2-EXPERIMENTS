@@ -58,6 +58,13 @@ export const TENT_GLOW = {
 	parallax: 13,                               // px: the lean toward the cursor
 	mouseEase: 2.0,
 	sprite: 256,
+	/* how the stack meets the film (CSS mix-blend-mode on the glow canvas): 'normal' | 'screen' | 'plus-lighter' |
+	   'overlay' | 'soft-light' | 'hard-light' | 'color-dodge' | 'lighten' */
+	blend: 'normal',
+	/* DODGE — a separate pass (Alex, 18 Sep): the same stack drawn again on its own canvas with mix-blend-mode:
+	   color-dodge, so it burns the film's own highlights (the tent, the lit rocks) instead of adding light over them.
+	   amount = its opacity; spread/intensity scale that pass alone */
+	dodge: { amount: 0, spread: 1, intensity: 1 },
 };
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -83,8 +90,9 @@ function makeSprite(color, size) {
 const toHex = ([r, g, b]) => '#' + [r, g, b].map((v) => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('');
 const mixHex = (a, b, t) => { const A = hex(a), B = hex(b); return toHex(A.map((v, i) => v + (B[i] - v) * t)); };
 
-export function createTentGlow({ canvas, film, cfg = TENT_GLOW }) {
+export function createTentGlow({ canvas, dodgeCanvas = null, film, cfg = TENT_GLOW }) {
 	const ctx = canvas.getContext('2d');
+	const dctx = dodgeCanvas ? dodgeCanvas.getContext('2d') : null;
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	const base = cfg.layers.map((l) => l.color);
 	let sprites = cfg.layers.map((l) => makeSprite(l.color, cfg.sprite));
@@ -104,8 +112,7 @@ export function createTentGlow({ canvas, film, cfg = TENT_GLOW }) {
 	function resize() {
 		dpr = Math.min(window.devicePixelRatio || 1, 2);
 		W = window.innerWidth; H = window.innerHeight;
-		canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-		canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+		for (const c of [canvas, dodgeCanvas]) { if (!c) continue; c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); c.style.width = W + 'px'; c.style.height = H + 'px'; }
 	}
 	window.addEventListener('resize', resize); resize();
 
@@ -117,7 +124,7 @@ export function createTentGlow({ canvas, film, cfg = TENT_GLOW }) {
 	}
 	const hasFilter = 'filter' in ctx;
 	// one layer of the stack from the hand-drawn shape: the polygon, filled in the layer's colour, blurred
-	function drawShape(color, alpha, blurPx, cx, cy, tw, dx, dy) {
+	function drawShape(ctx, color, alpha, blurPx, cx, cy, tw, dx, dy) {
 		const pts = cfg.shape;
 		if (pts.length < 3) return;
 		ctx.globalAlpha = alpha;
@@ -164,11 +171,13 @@ export function createTentGlow({ canvas, film, cfg = TENT_GLOW }) {
 		lean.x += (mouse.x - lean.x) * Math.min(1, dt * cfg.mouseEase);
 		lean.y += (mouse.y - lean.y) * Math.min(1, dt * cfg.mouseEase);
 
-		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-		ctx.clearRect(0, 0, W, H);
 		const f = film?.frame ?? 0;
 		const tent = cfg.enabled ? tentAt(f) : null;
-		if (tent) {
+		// one pass of the stack into a context, with its own spread and intensity
+		function stack(ctx, spread, intensity) {
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			ctx.clearRect(0, 0, W, H);
+			if (!tent) return;
 			const c = cover();
 			const tw = tent.w * c.fw;                       // the tent's lit width on screen
 			const cx = c.x + tent.u * c.fw + lean.x * cfg.parallax;
@@ -177,16 +186,26 @@ export function createTentGlow({ canvas, film, cfg = TENT_GLOW }) {
 			ctx.globalCompositeOperation = 'lighter';
 			cfg.layers.forEach((l, i) => {
 				const k = flicker(t, i);
-				const r = l.radius * tw * (0.92 + 0.08 * k) * cfg.spread;
+				const r = l.radius * tw * (0.92 + 0.08 * k) * spread;
 				const wander = reduced ? 0 : cfg.drift * tw * (i / cfg.layers.length);
 				const x = cx + Math.sin(t * 0.9 + phase[i]) * wander;
 				const y = cy - l.rise * tw * k * cfg.riseScale + Math.cos(t * 0.7 + phase[i] * 1.4) * wander * 0.6;
-				const a = clamp(l.alpha * k * on * cfg.intensity, 0, 1);
-				if (cfg.shape.length >= 3) drawShape(l.color, a, l.radius * tw * cfg.blur * cfg.spread, cx, cy, tw, x - cx, y - cy);
+				const a = clamp(l.alpha * k * on * intensity, 0, 1);
+				if (cfg.shape.length >= 3) drawShape(ctx, l.color, a, l.radius * tw * cfg.blur * spread, cx, cy, tw, x - cx, y - cy);
 				else { ctx.globalAlpha = a; ctx.drawImage(sprites[i], x - r, y - r, r * 2, r * 2); }
 			});
 			ctx.globalAlpha = 1;
 			ctx.globalCompositeOperation = 'source-over';
+		}
+		stack(ctx, cfg.spread, cfg.intensity);
+		if (canvas.style.mixBlendMode !== cfg.blend) canvas.style.mixBlendMode = cfg.blend;
+		if (dctx) {
+			const d = cfg.dodge;
+			const show = d.amount > 0 && tent;
+			if (dodgeCanvas.style.opacity !== String(d.amount)) dodgeCanvas.style.opacity = String(d.amount);
+			if (show) stack(dctx, cfg.spread * d.spread, cfg.intensity * d.intensity);
+			else if (dodgeCanvas.dataset.clean !== '1') { dctx.setTransform(1, 0, 0, 1, 0, 0); dctx.clearRect(0, 0, dodgeCanvas.width, dodgeCanvas.height); }
+			dodgeCanvas.dataset.clean = show ? '0' : '1';
 		}
 		requestAnimationFrame(frame);
 	}
