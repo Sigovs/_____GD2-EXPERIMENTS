@@ -22,9 +22,10 @@ export const WATER_WAVES = {
 	simWidth: 384,              // the field's width in texels (height follows the viewport's aspect)
 	steps: 2,                   // simulation steps per frame: the rings' speed
 	damping: 0.99,              // per step: how long a ring lives
-	refract: 0.12,              // uv units of bend at a slope of 1 — the strength of the lens (Alex, 18 Sep: "очень сильные, сбавь" → "меньше")
-	highlight: 0.6,             // the crest's light (soft-limited in the shader)
-	drop: { move: [0.12, 0.35], press: 0.7, radius: [0.016, 0.028], spacing: 22, minGap: 40, speedFull: 700 },   // move: [min, max] depth by cursor speed; radius in uv of the width; spacing: px and minGap: ms between drops
+	refract: 0.08,              // uv units of bend at a slope of 1 — the strength of the lens (Alex, 18 Sep: "очень сильные, сбавь" → "меньше" → "less")
+	highlight: 0.45,            // the crest's light (soft-limited in the shader)
+	stretch: 2.2,               // the rings' horizontal reach over their vertical — a surface seen at an angle (Alex: "более горизонтальные")
+	drop: { move: [0.1, 0.28], press: 0.6, radius: [0.016, 0.028], spacing: 22, minGap: 40, speedFull: 700 },   // move: [min, max] depth by cursor speed; radius in uv of the width; spacing: px and minGap: ms between drops
 	still: 0.01,                // below this remaining drop energy the field counts as still and the layer sleeps
 };
 
@@ -39,6 +40,7 @@ const SIM = `#version 300 es
 precision highp float;
 in vec2 vUv; out vec4 o;
 uniform sampler2D uField; uniform vec2 uTexel; uniform float uDamp;
+uniform float uStretch;                      // the wave runs this much faster along x than along y
 uniform int uDrops; uniform vec3 uDrop[8];   // x, y (uv), depth; radius in w below
 uniform float uDropR[8];
 void main() {
@@ -47,11 +49,15 @@ void main() {
 	float s = texture(uField, vUv - vec2(0.0, uTexel.y)).r;
 	float e = texture(uField, vUv + vec2(uTexel.x, 0.0)).r;
 	float w = texture(uField, vUv - vec2(uTexel.x, 0.0)).r;
-	float h = (n + s + e + w) * 0.5 - c.g;
+	// anisotropic: the horizontal neighbours weigh more, so a ring becomes a lying ellipse
+	// (weights sum to 1 — the scheme's stability is the isotropic one's)
+	float kx = uStretch * uStretch / (1.0 + uStretch * uStretch), ky = 1.0 - kx;
+	float h = kx * (e + w) + ky * (n + s) - c.g;
 	h *= uDamp;
 	for (int i = 0; i < 8; i++) {
 		if (i >= uDrops) break;
-		vec2 d = (vUv - uDrop[i].xy); d.y *= uTexel.x / uTexel.y;   // round in screen space
+		vec2 d = (vUv - uDrop[i].xy); d.y *= uTexel.x / uTexel.y;   // round in screen space…
+		d.x /= uStretch;                                             // …then the drop itself lies along x
 		float r = uDropR[i];
 		h -= uDrop[i].z * exp(-dot(d, d) / (r * r));
 	}
@@ -109,7 +115,7 @@ export function createWaterWaves({ canvas, film, cfg = WATER_WAVES }) {
 	for (const p of [sim, draw]) { const a = gl.getAttribLocation(p, 'aPos'); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0); }
 	const U = (p, n) => gl.getUniformLocation(p, n);
 	const u = {
-		sim: { field: U(sim, 'uField'), texel: U(sim, 'uTexel'), damp: U(sim, 'uDamp'), drops: U(sim, 'uDrops'), drop: U(sim, 'uDrop'), dropR: U(sim, 'uDropR') },
+		sim: { field: U(sim, 'uField'), texel: U(sim, 'uTexel'), damp: U(sim, 'uDamp'), stretch: U(sim, 'uStretch'), drops: U(sim, 'uDrops'), drop: U(sim, 'uDrop'), dropR: U(sim, 'uDropR') },
 		draw: { filmA: U(draw, 'uFilmA'), filmB: U(draw, 'uFilmB'), mix: U(draw, 'uMix'), coverA: U(draw, 'uCoverA'), coverB: U(draw, 'uCoverB'), field: U(draw, 'uField'), texel: U(draw, 'uTexel'), refract: U(draw, 'uRefract'), highlight: U(draw, 'uHighlight'), aspect: U(draw, 'uAspect') },
 	};
 
@@ -196,7 +202,7 @@ export function createWaterWaves({ canvas, film, cfg = WATER_WAVES }) {
 	function step() {
 		gl.useProgram(sim); gl.bindVertexArray(vao);
 		gl.viewport(0, 0, SW, SH);
-		gl.uniform2f(u.sim.texel, 1 / SW, 1 / SH); gl.uniform1f(u.sim.damp, cfg.damping);
+		gl.uniform2f(u.sim.texel, 1 / SW, 1 / SH); gl.uniform1f(u.sim.damp, cfg.damping); gl.uniform1f(u.sim.stretch, cfg.stretch);
 		for (let s = 0; s < cfg.steps; s++) {
 			const n = Math.min(8, pending.length);
 			energy *= cfg.damping;

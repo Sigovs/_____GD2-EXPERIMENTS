@@ -46,7 +46,7 @@
 	text-shadow: var(--nav-shadow);
 	padding: 8px 0;
 }
-.nav__brand img { display: block; height: 34px; width: auto; }   /* the logo (assets/logo.png), small — the header's only mark */
+.nav__brand img { display: block; height: 48px; width: auto; }   /* the logo (assets/logo.png) — the header's only mark (34 → 48, Alex 18 Sep: "logo larger") */
 .nav__brand:focus-visible, .nav__toggle:focus-visible, .nav__link:focus-visible { outline: 2px solid var(--nav-accent); outline-offset: 4px; }
 
 .nav__toggle {
