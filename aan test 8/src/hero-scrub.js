@@ -10,7 +10,7 @@
 
 const cfg = {
 	damp: 9,              // how fast the film follows the scroll (higher = tighter)
-	fadeTitle: [0.02, 0.22],   // scroll fractions over which the statement leaves
+	fadeTitle: [0.45, 0.56],   // the statement stays for the whole hero scroll (Alex, 18 Sep); it leaves only after filmEnd, with the water
 	endHold: 0.04,        // fraction of the track kept as a hold on the last frame
 };
 
@@ -33,7 +33,7 @@ function scrollProgress() {
 }
 
 function apply(p) {
-	// the statement leaves early: the film is the subject
+	// the statement holds while the film scrubs; it leaves with the film, when the water comes
 	if (hero) {
 		const out = smoothstep(p, cfg.fadeTitle[0], cfg.fadeTitle[1]);
 		hero.style.opacity = (1 - out).toFixed(3);

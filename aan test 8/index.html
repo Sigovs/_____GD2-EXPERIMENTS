@@ -18,12 +18,12 @@
 </head>
 <body>
 
-	<!-- ONE SCENE. The film is the scene; the scroll is its transport (src/hero-scrub.js). -->
+	<!-- ONE SCENE. The film is the scene; the scroll is its transport. The film is a FRAME SEQUENCE on a canvas
+	     (src/film-frames.js): a seek is a drawImage, no keyframe decode, no iOS seek jitter, and the two frames
+	     around the scroll position are crossfaded so 24 fps reads as smooth. The <video> transport is parked
+	     (src/hero-scrub.js) — swap the two script tags below to go back. -->
 	<div class="stage">
-		<video id="hero-video" class="stage__video" playsinline muted preload="auto"
-		       poster="previews/hero-gora-poster.jpg" aria-hidden="true">
-			<source src="assets/videos/hero-gora.mp4" type="video/mp4">
-		</video>
+		<canvas id="hero-film" class="stage__video" aria-hidden="true"></canvas>
 		<!-- the descent route over the film — an instrument, rotoscoped to the film's frames (src/route-layer.js) -->
 		<canvas id="route-canvas" class="stage__route" aria-hidden="true"></canvas>
 		<!-- the one 3-D thing we keep: the scene's own clouds, over the film (src/cloud-layer.js) -->
@@ -79,7 +79,11 @@
 		}
 	}
 	</script>
-	<script type="module" src="src/hero-scrub.js"></script>
+	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
+	<script type="module">
+		import { createFilmFrames } from './src/film-frames.js';
+		createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp' });
+	</script>
 	<script type="module">
 		// one module, in order: the route over the film, the cloud plates over the route, then the intro
 		// that drives both. The clouds may fail (no WebGL): the intro still runs, without them.
@@ -88,7 +92,10 @@
 		import * as THREE from 'three';
 		import { createCloudLayer } from './src/cloud-layer.js';
 
-		window.__route = createRouteLayer({ canvas: document.getElementById('route-canvas'), video: document.getElementById('hero-video'), labelRoot: document.getElementById('route-labels') });
+		// the route is OFF for now (Alex, 18 Sep: "уберём path вообще на данном этапе" — smooth scrolling first); the
+		// layer stays in the tree, one line brings it back
+		window.__route = null; // the route layer was rotoscoped to the <video>; if it comes back it reads window.__film.frame
+		document.getElementById('route-canvas')?.remove();
 
 		const cloudsUp = (async () => {
 			const loader = new THREE.TextureLoader();

@@ -65,6 +65,7 @@ body {
 }
 
 /* ---- the statement ---- */
+.hero { display: none !important; }   /* the statement is OFF (Alex, 18 Sep: "убери текст полностью, оставь только гору") */
 .hero {
 	position: fixed;
 	z-index: 2;
@@ -105,20 +106,17 @@ body {
 .hero__title { transition: text-shadow 400ms ease-out; }
 .hero__line .ch { display: inline-block; will-change: transform; }
 /* the rotating word (text-rise.js → rotateWord): its own mask, always — the words travel through it */
-/* the rotating word sits on a plate: the accent green, 5 px corners; ink on it is the page's ground
-   (white on #97C82C is 1.96:1 — under AA even for display type; the ground is ≈ 10:1) */
+/* the rotating word: no plate (Alex, 18 Sep: "убери зелёный box") — the same ink as the line, the words travel
+   through the mask. The accent green (#97C82C) stays a token for later, not a surface here. */
 .hero__rotate {
 	display: inline-block;
 	box-sizing: border-box;            /* text-rise.js owns the width as a border-box */
 	overflow: hidden;
 	vertical-align: top;
 	white-space: nowrap;
-	padding: 0.02em 0.18em 0.08em;
+	padding: 0.02em 0 0.08em;
 	margin: -0.02em 0 -0.08em;
-	background: #97C82C;
-	border-radius: 5px;
-	color: #05080f;
-	text-shadow: none;
+	color: inherit;
 }
 .hero__rotate .hero__word { display: inline-block; white-space: nowrap; }
 .hero__line .ch--space { width: 0.26em; }

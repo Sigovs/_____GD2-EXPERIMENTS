@@ -105,10 +105,16 @@ void main() {
 	// the solid core: its rectangle must never show — every edge is displaced by the plate's own noise so the
 	// boundary is a ragged cloud edge, and the bottom one (the one that comes into frame as the band rises)
 	// gets the widest feather (Alex, 18 Sep: a straight seam across the screen at the end of the scroll)
+	// The core is NOT a rectangle any more (Alex, 18 Sep — photographed: two straight bands across the whole
+	// screen, one per plate group; the plates are wider than the frame, so any straight uv bound is a line
+	// across it). The core takes the shape of the cloud itself: its band is multiplied by the ragged `clouds`
+	// contour, and its bounds are pushed around by two noises — no fragment row shares an edge.
 	float coreN = texture2D(tNoise, ratioedUv * 0.15 + vec2(0.01, -0.02) * time).r - 0.5;
-	float cy = vUv.y + coreN * 0.28, cx = vUv.x + coreN * 0.16;
-	alpha += smoothstep(0.2, 0.2 + uEdgeFeather * 2.2, cy) * (1.0 - smoothstep(0.7 - uEdgeFeather, 0.7, cy))
+	float coreM = texture2D(tPerlin, ratioedUv * 0.06 - vec2(0.02, 0.01) * time).r - 0.5;
+	float cy = vUv.y + coreN * 0.34 + coreM * 0.3, cx = vUv.x + coreN * 0.2;
+	float core = smoothstep(0.2, 0.2 + uEdgeFeather * 3.0, cy) * (1.0 - smoothstep(0.7 - uEdgeFeather * 2.0, 0.7, cy))
 		* smoothstep(0.2, 0.2 + uEdgeFeather, cx) * (1.0 - smoothstep(0.9 - uEdgeFeather, 0.9, cx));
+	alpha += core * (0.35 + 0.65 * clouds);
 	alpha = min(1.0, alpha * (1.0 + 4.0 * uDense));   // the intro's mass: the same vapour, thicker
 
 	// rim light: the plate's edges (top contour and underside) catch the moon; the body stays in its own shade
