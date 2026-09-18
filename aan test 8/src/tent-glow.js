@@ -110,8 +110,8 @@ export function createTentGlow({ canvas, dodgeCanvas = null, film, cfg = TENT_GL
 	let W = 0, H = 0, dpr = 1;
 
 	function resize() {
-		dpr = Math.min(window.devicePixelRatio || 1, 2);
 		W = window.innerWidth; H = window.innerHeight;
+		dpr = Math.min(window.devicePixelRatio || 1, W < 700 ? 1 : 2);   // the glow is soft: on a phone one pixel per CSS pixel is plenty, and the blurs are 9x cheaper
 		for (const c of [canvas, dodgeCanvas]) { if (!c) continue; c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); c.style.width = W + 'px'; c.style.height = H + 'px'; }
 	}
 	window.addEventListener('resize', resize); resize();
@@ -179,7 +179,7 @@ export function createTentGlow({ canvas, dodgeCanvas = null, film, cfg = TENT_GL
 			ctx.clearRect(0, 0, W, H);
 			if (!tent) return;
 			const c = cover();
-			const tw = tent.w * c.fw;                       // the tent's lit width on screen
+			const tw = tent.w * c.fw * clamp((W / H) / 1.2, 0.5, 1);   // the tent's lit width on screen — on a portrait phone the cover crop makes the tent huge, so the light is held back
 			const cx = c.x + tent.u * c.fw + lean.x * cfg.parallax;
 			const cy = c.y + tent.v * c.fh - tw * cfg.anchor + lean.y * cfg.parallax * 0.5;
 			const on = smooth((f - cfg.fadeIn[0]) / (cfg.fadeIn[1] - cfg.fadeIn[0]));

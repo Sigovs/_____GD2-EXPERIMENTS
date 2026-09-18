@@ -18,13 +18,14 @@
 export const FILM = {
 	frames: 241,
 	fps: 24,
-	dir: (w) => (w > 1000 ? 'assets/frames/1600' : 'assets/frames/960'),
+	dir: (w) => (w > 1000 ? 'assets/frames/1600' : w > 520 ? 'assets/frames/960' : 'assets/frames/640'),   // phones get 640: a third of the bytes, and a third of the decode memory
 	name: (i) => `f${String(i + 1).padStart(3, '0')}.webp`,
 	range: [0, 1],         // the share of the page this film scrubs over (two films overlap where their ranges do — descent.js)
 	filmEnd: 1.0,          // within its range, the film spans this share (1 = all of it)
 	damp: 10,              // how fast the film follows the scroll (higher = tighter)
 	coarse: 8,             // first pass: every Nth frame
 	crossfade: true,       // blend the two frames around the fractional position
+	keep: (w) => (w > 700 ? 999 : 72),   // frames kept decoded around the current one (plus the coarse grid): all on desktop, a window on phones — a phone cannot hold 241 bitmaps
 };
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -33,6 +34,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 	const cfg = { ...FILM, ...overrides };
 	const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
 	let mayLoad = loadAfter === 0;   // a second film waits its turn, so the first one's frames come in first
+	const KEEP = typeof cfg.keep === 'function' ? cfg.keep(window.innerWidth) : cfg.keep;
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	const dir = cfg.dir(window.innerWidth);
 	const imgs = new Array(cfg.frames).fill(null);
@@ -93,6 +95,16 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 	}
 	function schedule() { if (!raf) raf = requestAnimationFrame(frame); }
 
+	// memory: far from the current frame, the full-resolution bitmaps are let go (the coarse grid stays, so
+	// scrubbing far away still shows a picture at once); they come back from the HTTP cache when needed
+	function evict() {
+		const c = Math.round(current), half = KEEP / 2;
+		for (let i = 0; i < cfg.frames; i++) {
+			if (!imgs[i] || i % cfg.coarse === 0 || i === 0) continue;
+			if (Math.abs(i - c) > half) imgs[i] = null;
+		}
+	}
+	let evictTimer = 0;
 	function load(i) {
 		if (imgs[i] || loading.has(i) || i < 0 || i >= cfg.frames) return;
 		loading.add(i);
@@ -107,7 +119,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		if (!mayLoad || loading.size >= 6) return;
 		for (let i = 0; i < cfg.frames; i += cfg.coarse) if (!imgs[i] && !loading.has(i)) { load(i); if (loading.size >= 6) return; }
 		const c = Math.round(current);
-		for (let d = 0; d < cfg.frames; d++) {
+		for (let d = 0; d < Math.min(cfg.frames, KEEP / 2); d++) {
 			for (const i of [c + d, c - d]) { if (i >= 0 && i < cfg.frames && !imgs[i] && !loading.has(i)) { load(i); if (loading.size >= 6) return; } }
 		}
 	}
@@ -122,6 +134,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		target = clamp(local / cfg.filmEnd, 0, 1) * (cfg.frames - 1);
 		schedule();
 		pump();
+		if (KEEP < cfg.frames && !evictTimer) evictTimer = setTimeout(() => { evictTimer = 0; evict(); pump(); }, 800);
 	}
 
 	// first paint: the poster, at once

@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18u">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-18r">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-18v">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -76,10 +76,24 @@
 	<main id="main" class="hero">
 		<!-- the last word rotates (text-rise.js → rotateWord): the words in data-words are PLACEHOLDERS — replace with the client's -->
 		<h1 class="hero__title"><span class="hero__line">The deeper</span><br><span class="hero__line">you go,</span><br><span class="hero__line">the more you <span class="hero__rotate" data-words="know.|see.|learn.|find.">know.</span></span></h1>
+		<!-- the calls: two, no more (Alex, 18 Sep). Links are PLACEHOLDERS -->
+		<div class="hero__cta">
+			<a class="cta cta--primary" href="#brands">Explore services</a>
+			<a class="cta cta--ghost" href="#brands">Talk to us</a>
+		</div>
 	</main>
 
-	<!-- the scroll length: how much travel the film gets -->
+	<!-- the scroll length: how much travel the films get (progress.js measures the scene by this track) -->
 	<div class="spacer" aria-hidden="true"></div>
+
+	<!-- after the descent: the brands, quietly. Wordmarks as TEXT for now — Alex brings the logos (18 Sep) -->
+	<section class="brands" id="brands" aria-labelledby="brands-title">
+		<p class="brands__eyebrow" id="brands-title">Brands we work with</p>
+		<ul class="brands__list">
+			<li>Rolls-Royce</li><li>Sotheby's</li><li>McLaren</li><li>Gorsuch</li><li>Vogel Marketing Group</li><li>ELLE</li>
+			<li>Pininfarina</li><li>AAN — All Auto Network</li><li>duPont Registry</li><li>Christine Alexander</li><li>Koenigsegg</li>
+		</ul>
+	</section>
 
 	<script type="importmap">
 	{
@@ -91,9 +105,9 @@
 	</script>
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
-		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18e';
-		import { createTentGlow } from './src/tent-glow.js?v=2026-09-18n';
-		import { createDescent, ACT } from './src/descent.js?v=2026-09-18s';
+		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18v';
+		import { createTentGlow } from './src/tent-glow.js?v=2026-09-18v';
+		import { createDescent, ACT } from './src/descent.js?v=2026-09-18v';
 		// the two films: the hero scrubs the first part of the page, the water the rest — they overlap for the hand-over.
 		// Neither listens to the scroll itself: descent.js drives both from one progress.
 		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp', cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false } });   // the film ends early and holds on the tent
@@ -101,10 +115,17 @@
 		window.__water = water;
 		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), film });
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
-		import { createWaterLife } from './src/water-life.js?v=2026-09-18t';
+		import { createWaterLife } from './src/water-life.js?v=2026-09-18v';
 		const life = createWaterLife({ canvas: document.getElementById('water-life'), waterCanvas: document.getElementById('water-film') });
 		window.__life = life;
-		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: film, waterFilm: water, clouds: null, onWater: (w, P) => life.setPresence(w, P) });
+		// the water answers the cursor — desktop only, under the water only, a few pixels (src/water-ripple.js)
+		import { createWaterRipple } from './src/water-ripple.js?v=2026-09-18v';
+		const ripple = createWaterRipple({ target: document.getElementById('water-film') });
+		window.__ripple = ripple;
+		// photographs floating up through the water (src/drift-cards.js)
+		import { createDriftCards } from './src/drift-cards.js?v=2026-09-18v';
+		window.__drift = createDriftCards();
+		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: film, waterFilm: water, clouds: null, onWater: (w, P) => { life.setPresence(w, P); ripple.setPresence(w); } });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
 		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.shape') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-18m'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)
@@ -153,7 +174,7 @@
 	<script type="module">import { initNav } from './src/nav.js'; window.__nav = initNav();</script>
 	<script type="module">
 		// the captions: text blocks that arrive with the scroll, over the mountain and under the water (src/captions.js)
-		import { createCaptions } from './src/captions.js?v=2026-09-18s';
+		import { createCaptions } from './src/captions.js?v=2026-09-18v';
 		window.__captions = createCaptions();
 	</script>
 </body>

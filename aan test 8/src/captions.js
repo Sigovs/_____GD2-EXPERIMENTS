@@ -32,9 +32,11 @@ export const CAPTIONS = {
 		// ACT II — the water (from ~0.56)
 		{ at: [0.60, 0.70], side: 'right', y: '54%', eyebrow: '04 — Descent',   lines: ['Below the surface', 'the real work begins.'], world: 'water' },
 		{ at: [0.74, 0.84], side: 'left',  y: '50%', eyebrow: '05 — Pressure',  lines: ['Compliance is not a cage.', 'It is a map of the pressure.'], world: 'water' },
-		{ at: [0.88, 0.99], side: 'left',  y: '50%', eyebrow: 'GD2',            lines: ['The deeper you go,', 'the more you know.'], world: 'water', closing: true },
+		{ at: [0.88, 0.99], side: 'left',  y: '50%', eyebrow: 'GD2',            lines: ['The deeper you go,', 'the more you know.'], world: 'water', closing: true, cta: { label: 'Start the descent', href: '#brands' } },
 	],
 };
+
+import { sceneProgress } from './progress.js?v=2026-09-18v';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
@@ -52,7 +54,8 @@ export function createCaptions({ root = document.body, hero = document.querySele
 		const el = document.createElement('div');
 		el.className = `caption caption--${b.side} caption--${b.world}${b.closing ? ' caption--closing' : ''}`;
 		el.style.setProperty('--y', b.y);
-		el.innerHTML = `<div class="caption__eyebrow"><span class="caption__word">${b.eyebrow}</span></div>` + b.lines.map((l) => `<div class="caption__line">${words(l)}</div>`).join('');
+		el.innerHTML = `<div class="caption__eyebrow"><span class="caption__word">${b.eyebrow}</span></div>` + b.lines.map((l) => `<div class="caption__line">${words(l)}</div>`).join('')
+			+ (b.cta ? `<div class="caption__cta"><a class="cta cta--ghost caption__word" href="${b.cta.href}">${b.cta.label}</a></div>` : '');
 		host.appendChild(el);
 		const parts = [...el.querySelectorAll('.caption__word')];
 		parts.forEach((p) => { p.style.opacity = '0'; });
@@ -108,7 +111,7 @@ export function createCaptions({ root = document.body, hero = document.querySele
 		}
 	}
 
-	const progress = () => { const max = document.documentElement.scrollHeight - window.innerHeight; return max > 0 ? clamp(window.scrollY / max, 0, 1) : 0; };
+	const progress = sceneProgress;
 	const onScroll = () => apply(progress());
 	window.addEventListener('scroll', onScroll, { passive: true });
 	window.addEventListener('resize', onScroll);

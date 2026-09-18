@@ -37,12 +37,14 @@ export const ACT = {
 	clouds: { out: [0.90, 0.97] },      // the plates leave with the hero
 };
 
+import { sceneProgress } from './progress.js?v=2026-09-18v';
+
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const ramp = (v, [a, b]) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const lerp = (a, b, t) => a + (b - a) * t;
 
 export function createDescent({ heroWrap, waterCanvas, cloudCanvas, heroFilm, waterFilm, clouds, onWater = null, cfg = ACT }) {
-	const progress = () => { const max = document.documentElement.scrollHeight - window.innerHeight; return max > 0 ? clamp(window.scrollY / max, 0, 1) : 0; };
+	const progress = sceneProgress;
 	let last = -1, cloudsRef = clouds;
 
 	function apply(P) {

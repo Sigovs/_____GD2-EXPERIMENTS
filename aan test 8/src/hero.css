@@ -146,7 +146,7 @@ body {
 }
 
 /* ---- the scroll track ---- */
-.spacer { height: calc(var(--scene-vh) * 1vh); }
+.spacer { height: calc(var(--scene-vh) * 1vh); height: calc(var(--scene-vh) * 1svh); }   /* svh: the phone's URL bar must not change the scroll's length as it hides */
 
 @media (max-width: 700px) {
 	.hero { top: auto; bottom: 14vh; transform: none; max-width: none; right: clamp(24px, 6vw, 96px); }
@@ -193,4 +193,82 @@ body {
 @media (max-width: 700px) {
 	.caption { max-width: 82vw; }
 	.caption--right { right: auto; left: 24px; text-align: left; }
+}
+
+/* ---- the calls ---- */
+.cta {
+	display: inline-flex; align-items: center; gap: 0.6em;
+	padding: 0.85em 1.5em;
+	border-radius: 999px;
+	font-size: 0.9375rem; font-weight: 600; letter-spacing: 0.02em;
+	text-decoration: none; color: var(--ink);
+	border: 1px solid rgba(238, 243, 251, 0.35);
+	background: rgba(5, 8, 15, 0.25);
+	-webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+	transition: background 240ms ease, border-color 240ms ease, transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+	pointer-events: auto;
+}
+.cta:hover { background: rgba(238, 243, 251, 0.12); border-color: rgba(238, 243, 251, 0.6); transform: translateY(-1px); }
+.cta--primary { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.cta--primary:hover { background: #ffffff; border-color: #ffffff; }
+.cta:focus-visible { outline: 2px solid #97C82C; outline-offset: 3px; }
+.hero__cta { display: flex; gap: 12px; margin-top: clamp(20px, 3vw, 36px); pointer-events: auto; }
+.is-intro .hero__cta { opacity: 0; }
+.hero__cta { opacity: 1; transition: opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 200ms; }
+.caption__cta { margin-top: 1.4em; }
+.caption--right .caption__cta { display: flex; justify-content: flex-end; }
+
+/* ---- the drifting photographs (src/drift-cards.js) ---- */
+.drift { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+.drift__card {
+	position: absolute; top: 0; margin: 0;
+	aspect-ratio: var(--ratio, 4 / 5);
+	visibility: hidden; opacity: 0;
+	will-change: transform, opacity;
+	transform-origin: 50% 50%;
+}
+.drift__card img {
+	display: block; width: 100%; height: 100%; object-fit: cover;
+	border-radius: 6px;
+	box-shadow: 0 30px 80px rgba(0, 6, 18, 0.7), 0 0 0 1px rgba(200, 225, 255, 0.08) inset;
+	filter: saturate(0.85) brightness(0.92);
+}
+.drift__card figcaption {
+	margin-top: 10px;
+	font-size: 0.875rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+	color: var(--ink-dim);
+}
+
+/* ---- the brands, after the descent ---- */
+.brands {
+	position: relative; z-index: 3;
+	background: var(--ground);
+	padding: clamp(72px, 14vh, 160px) clamp(24px, 6vw, 96px) clamp(96px, 16vh, 200px);
+	border-top: 1px solid rgba(238, 243, 251, 0.06);
+}
+.brands__eyebrow {
+	margin: 0 0 clamp(28px, 4vw, 56px);
+	text-align: center;
+	font-size: 0.875rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+	color: #97C82C;
+	opacity: 0.85;
+}
+.brands__list {
+	list-style: none; margin: 0 auto; padding: 0;
+	max-width: 1400px;
+	display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+	gap: clamp(20px, 3.2vw, 56px) clamp(32px, 4.6vw, 88px);
+}
+.brands__list li {
+	font-size: clamp(1rem, 1.35vw, 1.35rem); font-weight: 600; letter-spacing: 0.06em;
+	color: rgba(238, 243, 251, 0.42);
+	white-space: nowrap;
+	transition: color 300ms ease;
+}
+.brands__list li:hover { color: rgba(238, 243, 251, 0.8); }
+@media (max-width: 700px) {
+	.hero__cta { flex-wrap: wrap; }
+	.drift__card { width: 46vw !important; }
+	.drift__card figcaption { font-size: 0.875rem; }
+	.brands__list { gap: 18px 28px; }
 }
