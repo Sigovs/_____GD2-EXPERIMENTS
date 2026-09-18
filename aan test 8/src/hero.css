@@ -7,7 +7,7 @@
 	--ink: #eef3fb;
 	--ink-dim: rgba(238, 243, 251, 0.72);
 	--ground: #05080f;
-	--scene-vh: 520;           /* how many viewport heights the film gets (JS reads this too) */
+	--scene-vh: 1000;          /* how many viewport heights the two films get together (descent.js splits them) */
 }
 
 * { box-sizing: border-box; }
@@ -46,6 +46,12 @@ body {
 	height: 100%;
 	display: block;
 	pointer-events: none;
+}
+.stage__act {
+	position: absolute;
+	inset: 0;
+	will-change: opacity, filter, transform;
+	transform-origin: 50% 50%;
 }
 .stage__glow {
 	position: absolute;

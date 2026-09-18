@@ -74,14 +74,16 @@ export function openGlowEditor({ glow, film }) {
 	}
 
 	/* the dials: every one writes straight into the live glow (cfg) and is saved with the shape */
+	// path, label, min, max, step, DEFAULT — the default is the module's own value, written here so Reset is a
+	// real reset (the cfg has already taken the saved dials by the time the editor opens)
 	const DIALS = [
-		['intensity', 'Brightness', 0, 3, 0.01], ['spread', 'Spread', 0.2, 2.5, 0.01], ['riseScale', 'Rise', 0, 2.5, 0.01], ['blur', 'Blur', 0.05, 1.5, 0.01],
-		['breath.depth', 'Breath', 0, 0.5, 0.01], ['tremble.depth', 'Tremble', 0, 0.4, 0.01], ['flare.depth', 'Flare', 0, 1, 0.01], ['drift', 'Drift', 0, 0.15, 0.001], ['parallax', 'Mouse lean', 0, 40, 1], ['anchor', 'Anchor Y', -0.6, 0.6, 0.01],
+		['intensity', 'Brightness', 0, 3, 0.01, 1], ['spread', 'Spread', 0.2, 2.5, 0.01, 1], ['riseScale', 'Rise', 0, 2.5, 0.01, 1], ['blur', 'Blur', 0.05, 1.5, 0.01, 0.55],
+		['breath.depth', 'Breath', 0, 0.5, 0.01, 0.14], ['tremble.depth', 'Tremble', 0, 0.4, 0.01, 0.07], ['flare.depth', 'Flare', 0, 1, 0.01, 0.25], ['drift', 'Drift', 0, 0.15, 0.001, 0.035], ['parallax', 'Mouse lean', 0, 40, 1, 8], ['anchor', 'Anchor Y', -0.6, 0.6, 0.01, -0.02],
 	];
 	const COLORS = [['core', 'Core', '#fefcc9'], ['mid', 'Mid', '#ffae34'], ['ember', 'Ember', '#451b0e']];
 	const get = (path) => path.split('.').reduce((o, k) => o[k], cfg);
 	const set = (path, v) => { const ks = path.split('.'); const o = ks.slice(0, -1).reduce((o, k) => o[k], cfg); o[ks[ks.length - 1]] = v; };
-	const DEFAULTS = Object.fromEntries(DIALS.map(([path]) => [path, get(path)]));
+	const DEFAULTS = Object.fromEntries(DIALS.map(([path, , , , , def]) => [path, def]));
 	const dials = ui.querySelector('#glow-dials');
 	const row = (label, input, out) => { const l = document.createElement('label'); l.textContent = label; l.style.opacity = '.8'; dials.append(l, input, out); };
 	const fmt = (v, step) => (+v).toFixed(step < 0.01 ? 3 : 2);

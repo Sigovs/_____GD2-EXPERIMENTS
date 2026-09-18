@@ -20,7 +20,8 @@ export const FILM = {
 	fps: 24,
 	dir: (w) => (w > 1000 ? 'assets/frames/1600' : 'assets/frames/960'),
 	name: (i) => `f${String(i + 1).padStart(3, '0')}.webp`,
-	filmEnd: 1.0,          // the film spans this share of the scroll (1 = all of it)
+	range: [0, 1],         // the share of the page this film scrubs over (two films overlap where their ranges do — descent.js)
+	filmEnd: 1.0,          // within its range, the film spans this share (1 = all of it)
 	damp: 10,              // how fast the film follows the scroll (higher = tighter)
 	coarse: 8,             // first pass: every Nth frame
 	crossfade: true,       // blend the two frames around the fractional position
@@ -28,8 +29,10 @@ export const FILM = {
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
-export function createFilmFrames({ canvas, poster, cfg = FILM }) {
+export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfter = 0 }) {
+	const cfg = { ...FILM, ...overrides };
 	const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+	let mayLoad = loadAfter === 0;   // a second film waits its turn, so the first one's frames come in first
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	const dir = cfg.dir(window.innerWidth);
 	const imgs = new Array(cfg.frames).fill(null);
@@ -101,7 +104,7 @@ export function createFilmFrames({ canvas, poster, cfg = FILM }) {
 	}
 	// priority: coarse grid first, then outward from the current frame
 	function pump() {
-		if (loading.size >= 6) return;
+		if (!mayLoad || loading.size >= 6) return;
 		for (let i = 0; i < cfg.frames; i += cfg.coarse) if (!imgs[i] && !loading.has(i)) { load(i); if (loading.size >= 6) return; }
 		const c = Math.round(current);
 		for (let d = 0; d < cfg.frames; d++) {
@@ -114,7 +117,9 @@ export function createFilmFrames({ canvas, poster, cfg = FILM }) {
 		return max > 0 ? clamp(window.scrollY / max, 0, 1) : 0;
 	}
 	function setProgress(p) {
-		target = clamp(p / cfg.filmEnd, 0, 1) * (cfg.frames - 1);
+		const [r0, r1] = cfg.range;
+		const local = clamp((p - r0) / (r1 - r0), 0, 1);
+		target = clamp(local / cfg.filmEnd, 0, 1) * (cfg.frames - 1);
 		schedule();
 		pump();
 	}
@@ -123,9 +128,10 @@ export function createFilmFrames({ canvas, poster, cfg = FILM }) {
 	const first = new Image();
 	first.onload = () => { imgs[0] = first; resize(); if (!ready) { ready = true; document.body.classList.add('is-ready'); document.body.dispatchEvent(new Event('ready')); } if (!reduced) pump(); };
 	first.src = poster || `${dir}/${cfg.name(0)}`;
+	if (loadAfter) setTimeout(() => { mayLoad = true; if (!reduced) pump(); }, loadAfter);
 
 	window.addEventListener('resize', resize);
-	if (!reduced) {
+	if (!reduced && cfg.scroll !== false) {
 		const onScroll = () => setProgress(scrollProgress());
 		window.addEventListener('scroll', onScroll, { passive: true });
 		window.addEventListener('load', onScroll);
@@ -133,7 +139,7 @@ export function createFilmFrames({ canvas, poster, cfg = FILM }) {
 		setProgress(scrollProgress());
 	}
 
-	const api = { get progress() { return target / (cfg.frames - 1); }, get frame() { return current; }, setProgress, cfg };
-	window.__film = api;
+	const api = { get progress() { return target / (cfg.frames - 1); }, get frame() { return current; }, setProgress, cfg, canvas };
+	if (!window.__film) window.__film = api;   // the first film is the page's film (the clouds, the glow read it)
 	return api;
 }

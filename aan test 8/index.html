@@ -23,9 +23,16 @@
 	     around the scroll position are crossfaded so 24 fps reads as smooth. The <video> transport is parked
 	     (src/hero-scrub.js) — swap the two script tags below to go back. -->
 	<div class="stage">
-		<canvas id="hero-film" class="stage__video" aria-hidden="true"></canvas>
-		<!-- the tent's light, breathing and flickering over the film's tent (src/tent-glow.js) - under the clouds, in the fog -->
-		<canvas id="tent-glow" class="stage__glow" aria-hidden="true"></canvas>
+		<!-- ACT I — the mountain: the film and the tent's light in one wrapper, so the hand-over (src/descent.js)
+		     blurs and dissolves them together -->
+		<div id="act-hero" class="stage__act">
+			<canvas id="hero-film" class="stage__video" aria-hidden="true"></canvas>
+			<!-- the tent's light, breathing and flickering over the film's tent (src/tent-glow.js) - under the clouds, in the fog -->
+			<canvas id="tent-glow" class="stage__glow" aria-hidden="true"></canvas>
+		</div>
+		<!-- ACT II — the water: starts under the surface (the tent's light warped above), comes up over the mountain
+		     for a moment, then the scroll scrubs the descent. Same frame transport. -->
+		<canvas id="water-film" class="stage__video stage__act" aria-hidden="true"></canvas>
 		<!-- the descent route over the film — an instrument, rotoscoped to the film's frames (src/route-layer.js) -->
 		<canvas id="route-canvas" class="stage__route" aria-hidden="true"></canvas>
 		<!-- the one 3-D thing we keep: the scene's own clouds, over the film (src/cloud-layer.js) -->
@@ -85,12 +92,19 @@
 	<script type="module">
 		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18e';
 		import { createTentGlow } from './src/tent-glow.js?v=2026-09-18g';
-		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp' });
+		import { createDescent, ACT } from './src/descent.js?v=2026-09-18h';
+		// the two films: the hero scrubs the first part of the page, the water the rest — they overlap for the hand-over.
+		// Neither listens to the scroll itself: descent.js drives both from one progress.
+		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp', cfg: { range: [0, ACT.heroEnd], scroll: false } });
+		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => (w > 1000 ? 'assets/frames/water/1600' : 'assets/frames/water/960') }, loadAfter: 2500 });
+		window.__water = water;
 		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), film });
+		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
+		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: film, waterFilm: water, clouds: null });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
-		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.shape') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-18g'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
+		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.shape') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-18h'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)
-		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-18g'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
+		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-18h'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
 		if (new URLSearchParams(location.search).get('edit') === 'glow') openEditor();
 		addEventListener('keydown', (e) => { if ((e.key === 'g' || e.key === 'G') && !window.__glowEditor && !e.metaKey && !e.ctrlKey) openEditor(); });
 	</script>
@@ -122,14 +136,14 @@
 				? createCloudStack({ canvas: document.getElementById('cloud-canvas'), noise: cloudNoise })
 				: await createCloudLayer({ canvas: document.getElementById('cloud-canvas'), textures: { noise, perlin }, hold: null });   // no hold: no statement on the page, and its rect was a straight edge
 			const progress = () => { const max = document.documentElement.scrollHeight - window.innerHeight; return max > 0 ? window.scrollY / max : 0; };
-			clouds.setProgress(progress());
-			addEventListener('scroll', () => clouds.setProgress(progress()), { passive: true });
+			clouds.setProgress(0);   // from here on descent.js drives it (the hero's own progress, not the page's)
 			window.__clouds = clouds;
 			return clouds;
 		})().catch((e) => { console.warn('cloud layer off:', e); return null; });
 
 		// the intro opens inside the cloud, so it waits for the plates — but not past 2.5 s on a slow line
 		const clouds = await Promise.race([cloudsUp, new Promise((r) => setTimeout(() => r(null), 2500))]);
+		window.__descent?.setClouds(clouds);   // the hand-over (src/descent.js) drives the clouds from here on
 		runIntro({ route: window.__route, clouds });
 	</script>
 	<script type="module">import { initNav } from './src/nav.js'; window.__nav = initNav();</script>
