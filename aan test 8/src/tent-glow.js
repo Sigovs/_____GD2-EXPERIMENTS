@@ -25,6 +25,17 @@ export const TENT_GLOW = {
 	frameAspect: 16 / 9,
 	// [frame, u, v, w] — the tent's centre (0..1 of the frame) and its lit width (0..1 of the frame width)
 	track: [[179, 0.9363, 0.9952, 0.0344], [182, 0.9107, 0.9873, 0.0625], [184, 0.8925, 0.9823, 0.0719], [189, 0.8485, 0.9664, 0.105], [194, 0.7999, 0.9404, 0.1112], [199, 0.7498, 0.9111, 0.125], [204, 0.7024, 0.883, 0.11], [209, 0.6575, 0.8563, 0.1412], [214, 0.6175, 0.8337, 0.1294], [219, 0.5831, 0.814, 0.1212], [224, 0.5552, 0.7983, 0.1194], [229, 0.534, 0.7862, 0.1275], [234, 0.5186, 0.7771, 0.1444], [239, 0.5088, 0.7703, 0.1325], [240, 0.5079, 0.7693, 0.1431]],
+	/* the shape the light is cast from — a polygon in tent widths from the tracked centroid, drawn by hand in the
+	   editor (src/glow-editor.js: open with ?edit=glow or press G). Empty = the circular stack. Each layer is this
+	   shape, filled in its colour and blurred by its radius, exactly as text-shadow blurs the glyph. */
+	shape: [],
+	blur: 0.55,               // blur radius per layer, in `radius` tent widths (the sprite's soft edge, matched)
+	// the editor's dials (src/glow-editor.js) — all multipliers on the stack above
+	intensity: 1,             // brightness of the whole stack
+	spread: 1,                // how far the light reaches (radius / blur)
+	riseScale: 1,             // how high the plume climbs
+	// the palette: the seven layers run core → mid → ember (the pen's cream → orange → coal); null = the colours above
+	palette: null,            // { core: '#fefcc9', mid: '#ffae34', ember: '#451b0e' }
 	fadeIn: [192, 226],       // frames: the light comes up as the tent settles into the frame (earlier it reads as a sunrise over the edge)
 	anchor: -0.02,            // the flame sits at the tent's centroid (a touch below: the canopy is the lamp, not a bulb over it)
 	// the stack, in the pen's order: radius and rise in tent widths, alpha 0..1. The core is wide and soft —
@@ -68,10 +79,24 @@ function makeSprite(color, size) {
 	return c;
 }
 
+const toHex = ([r, g, b]) => '#' + [r, g, b].map((v) => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('');
+const mixHex = (a, b, t) => { const A = hex(a), B = hex(b); return toHex(A.map((v, i) => v + (B[i] - v) * t)); };
+
 export function createTentGlow({ canvas, film, cfg = TENT_GLOW }) {
 	const ctx = canvas.getContext('2d');
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	const sprites = cfg.layers.map((l) => makeSprite(l.color, cfg.sprite));
+	const base = cfg.layers.map((l) => l.color);
+	let sprites = cfg.layers.map((l) => makeSprite(l.color, cfg.sprite));
+	// the palette dial: core → mid → ember across the seven layers; the sprites follow
+	function setPalette(p) {
+		cfg.palette = p;
+		cfg.layers.forEach((l, i) => {
+			const t = i / (cfg.layers.length - 1);
+			l.color = p ? (t < 0.5 ? mixHex(p.core, p.mid, t * 2) : mixHex(p.mid, p.ember, (t - 0.5) * 2)) : base[i];
+		});
+		sprites = cfg.layers.map((l) => makeSprite(l.color, cfg.sprite));
+	}
+	if (cfg.palette) setPalette(cfg.palette);
 	const phase = cfg.layers.map((_, i) => i * 1.7);
 	let W = 0, H = 0, dpr = 1;
 
@@ -88,6 +113,25 @@ export function createTentGlow({ canvas, film, cfg = TENT_GLOW }) {
 		const s = Math.max(W / cfg.frameAspect, H);   // the frame's height on screen
 		const fw = s * cfg.frameAspect, fh = s;
 		return { x: (W - fw) / 2, y: (H - fh) / 2, fw, fh };
+	}
+	const hasFilter = 'filter' in ctx;
+	// one layer of the stack from the hand-drawn shape: the polygon, filled in the layer's colour, blurred
+	function drawShape(color, alpha, blurPx, cx, cy, tw, dx, dy) {
+		const pts = cfg.shape;
+		if (pts.length < 3) return;
+		ctx.globalAlpha = alpha;
+		ctx.fillStyle = color;
+		if (hasFilter) {
+			ctx.filter = `blur(${blurPx.toFixed(1)}px)`;
+			ctx.beginPath(); pts.forEach(([rx, ry], i) => { const x = cx + rx * tw + dx, y = cy + ry * tw + dy; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath(); ctx.fill();
+			ctx.filter = 'none';
+		} else {
+			// no ctx.filter: the shadow is the blur — draw the shape off-screen and let its shadow land in place
+			const off = 4096;
+			ctx.shadowColor = color; ctx.shadowBlur = blurPx; ctx.shadowOffsetX = off; ctx.shadowOffsetY = 0;
+			ctx.beginPath(); pts.forEach(([rx, ry], i) => { const x = cx + rx * tw + dx - off, y = cy + ry * tw + dy; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath(); ctx.fill();
+			ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0;
+		}
 	}
 	function tentAt(frame) {
 		const k = cfg.track;
@@ -132,12 +176,13 @@ export function createTentGlow({ canvas, film, cfg = TENT_GLOW }) {
 			ctx.globalCompositeOperation = 'lighter';
 			cfg.layers.forEach((l, i) => {
 				const k = flicker(t, i);
-				const r = l.radius * tw * (0.92 + 0.08 * k);
+				const r = l.radius * tw * (0.92 + 0.08 * k) * cfg.spread;
 				const wander = reduced ? 0 : cfg.drift * tw * (i / cfg.layers.length);
 				const x = cx + Math.sin(t * 0.9 + phase[i]) * wander;
-				const y = cy - l.rise * tw * k + Math.cos(t * 0.7 + phase[i] * 1.4) * wander * 0.6;
-				ctx.globalAlpha = clamp(l.alpha * k * on, 0, 1);
-				ctx.drawImage(sprites[i], x - r, y - r, r * 2, r * 2);
+				const y = cy - l.rise * tw * k * cfg.riseScale + Math.cos(t * 0.7 + phase[i] * 1.4) * wander * 0.6;
+				const a = clamp(l.alpha * k * on * cfg.intensity, 0, 1);
+				if (cfg.shape.length >= 3) drawShape(l.color, a, l.radius * tw * cfg.blur * cfg.spread, cx, cy, tw, x - cx, y - cy);
+				else { ctx.globalAlpha = a; ctx.drawImage(sprites[i], x - r, y - r, r * 2, r * 2); }
 			});
 			ctx.globalAlpha = 1;
 			ctx.globalCompositeOperation = 'source-over';
@@ -146,5 +191,5 @@ export function createTentGlow({ canvas, film, cfg = TENT_GLOW }) {
 	}
 	requestAnimationFrame(frame);
 
-	return { cfg, tentAt };
+	return { cfg, tentAt, cover, setPalette };
 }

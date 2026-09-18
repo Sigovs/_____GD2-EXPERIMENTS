@@ -84,9 +84,15 @@
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
 		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18e';
-		import { createTentGlow } from './src/tent-glow.js?v=2026-09-18f';
+		import { createTentGlow } from './src/tent-glow.js?v=2026-09-18g';
 		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp' });
 		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), film });
+		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
+		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.shape') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-18g'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
+		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)
+		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-18g'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
+		if (new URLSearchParams(location.search).get('edit') === 'glow') openEditor();
+		addEventListener('keydown', (e) => { if ((e.key === 'g' || e.key === 'G') && !window.__glowEditor && !e.metaKey && !e.ctrlKey) openEditor(); });
 	</script>
 	<script type="module">
 		// the vignette, dithered on a canvas — a CSS gradient banded (src/vignette.js)
