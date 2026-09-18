@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="src/nav.css">
-<link rel="stylesheet" href="src/hero.css">
+<link rel="stylesheet" href="src/nav.css?v=2026-09-18d">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-18d">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -81,7 +81,7 @@
 	</script>
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
-		import { createFilmFrames } from './src/film-frames.js';
+		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18d';
 		createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp' });
 	</script>
 	<script type="module">
@@ -90,8 +90,8 @@
 		import { createRouteLayer } from './src/route-layer.js';
 		import { runIntro } from './src/intro.js';
 		import * as THREE from 'three';
-		import { createCloudLayer } from './src/cloud-layer.js';   // the plate rig from the 3-D build — the clouds Alex approved
-		import { createCloudStack } from './src/cloud-stack.js';   // procedural fbm layers (parked — "не те облака")
+		import { createCloudLayer } from './src/cloud-layer.js?v=2026-09-18d';   // the plate rig from the 3-D build — the clouds Alex approved
+		import { createCloudStack } from './src/cloud-stack.js?v=2026-09-18d';   // procedural fbm layers (parked — "не те облака")
 		const CLOUDS = 'plates';   // 'plates' (the rig's white breathing clouds — Alex: "это те облака") | 'stack' (procedural, parked)
 
 		// the route is OFF for now (Alex, 18 Sep: "уберём path вообще на данном этапе" — smooth scrolling first); the
