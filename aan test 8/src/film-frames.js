@@ -67,7 +67,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		return null;
 	}
 
-	let lastKey = '';
+	let lastKey = '', lastPair = null;
 	function draw(force = false) {
 		if (!W) return;
 		const f = clamp(current, 0, cfg.frames - 1);
@@ -77,6 +77,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		if (!force && key === lastKey) return;
 		lastKey = key;
 		if (!a) return;
+		lastPair = { a, b: (cfg.crossfade && b && b !== a && t > 0.02) ? b : null, t };   // what is on the canvas now (water-waves.js samples the same pair)
 		ctx.globalAlpha = 1;
 		ctx.drawImage(a, ...cover(a));
 		if (cfg.crossfade && b && b !== a && t > 0.02) {
@@ -152,7 +153,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		setProgress(scrollProgress());
 	}
 
-	const api = { get progress() { return target / (cfg.frames - 1); }, get frame() { return current; }, setProgress, cfg, canvas };
+	const api = { get progress() { return target / (cfg.frames - 1); }, get frame() { return current; }, get pair() { return lastPair; }, setProgress, cfg, canvas };
 	if (!window.__film) window.__film = api;   // the first film is the page's film (the clouds, the glow read it)
 	return api;
 }
