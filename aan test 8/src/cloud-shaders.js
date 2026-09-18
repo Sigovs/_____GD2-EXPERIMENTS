@@ -99,9 +99,7 @@ void main() {
 	float clouds = 1.0 - smoothstep(foot, top, dUv.y);
 	clouds *= smoothstep(0.0, 0.2, dUv.y - 0.2 * smoothstep(0.4, 1.0, dUv.x));
 
-	float alpha = clouds
-		* (1.0 - smoothstep(0.9, 1.0, vUv.y)) * smoothstep(0.0, 0.1, vUv.y)
-		* smoothstep(0.0, 0.1, vUv.x) * (1.0 - smoothstep(0.9, 1.0, vUv.x));
+	float alpha = clouds;
 	// the solid core: its rectangle must never show — every edge is displaced by the plate's own noise so the
 	// boundary is a ragged cloud edge, and the bottom one (the one that comes into frame as the band rises)
 	// gets the widest feather (Alex, 18 Sep: a straight seam across the screen at the end of the scroll)
@@ -115,6 +113,15 @@ void main() {
 	float core = smoothstep(0.2, 0.2 + uEdgeFeather * 3.0, cy) * (1.0 - smoothstep(0.7 - uEdgeFeather * 2.0, 0.7, cy))
 		* smoothstep(0.2, 0.2 + uEdgeFeather, cx) * (1.0 - smoothstep(0.9 - uEdgeFeather, 0.9, cx));
 	alpha += core * (0.35 + 0.65 * clouds);
+	// the plate's own edge, applied to EVERYTHING above (the core included — before, the core was added after the
+	// edge and its noise-shifted bounds could reach the plate's geometric edge: a hard straight cut across the
+	// frame, Alex, 18 Sep: "полоса опять"). The feather's width is itself a noise field (0.05..0.35 uv), so the
+	// contour is ragged, and it is exactly 0 at the geometry, so nothing can show the quad.
+	float en = texture2D(tNoise, ratioedUv * 0.12 + vSeed * 0.7 + vec2(0.006, -0.01) * time).r;
+	float wy = mix(0.05, 0.35, en), wx = mix(0.05, 0.28, en);
+	float edge = smoothstep(0.0, wy, vUv.y) * (1.0 - smoothstep(1.0 - wy, 1.0, vUv.y))
+		* smoothstep(0.0, wx, vUv.x) * (1.0 - smoothstep(1.0 - wx, 1.0, vUv.x));
+	alpha *= edge;
 	alpha = min(1.0, alpha * (1.0 + 4.0 * uDense));   // the intro's mass: the same vapour, thicker
 
 	// rim light: the plate's edges (top contour and underside) catch the moon; the body stays in its own shade
