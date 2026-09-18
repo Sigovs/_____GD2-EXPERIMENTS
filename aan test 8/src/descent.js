@@ -53,13 +53,13 @@ export function createDescent({ heroWrap, waterCanvas, cloudCanvas, heroFilm, wa
 		heroWrap.style.filter = s > 0 ? `blur(${blur.toFixed(2)}px) brightness(${dim.toFixed(3)})` : '';
 		heroWrap.style.transform = s > 0 ? `scale(${grow.toFixed(4)})` : '';
 		heroWrap.style.opacity = o.toFixed(3);
-		heroWrap.style.visibility = o > 0 ? '' : 'hidden';
+		heroWrap.style.visibility = o > 0 ? 'visible' : 'hidden';
 
 		const w = ramp(h, cfg.water.in);
 		waterCanvas.style.opacity = w.toFixed(3);
-		waterCanvas.style.visibility = w > 0 ? '' : 'hidden';
+		waterCanvas.style.visibility = w > 0 ? 'visible' : 'hidden';   // explicit: the CSS default for the water is hidden
 
-		if (cloudCanvas) { const c = 1 - ramp(h, cfg.clouds.out); cloudCanvas.style.opacity = c.toFixed(3); cloudCanvas.style.visibility = c > 0 ? '' : 'hidden'; }
+		if (cloudCanvas) { const c = 1 - ramp(h, cfg.clouds.out); cloudCanvas.style.opacity = c.toFixed(3); cloudCanvas.style.visibility = c > 0 ? 'visible' : 'hidden'; }
 		last = P;
 	}
 
