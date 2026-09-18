@@ -30,15 +30,15 @@ export const TENT_GLOW = {
 	   shape, filled in its colour and blurred by its radius, exactly as text-shadow blurs the glyph. */
 	// Alex's shape, 18 Sep (drawn in the editor)
 	shape: [[0.7098, 0.134], [-0.0026, -0.051], [-1.8527, 0.2148], [-0.1084, 0.2369], [2.2005, 0.1867], [0.948, 0.1144], [0.7651, -0.1089], [0.7481, 0.0315]],
-	blur: 0.55,               // blur radius per layer, in `radius` tent widths (the sprite's soft edge, matched)
+	blur: 0.65,               // blur radius per layer, in `radius` tent widths (the sprite's soft edge, matched)
 	// the editor's dials (src/glow-editor.js) — all multipliers on the stack above
-	intensity: 2.09,          // brightness of the whole stack
+	intensity: 2.03,          // brightness of the whole stack
 	spread: 0.3,              // how far the light reaches (radius / blur)
-	riseScale: 1.94,          // how high the plume climbs
+	riseScale: 1.27,          // how high the plume climbs
 	// the palette: the seven layers run core → mid → ember (the pen's cream → orange → coal); null = the colours above
 	palette: { core: '#ff6600', mid: '#ff5900', ember: '#ff0000' },   // Alex, 18 Sep: pure fire, no cream (null = the pen's colours above)
 	fadeIn: [192, 226],       // frames: the light comes up as the tent settles into the frame (earlier it reads as a sunrise over the edge)
-	anchor: 0,                // the flame sits at the tent's centroid
+	anchor: 0.07,             // the flame sits a touch above the tent's centroid (Alex, 18 Sep)
 	// the stack, in the pen's order: radius and rise in tent widths, alpha 0..1. The core is wide and soft —
 	// the tent IS the source, so there is no hot spot, just the canopy's own light spreading
 	//          colour       radius  rise   alpha
@@ -52,8 +52,8 @@ export const TENT_GLOW = {
 		{ color: '#451b0e', radius: 2.30, rise: 0.48, alpha: 0.07 },
 	],
 	breath: { period: 2.6, depth: 0.04 },      // slow swell of the whole stack
-	tremble: { period: 0.72, depth: 0.04 },    // the quick shiver of a flame
-	flare: { every: [3, 9], depth: 0.16, length: 0.35 },   // rare bursts: seconds between, extra brightness, duration (s)
+	tremble: { period: 0.72, depth: 0.08 },    // the quick shiver of a flame
+	flare: { every: [3, 9], depth: 0.25, length: 0.35 },   // rare bursts: seconds between, extra brightness, duration (s)
 	drift: 0.048,                              // tent widths: how far the outer layers wander as they flicker
 	parallax: 13,                               // px: the lean toward the cursor
 	mouseEase: 2.0,
@@ -64,7 +64,7 @@ export const TENT_GLOW = {
 	/* DODGE — a separate pass (Alex, 18 Sep): the same stack drawn again on its own canvas with mix-blend-mode:
 	   color-dodge, so it burns the film's own highlights (the tent, the lit rocks) instead of adding light over them.
 	   amount = its opacity; spread/intensity scale that pass alone */
-	dodge: { amount: 0, spread: 1, intensity: 1 },
+	dodge: { amount: 0.37, spread: 1.47, intensity: 2.41 },   // Alex, 18 Sep
 };
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
