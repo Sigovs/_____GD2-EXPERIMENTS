@@ -114,7 +114,7 @@
 		window.__life = life;
 		// the water answers the cursor: rings (src/water-waves.js, WebGL2); where float targets are missing, the soft
 		// SVG lens of src/water-ripple.js stands in
-		import { createWaterWaves } from './src/water-waves.js?v=2026-09-18a';
+		import { createWaterWaves } from './src/water-waves.js?v=2026-09-18b';
 		import { createWaterRipple } from './src/water-ripple.js?v=2026-09-18v';
 		const waves = createWaterWaves({ canvas: document.getElementById('water-waves'), film: water });
 		const ripple = waves.enabled ? { setPresence() {} } : createWaterRipple({ target: document.getElementById('water-film') });
@@ -123,7 +123,7 @@
 		// photographs floating up through the water (src/drift-cards.js)
 		import { createDriftCards } from './src/drift-cards.js?v=2026-09-18x';
 		window.__drift = createDriftCards();
-		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: film, waterFilm: water, clouds: null, onWater: (w, P) => { life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w); } });
+		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: film, waterFilm: water, clouds: null, onWater: (w, P) => { life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
 		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.shape') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-18m'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)

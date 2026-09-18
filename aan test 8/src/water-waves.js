@@ -12,9 +12,15 @@
  * bends under real ripples — and the crests catch a thin light from above. Where the field is
  * flat the frame is untouched, so the layer can sit over the film at the film's own opacity.
  *
+ * The SURFACE (after the "water-ripple-image" shader Alex found, 18 Sep): on top of the rings the
+ * water itself is never still — a field of rotating sines (ten octaves) and a simplex drift bend
+ * the frame a little all the time, and the same field is the light: moving caustic streaks, a touch
+ * blue, strongest near the surface and gone with depth. Both distortions land in one sample.
+ *
  * Needs WebGL2 with float render targets; without them it declines (returns enabled: false) and the
- * soft SVG lens (water-ripple.js) stays. Fine pointers only; off under reduced motion; asleep when
- * the water is not on the page or the field has gone still.
+ * soft SVG lens (water-ripple.js) stays. Fine pointers only for the rings; the surface runs for every
+ * pointer; off under reduced motion (the surface holds one frame); asleep when the water is not on
+ * the page.
  */
 
 export const WATER_WAVES = {
@@ -26,10 +32,15 @@ export const WATER_WAVES = {
 	highlight: 0.25,            // the crest's light (soft-limited in the shader)
 	stretch: 2.2,               // the rings' horizontal reach over their vertical — a surface seen at an angle (Alex: "более горизонтальные")
 	drop: { move: [0.08, 0.2], press: 0.45, radius: [0.016, 0.028], spacing: 26, minGap: 50, speedFull: 700 },   // move: [min, max] depth by cursor speed; radius in uv of the width; spacing: px and minGap: ms between drops
-	still: 0.01,                // below this remaining drop energy the field counts as still and the layer sleeps
+	still: 0.01,                // below this remaining drop energy the field counts as still (the rings' part rests)
+	/* the ambient surface (the demo's gentle values): scale of the sine field, the light's strength and
+	   blueness, how far the surface and the drift bend the frame, the clock's speed, and the depth
+	   (scene progress) over which the light goes out */
+	surface: { scale: 7, illumination: 0.15, blueish: 0.4, distortion: 0.03, drift: 0.02, speed: 0.002, depthFade: [0.62, 0.9] },
 };
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const smooth = (v, a, b) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
 const VERT = `#version 300 es
 in vec2 aPos; out vec2 vUv;
@@ -72,14 +83,55 @@ in vec2 vUv; out vec4 o;
 uniform sampler2D uFilmA, uFilmB, uField; uniform float uMix;   // the two frames the film is crossfading, and how far
 uniform vec2 uCoverA, uCoverB;                                  // object-fit: cover — the share of each image the viewport sees
 uniform vec2 uTexel; uniform float uRefract, uHighlight, uAspect;
+uniform float uTime, uScale, uIllum, uBlueish, uSurfDist, uDrift;   // the ambient surface
 vec3 film(sampler2D t, vec2 cover, vec2 uv) { return texture(t, 0.5 + (uv - 0.5) * cover).rgb; }
+
+// simplex noise (Ashima / Ian McEwan), as the found shader carries it
+vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec3 permute(vec3 x) { return mod289(((x * 34.0) + 1.0) * x); }
+float snoise(vec2 v) {
+	const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+	vec2 i = floor(v + dot(v, C.yy)); vec2 x0 = v - i + dot(i, C.xx);
+	vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+	vec4 x12 = x0.xyxy + C.xxzz; x12.xy -= i1;
+	i = mod289(i);
+	vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
+	vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0); m = m * m; m = m * m;
+	vec3 x = 2.0 * fract(p * C.www) - 1.0; vec3 h = abs(x) - 0.5; vec3 ox = floor(x + 0.5); vec3 a0 = x - ox;
+	m *= 1.79284291400159 - 0.85373472095314 * (a0 * a0 + h * h);
+	vec3 g; g.x = a0.x * x0.x + h.x * x0.y; g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+	return 130.0 * dot(m, g);
+}
+mat2 rot(float r) { return mat2(cos(r), sin(r), -sin(r), cos(r)); }
+// the surface: ten rotating sine octaves — the found shader's field, unchanged
+float surface(vec2 uv, float t, float scale) {
+	vec2 n = vec2(0.1), N = vec2(0.1); mat2 m = rot(0.5);
+	for (int j = 0; j < 10; j++) {
+		uv *= m; n *= m;
+		vec2 q = uv * scale + float(j) + n + (0.5 + 0.5 * float(j)) * (mod(float(j), 2.0) - 1.0) * t;
+		n += sin(q); N += cos(q) / scale; scale *= 1.2;
+	}
+	return N.x + N.y + 0.1;
+}
 void main() {
 	float e = texture(uField, vUv + vec2(uTexel.x, 0.0)).r, w = texture(uField, vUv - vec2(uTexel.x, 0.0)).r;
 	float n = texture(uField, vUv + vec2(0.0, uTexel.y)).r, s = texture(uField, vUv - vec2(0.0, uTexel.y)).r;
 	vec2 grad = vec2(e - w, n - s);
-	vec2 uv = clamp(vUv + grad * uRefract * vec2(1.0, uAspect), vec2(0.001), vec2(0.999));
+	// the ambient surface: a slow drift field and the sine surface, stronger toward the top (the light's side)
+	float t = uTime;
+	vec2 suv = vec2(vUv.x * uAspect, vUv.y);
+	float outer = snoise((0.3 + 0.1 * sin(t)) * suv + vec2(0.0, 0.2 * t));
+	float surf = surface(2.0 * suv + outer * 0.2, t, uScale);
+	surf *= pow(vUv.y, 0.3);
+	surf = surf * surf;
+	vec2 uv = vUv + grad * uRefract * vec2(1.0, uAspect) + uDrift * outer + uSurfDist * surf;
+	uv = clamp(uv, vec2(0.001), vec2(0.999));
 	vec3 col = film(uFilmA, uCoverA, uv);
 	if (uMix > 0.001) col = mix(col, film(uFilmB, uCoverB, uv), uMix);
+	// the surface's light: the frame lifted where the light runs, and the light itself, a touch blue
+	col *= 1.0 + uIllum * surf;
+	col += uIllum * vec3(1.0 - uBlueish, 1.0, 1.0) * surf;
 	// the crest's light: a slope facing up-left catches it, the far slope loses a little — soft-limited, never white
 	float lit = clamp((grad.x * -0.6 + grad.y * 1.0) * 12.0, -1.0, 1.0);
 	col += uHighlight * 0.32 * smoothstep(0.0, 1.0, lit) * vec3(0.85, 0.95, 1.0);
@@ -100,9 +152,9 @@ function program(gl, vs, fs) {
 
 export function createWaterWaves({ canvas, film, cfg = WATER_WAVES }) {
 	const off = { enabled: false, setPresence() {} };
-	const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+	const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;   // the rings want a mouse; the surface runs anywhere
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	if (!cfg.enabled || !fine || reduced || !canvas || !film) return off;
+	if (!cfg.enabled || !canvas || !film) return off;
 	const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: false });
 	if (!gl || !gl.getExtension('EXT_color_buffer_float')) return off;
 	const linear = gl.getExtension('OES_texture_float_linear');   // half-float linear filtering is core in WebGL2
@@ -116,7 +168,8 @@ export function createWaterWaves({ canvas, film, cfg = WATER_WAVES }) {
 	const U = (p, n) => gl.getUniformLocation(p, n);
 	const u = {
 		sim: { field: U(sim, 'uField'), texel: U(sim, 'uTexel'), damp: U(sim, 'uDamp'), stretch: U(sim, 'uStretch'), drops: U(sim, 'uDrops'), drop: U(sim, 'uDrop'), dropR: U(sim, 'uDropR') },
-		draw: { filmA: U(draw, 'uFilmA'), filmB: U(draw, 'uFilmB'), mix: U(draw, 'uMix'), coverA: U(draw, 'uCoverA'), coverB: U(draw, 'uCoverB'), field: U(draw, 'uField'), texel: U(draw, 'uTexel'), refract: U(draw, 'uRefract'), highlight: U(draw, 'uHighlight'), aspect: U(draw, 'uAspect') },
+		draw: { filmA: U(draw, 'uFilmA'), filmB: U(draw, 'uFilmB'), mix: U(draw, 'uMix'), coverA: U(draw, 'uCoverA'), coverB: U(draw, 'uCoverB'), field: U(draw, 'uField'), texel: U(draw, 'uTexel'), refract: U(draw, 'uRefract'), highlight: U(draw, 'uHighlight'), aspect: U(draw, 'uAspect'),
+			time: U(draw, 'uTime'), scale: U(draw, 'uScale'), illum: U(draw, 'uIllum'), blueish: U(draw, 'uBlueish'), surfDist: U(draw, 'uSurfDist'), drift: U(draw, 'uDrift') },
 	};
 
 	// the field: two half-float RG textures with framebuffers
@@ -181,7 +234,7 @@ export function createWaterWaves({ canvas, film, cfg = WATER_WAVES }) {
 	const pending = [];
 	let lastP = null, lastT = 0, since = 0, lastDrop = 0;
 	const toUv = (x, y) => [x / W, 1 - y / H];
-	window.addEventListener('pointermove', (e) => {
+	if (fine) window.addEventListener('pointermove', (e) => {
 		const now = performance.now();
 		if (lastP) {
 			const dx = e.clientX - lastP[0], dy = e.clientY - lastP[1], dist = Math.hypot(dx, dy);
@@ -195,9 +248,9 @@ export function createWaterWaves({ canvas, film, cfg = WATER_WAVES }) {
 		}
 		lastP = [e.clientX, e.clientY]; lastT = now;
 	}, { passive: true });
-	window.addEventListener('pointerdown', (e) => { const [x, y] = toUv(e.clientX, e.clientY); pending.push([x, y, cfg.drop.press, cfg.drop.radius[1] * 1.3]); }, { passive: true });
+	if (fine) window.addEventListener('pointerdown', (e) => { const [x, y] = toUv(e.clientX, e.clientY); pending.push([x, y, cfg.drop.press, cfg.drop.radius[1] * 1.3]); }, { passive: true });
 
-	let presence = 0, awake = 0, raf = 0, quiet = 0;
+	let presence = 0, depth = 0, awake = 0, raf = 0, quiet = 0;
 	const dropBuf = new Float32Array(24), dropR = new Float32Array(8);
 	function step() {
 		gl.useProgram(sim); gl.bindVertexArray(vao);
@@ -226,6 +279,10 @@ export function createWaterWaves({ canvas, film, cfg = WATER_WAVES }) {
 		gl.uniform1f(u.draw.mix, mixT); gl.uniform2f(u.draw.coverA, texA.cover[0], texA.cover[1]); gl.uniform2f(u.draw.coverB, texB.cover[0], texB.cover[1]);
 		gl.uniform2f(u.draw.texel, 1 / SW, 1 / SH);
 		gl.uniform1f(u.draw.refract, cfg.refract); gl.uniform1f(u.draw.highlight, cfg.highlight); gl.uniform1f(u.draw.aspect, W / H);
+		const sf = cfg.surface, deep = 1 - smooth(depth, sf.depthFade[0], sf.depthFade[1]);
+		gl.uniform1f(u.draw.time, reduced ? 0 : performance.now() * sf.speed); gl.uniform1f(u.draw.scale, sf.scale);
+		gl.uniform1f(u.draw.illum, sf.illumination * deep); gl.uniform1f(u.draw.blueish, sf.blueish);
+		gl.uniform1f(u.draw.surfDist, sf.distortion); gl.uniform1f(u.draw.drift, sf.drift);
 		gl.drawArrays(gl.TRIANGLES, 0, 3);
 	}
 	// is the field still? no read-back (a GPU stall): the energy the drops put in, decayed as the field decays
@@ -244,18 +301,24 @@ export function createWaterWaves({ canvas, film, cfg = WATER_WAVES }) {
 		step();
 		render();
 		canvas.style.visibility = 'visible';
-		// asleep once the field has gone still and nothing is pending (the film underneath carries on)
-		if (tick % 20 === 0 && !pending.length) quiet = energy < cfg.still ? quiet + 1 : 0; else if (pending.length) quiet = 0;
-		if (quiet >= 3) { canvas.style.visibility = 'hidden'; awake = 0; quiet = 0; return; }
+		// the surface never rests, so the layer runs while the water is on the page; under reduced motion the
+		// surface holds one frame and the layer sleeps once the rings are still
+		if (reduced) {
+			if (tick % 20 === 0 && !pending.length) quiet = energy < cfg.still ? quiet + 1 : 0; else if (pending.length) quiet = 0;
+			if (quiet >= 3) { awake = 0; quiet = 0; return; }
+		}
 		raf = requestAnimationFrame(frame);
 	}
 	function wake() { if (!raf && presence >= ON) { awake = 1; raf = requestAnimationFrame(frame); } }
-	window.addEventListener('pointermove', wake, { passive: true });
-	window.addEventListener('pointerdown', wake, { passive: true });
+	if (fine) { window.addEventListener('pointermove', wake, { passive: true }); window.addEventListener('pointerdown', wake, { passive: true }); }
 
 	return {
 		enabled: true, cfg,
 		debug() { return { energy, pending: pending.length, raf: !!raf, presence, glError: gl.getError(), sim: [SW, SH], tick }; },
-		setPresence(p) { presence = clamp(p, 0, 1); if (presence >= ON && pending.length) wake(); if (presence < ON && raf) { cancelAnimationFrame(raf); raf = 0; canvas.style.visibility = 'hidden'; } },
+		setPresence(p, P = depth) {
+			presence = clamp(p, 0, 1); depth = clamp(P, 0, 1);
+			if (presence >= ON) wake();
+			if (presence < ON && raf) { cancelAnimationFrame(raf); raf = 0; canvas.style.visibility = 'hidden'; }
+		},
 	};
 }
