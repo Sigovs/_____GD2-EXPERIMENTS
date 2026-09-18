@@ -31,6 +31,7 @@ export const ACT = {
 		soften: [0.88, 0.985],          // blur 0 → blurPx, brightness 1 → dim, scale 1 → grow
 		out: [0.945, 0.985],            // opacity 1 → 0
 		blurPx: 2.5, dim: 0.85, grow: 1.015,
+		lift: 14,                       // vh: the mountain slides UP as we go under — the camera keeps sinking (Alex, 18 Sep)
 	},
 	water: { in: [0.90, 0.97] },        // opacity 0 → 1
 	clouds: { out: [0.90, 0.97] },      // the plates leave with the hero
@@ -40,7 +41,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const ramp = (v, [a, b]) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const lerp = (a, b, t) => a + (b - a) * t;
 
-export function createDescent({ heroWrap, waterCanvas, cloudCanvas, heroFilm, waterFilm, clouds, cfg = ACT }) {
+export function createDescent({ heroWrap, waterCanvas, cloudCanvas, heroFilm, waterFilm, clouds, onWater = null, cfg = ACT }) {
 	const progress = () => { const max = document.documentElement.scrollHeight - window.innerHeight; return max > 0 ? clamp(window.scrollY / max, 0, 1) : 0; };
 	let last = -1, cloudsRef = clouds;
 
@@ -51,15 +52,16 @@ export function createDescent({ heroWrap, waterCanvas, cloudCanvas, heroFilm, wa
 		cloudsRef?.setProgress?.(h);
 
 		const s = ramp(h, cfg.hero.soften), o = 1 - ramp(h, cfg.hero.out);
-		const blur = lerp(0, cfg.hero.blurPx, s), dim = lerp(1, cfg.hero.dim, s), grow = lerp(1, cfg.hero.grow, s);
+		const blur = lerp(0, cfg.hero.blurPx, s), dim = lerp(1, cfg.hero.dim, s), grow = lerp(1, cfg.hero.grow, s), lift = lerp(0, cfg.hero.lift, s);
 		heroWrap.style.filter = s > 0 ? `blur(${blur.toFixed(2)}px) brightness(${dim.toFixed(3)})` : '';
-		heroWrap.style.transform = s > 0 ? `scale(${grow.toFixed(4)})` : '';
+		heroWrap.style.transform = s > 0 ? `translateY(${(-lift).toFixed(2)}vh) scale(${grow.toFixed(4)})` : '';
 		heroWrap.style.opacity = o.toFixed(3);
 		heroWrap.style.visibility = o > 0 ? 'visible' : 'hidden';
 
 		const w = ramp(h, cfg.water.in);
 		waterCanvas.style.opacity = w.toFixed(3);
 		waterCanvas.style.visibility = w > 0 ? 'visible' : 'hidden';   // explicit: the CSS default for the water is hidden
+		onWater?.(w, P);   // the water's life (caustics, motes, bubbles) follows the water's presence and the depth
 
 		if (cloudCanvas) { const c = 1 - ramp(h, cfg.clouds.out); cloudCanvas.style.opacity = c.toFixed(3); cloudCanvas.style.visibility = c > 0 ? 'visible' : 'hidden'; }
 		last = P;

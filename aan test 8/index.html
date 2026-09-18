@@ -35,6 +35,8 @@
 		<!-- ACT II — the water: starts under the surface (the tent's light warped above), comes up over the mountain
 		     for a moment, then the scroll scrubs the descent. Same frame transport. -->
 		<canvas id="water-film" class="stage__video stage__act" aria-hidden="true"></canvas>
+		<!-- what moves in the water while the film is a still: caustics, the suspension, bubbles (src/water-life.js) -->
+		<canvas id="water-life" class="stage__glow" aria-hidden="true"></canvas>
 		<!-- the descent route over the film — an instrument, rotoscoped to the film's frames (src/route-layer.js) -->
 		<canvas id="route-canvas" class="stage__route" aria-hidden="true"></canvas>
 		<!-- the one 3-D thing we keep: the scene's own clouds, over the film (src/cloud-layer.js) -->
@@ -94,7 +96,7 @@
 	<script type="module">
 		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18e';
 		import { createTentGlow } from './src/tent-glow.js?v=2026-09-18n';
-		import { createDescent, ACT } from './src/descent.js?v=2026-09-18p';
+		import { createDescent, ACT } from './src/descent.js?v=2026-09-18s';
 		// the two films: the hero scrubs the first part of the page, the water the rest — they overlap for the hand-over.
 		// Neither listens to the scroll itself: descent.js drives both from one progress.
 		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp', cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false } });   // the film ends early and holds on the tent
@@ -102,7 +104,10 @@
 		window.__water = water;
 		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), film });
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
-		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: film, waterFilm: water, clouds: null });
+		import { createWaterLife } from './src/water-life.js?v=2026-09-18s';
+		const life = createWaterLife({ canvas: document.getElementById('water-life'), waterCanvas: document.getElementById('water-film') });
+		window.__life = life;
+		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: film, waterFilm: water, clouds: null, onWater: (w, P) => life.setPresence(w, P) });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
 		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.shape') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-18m'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)
@@ -151,7 +156,7 @@
 	<script type="module">import { initNav } from './src/nav.js'; window.__nav = initNav();</script>
 	<script type="module">
 		// the captions: text blocks that arrive with the scroll, over the mountain and under the water (src/captions.js)
-		import { createCaptions } from './src/captions.js?v=2026-09-18r';
+		import { createCaptions } from './src/captions.js?v=2026-09-18s';
 		window.__captions = createCaptions();
 	</script>
 </body>

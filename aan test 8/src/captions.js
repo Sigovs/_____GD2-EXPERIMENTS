@@ -28,7 +28,7 @@ export const CAPTIONS = {
 		// ACT I — the mountain (the hero scrubs to 0.56 of the page; the tent holds from ~0.44)
 		{ at: [0.10, 0.22], side: 'left',  y: '58%', eyebrow: '01 — Ascent',    lines: ['Every summit starts', 'with a decision.'], world: 'air' },
 		{ at: [0.26, 0.38], side: 'right', y: '46%', eyebrow: '02 — Route',     lines: ['We map the route', 'before the first step.'], world: 'air' },
-		{ at: [0.44, 0.52], side: 'left',  y: '40%', eyebrow: '03 — Base camp', lines: ['Where the plan', 'meets the night.'], world: 'air' },
+		{ at: [0.42, 0.485], side: 'left',  y: '40%', eyebrow: '03 — Base camp', lines: ['Where the plan', 'meets the night.'], world: 'air' },
 		// ACT II — the water (from ~0.56)
 		{ at: [0.60, 0.70], side: 'right', y: '54%', eyebrow: '04 — Descent',   lines: ['Below the surface', 'the real work begins.'], world: 'water' },
 		{ at: [0.74, 0.84], side: 'left',  y: '50%', eyebrow: '05 — Pressure',  lines: ['Compliance is not a cage.', 'It is a map of the pressure.'], world: 'water' },
