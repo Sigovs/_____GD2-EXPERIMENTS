@@ -53,6 +53,9 @@ body {
 	will-change: opacity, filter, transform;
 	transform-origin: 50% 50%;
 }
+/* the water canvas is opaque (no alpha) and sits over the mountain: it starts INVISIBLE in CSS, so until
+   descent.js takes over (or if it never does) the mountain is never covered by a black canvas */
+#water-film { opacity: 0; visibility: hidden; }
 .stage__glow {
 	position: absolute;
 	inset: 0;
