@@ -32,7 +32,7 @@ export const CAPTIONS = {
 		// ACT II — the water (from ~0.56)
 		{ at: [0.60, 0.70], side: 'right', y: '54%', eyebrow: '04 — Descent',   lines: ['Below the surface', 'the real work begins.'], world: 'water' },
 		{ at: [0.74, 0.84], side: 'left',  y: '50%', eyebrow: '05 — Pressure',  lines: ['Compliance is not a cage.', 'It is a map of the pressure.'], world: 'water' },
-		{ at: [0.88, 0.99], side: 'left',  y: '50%', eyebrow: 'GD2',            lines: ['The deeper you go,', 'the more you know.'], world: 'water', closing: true, cta: { label: 'Start the descent', href: '#brands' } },
+		{ at: [0.88, 0.99], side: 'left',  y: '50%', eyebrow: 'GD2',            lines: ['The deeper you go,', 'the more you know.'], world: 'water', closing: true, cta: { label: 'Start the descent', href: '#main' } },
 	],
 };
 
