@@ -9,7 +9,8 @@
  * and the scroll scrubs the descent.
  *
  * Everything is a function of the page's progress P (0..1):
- *   hero film    scrubs over ACT.hero  = [0, heroEnd]         h = P / heroEnd
+ *   hero film    scrubs over [0, heroEnd·heroFilmEnd] and holds its last frame (the tent) until the hand-over;
+ *                h = P / heroEnd is the hero's own scroll
  *   water film   scrubs over ACT.water = [heroEnd·0.91, 1]
  *   the hand-over is keyed on h (the hero's own scroll), so the table below reads like the plan:
  *     0.00–0.88  hero, untouched
@@ -23,15 +24,16 @@
  */
 
 export const ACT = {
-	heroEnd: 0.52,                      // the hero's share of the page; the water takes the rest (minus the overlap)
-	waterStart: 0.91,                   // in hero scroll: where the water film starts (and starts loading its frames)
+	heroEnd: 0.56,                      // the hero's share of the page; the water takes the rest (minus the overlap)
+	heroFilmEnd: 0.78,                  // in hero scroll: the film reaches the tent here and HOLDS — time to look at it before the water
+	waterStart: 0.90,                   // in hero scroll: where the water film starts (and starts loading its frames)
 	hero: {
-		soften: [0.88, 0.97],           // blur 0 → blurPx, brightness 1 → dim, scale 1 → grow
-		out: [0.94, 0.97],              // opacity 1 → 0
+		soften: [0.88, 0.985],          // blur 0 → blurPx, brightness 1 → dim, scale 1 → grow
+		out: [0.945, 0.985],            // opacity 1 → 0
 		blurPx: 2.5, dim: 0.85, grow: 1.015,
 	},
-	water: { in: [0.91, 0.96] },        // opacity 0 → 1
-	clouds: { out: [0.90, 0.96] },      // the plates leave with the hero
+	water: { in: [0.90, 0.97] },        // opacity 0 → 1
+	clouds: { out: [0.90, 0.97] },      // the plates leave with the hero
 };
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));

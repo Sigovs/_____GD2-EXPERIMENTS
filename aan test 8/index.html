@@ -94,10 +94,10 @@
 	<script type="module">
 		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18e';
 		import { createTentGlow } from './src/tent-glow.js?v=2026-09-18n';
-		import { createDescent, ACT } from './src/descent.js?v=2026-09-18j';
+		import { createDescent, ACT } from './src/descent.js?v=2026-09-18p';
 		// the two films: the hero scrubs the first part of the page, the water the rest — they overlap for the hand-over.
 		// Neither listens to the scroll itself: descent.js drives both from one progress.
-		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp', cfg: { range: [0, ACT.heroEnd], scroll: false } });
+		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp', cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false } });   // the film ends early and holds on the tent
 		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => (w > 1000 ? 'assets/frames/water/1600' : 'assets/frames/water/960') }, loadAfter: 2500 });
 		window.__water = water;
 		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), film });
