@@ -20,11 +20,11 @@ export const DRIFT_CARDS = {
 	damp: 6,                   // how tightly the card follows the scroll (higher = tighter)
 	sway: { px: 10, period: 5.5 },
 	parallax: 28,              // px at depth 1
-	cards: [
-		{ at: [0.60, 0.73], x: '7vw',  w: 'clamp(200px, 24vw, 380px)', ratio: 4 / 5, tilt: -2.5, depth: 0.8, src: 'previews/card-ridge.jpg',  alt: '', label: 'The ridge, 4 a.m.' },
-		{ at: [0.68, 0.81], x: '64vw', w: 'clamp(180px, 20vw, 320px)', ratio: 3 / 2, tilt: 2,    depth: 0.45, src: 'previews/camp.jpg',        alt: '', label: 'Base camp' },
-		{ at: [0.77, 0.90], x: '30vw', w: 'clamp(200px, 22vw, 360px)', ratio: 4 / 5, tilt: -1.5, depth: 0.65, src: 'previews/card-trench.jpg', alt: '', label: 'The trench' },
-		{ at: [0.85, 0.97], x: '62vw', w: 'clamp(180px, 20vw, 320px)', ratio: 5 / 4, tilt: 3,    depth: 1,    src: 'previews/card-floor.jpg',  alt: '', label: 'The floor' },
+	cards: [   // x = the card's left edge; nearer the centre (Alex, 18 Sep: "ближе к центру") — left cards from ~20vw, right ones from ~52vw
+		{ at: [0.60, 0.73], x: '20vw', w: 'clamp(200px, 24vw, 380px)', ratio: 4 / 5, tilt: -2.5, depth: 0.8, src: 'previews/card-ridge.jpg',  alt: '', label: 'The ridge, 4 a.m.' },
+		{ at: [0.68, 0.81], x: '54vw', w: 'clamp(180px, 20vw, 320px)', ratio: 3 / 2, tilt: 2,    depth: 0.45, src: 'previews/camp.jpg',        alt: '', label: 'Base camp' },
+		{ at: [0.77, 0.90], x: '26vw', w: 'clamp(200px, 22vw, 360px)', ratio: 4 / 5, tilt: -1.5, depth: 0.65, src: 'previews/card-trench.jpg', alt: '', label: 'The trench' },
+		{ at: [0.85, 0.97], x: '52vw', w: 'clamp(180px, 20vw, 320px)', ratio: 5 / 4, tilt: 3,    depth: 1,    src: 'previews/card-floor.jpg',  alt: '', label: 'The floor' },
 	],
 };
 
