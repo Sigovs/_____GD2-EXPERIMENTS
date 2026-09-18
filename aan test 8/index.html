@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="src/nav.css?v=2026-09-18d">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-18d">
+<link rel="stylesheet" href="src/nav.css?v=2026-09-18e">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-18e">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -28,7 +28,7 @@
 		<canvas id="route-canvas" class="stage__route" aria-hidden="true"></canvas>
 		<!-- the one 3-D thing we keep: the scene's own clouds, over the film (src/cloud-layer.js) -->
 		<canvas id="cloud-canvas" class="stage__clouds" aria-hidden="true"></canvas>
-		<div class="stage__vignette" aria-hidden="true"></div>
+		<canvas id="vignette-canvas" class="stage__vignette" aria-hidden="true"></canvas>
 	</div>
 
 	<!-- the route's callouts (route.css); the leaders are drawn in here by route-layer.js -->
@@ -81,8 +81,13 @@
 	</script>
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
-		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18d';
+		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18e';
 		createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp' });
+	</script>
+	<script type="module">
+		// the vignette, dithered on a canvas — a CSS gradient banded (src/vignette.js)
+		import { createVignette } from './src/vignette.js?v=2026-09-18e';
+		createVignette({ canvas: document.getElementById('vignette-canvas') });
 	</script>
 	<script type="module">
 		// one module, in order: the route over the film, the cloud plates over the route, then the intro
@@ -90,8 +95,8 @@
 		import { createRouteLayer } from './src/route-layer.js';
 		import { runIntro } from './src/intro.js';
 		import * as THREE from 'three';
-		import { createCloudLayer } from './src/cloud-layer.js?v=2026-09-18d';   // the plate rig from the 3-D build — the clouds Alex approved
-		import { createCloudStack } from './src/cloud-stack.js?v=2026-09-18d';   // procedural fbm layers (parked — "не те облака")
+		import { createCloudLayer } from './src/cloud-layer.js?v=2026-09-18e';   // the plate rig from the 3-D build — the clouds Alex approved
+		import { createCloudStack } from './src/cloud-stack.js?v=2026-09-18e';   // procedural fbm layers (parked — "не те облака")
 		const CLOUDS = 'plates';   // 'plates' (the rig's white breathing clouds — Alex: "это те облака") | 'stack' (procedural, parked)
 
 		// the route is OFF for now (Alex, 18 Sep: "уберём path вообще на данном этапе" — smooth scrolling first); the

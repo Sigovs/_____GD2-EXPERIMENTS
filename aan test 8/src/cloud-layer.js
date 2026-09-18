@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mouseVertex, mouseFragment } from './shaders.js';
-import { cloudVertex, cloudFragment, mistVertex, mistFragment } from './cloud-shaders.js?v=2026-09-18d';
+import { cloudVertex, cloudFragment, mistVertex, mistFragment } from './cloud-shaders.js?v=2026-09-18e';
 
 /*
  * cloud-layer.js — the mountain scene's own clouds, and nothing else, over the film.
