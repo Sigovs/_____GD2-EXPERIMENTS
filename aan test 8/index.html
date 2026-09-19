@@ -114,10 +114,11 @@
 		window.__life = life;
 		// the water answers the cursor: rings (src/water-waves.js, WebGL2); where float targets are missing, the soft
 		// SVG lens of src/water-ripple.js stands in
-		import { createWaterWaves } from './src/water-waves.js?v=2026-09-18b';
-		import { createWaterRipple } from './src/water-ripple.js?v=2026-09-18v';
+		import { createWaterWaves } from './src/water-waves.js?v=2026-09-18y';
+		// import { createWaterRipple } from './src/water-ripple.js?v=2026-09-18v';   // parked with the rings
 		const waves = createWaterWaves({ canvas: document.getElementById('water-waves'), film: water });
-		const ripple = waves.enabled ? { setPresence() {} } : createWaterRipple({ target: document.getElementById('water-film') });
+		// the cursor's ripple is OFF (Alex, 18 Sep): no rings (WATER_WAVES.rings) and no SVG lens fallback either
+		const ripple = { setPresence() {} };   // was: waves.enabled ? … : createWaterRipple({ target: document.getElementById('water-film') })
 		window.__waves = waves;
 		window.__ripple = ripple;
 		// photographs floating up through the water (src/drift-cards.js)

@@ -25,6 +25,7 @@
 
 export const WATER_WAVES = {
 	enabled: true,
+	rings: false,               // the cursor's rings are OFF (Alex, 18 Sep: "убери ripple effect на mouse под водой"); the ambient surface stays. true brings them back
 	simWidth: 384,              // the field's width in texels (height follows the viewport's aspect)
 	steps: 2,                   // simulation steps per frame: the rings' speed
 	damping: 0.99,              // per step: how long a ring lives
@@ -152,7 +153,7 @@ function program(gl, vs, fs) {
 
 export function createWaterWaves({ canvas, film, cfg = WATER_WAVES }) {
 	const off = { enabled: false, setPresence() {} };
-	const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;   // the rings want a mouse; the surface runs anywhere
+	const fine = cfg.rings && window.matchMedia('(hover: hover) and (pointer: fine)').matches;   // the rings want a mouse (and to be on); the surface runs anywhere
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	if (!cfg.enabled || !canvas || !film) return off;
 	const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, premultipliedAlpha: false });
