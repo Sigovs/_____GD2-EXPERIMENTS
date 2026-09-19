@@ -28,13 +28,13 @@ export const ACT = {
 	heroFilmEnd: 0.90,                  // in hero scroll: the film plays to its last frame exactly where the hand-over begins (Alex, 19 Sep: "видео горы должно отыгрывать до конца")
 	waterStart: 0.90,                   // in hero scroll: where the water film starts (and starts loading its frames)
 	hero: {
-		soften: [0.88, 0.985],          // blur 0 → blurPx, brightness 1 → dim, scale 1 → grow
-		out: [0.945, 0.985],            // opacity 1 → 0
+		soften: [0.90, 0.99],           // blur 0 → blurPx, brightness 1 → dim, scale 1 → grow
+		out: [0.955, 0.99],             // opacity 1 → 0
 		blurPx: 2.5, dim: 0.85, grow: 1.015,
-		lift: 14,                       // vh: the mountain slides UP as we go under — the camera keeps sinking (Alex, 18 Sep)
+		lift: 0,                        // vh: NO lift of the whole act in test 9 — it showed the act's bottom edge as a straight seam over the water (Alex, 19 Sep); the near plane grows instead (layers.js)
 	},
-	water: { in: [0.90, 0.97] },        // opacity 0 → 1
-	clouds: { out: [0.90, 0.97] },      // the plates leave with the hero
+	water: { in: [0.93, 0.985] },       // opacity 0 → 1 — later: the water must not come up while the camp is still the picture (Alex, 19 Sep)
+	clouds: { out: [0.92, 0.985] },     // the plates leave with the hero
 };
 
 import { sceneProgress } from './progress.js?v=2026-09-18v';

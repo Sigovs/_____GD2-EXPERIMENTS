@@ -59,6 +59,7 @@ body {
 /* the planes (src/layers.js): every one fills the act and is moved by transform only */
 .layer { position: absolute; inset: 0; width: 100%; height: 100%; will-change: transform; transform-origin: 50% 50%; }
 .layer--plateau { pointer-events: none; display: block; }
+#plane-plateau { transform-origin: 50% 100%; }   /* the near plane grows from its bottom edge at the hand-over */
 .stage__glow {
 	position: absolute;
 	inset: 0;

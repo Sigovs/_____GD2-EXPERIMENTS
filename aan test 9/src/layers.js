@@ -22,15 +22,15 @@ export const LAYERS = {
 	/* NIGHT — the far planes sink into the dark as the camp comes on (Alex, 19 Sep: from where "We map the route"
 	   leaves, captions block 02 ends at 0.38). Scene progress window; the mountain and the clouds dim to these. */
 	night: { at: [0.37, 0.54], mountain: 0.28, clouds: 0.45 },
-	cloudsOut: [0.90, 0.97],   // hero scroll: the plates leave with the act at the hand-over (was descent.js's; the clouds' opacity is owned here now)
+	cloudsOut: [0.92, 0.985],   // hero scroll: the plates leave with the act at the hand-over (was descent.js's; the clouds' opacity is owned here now)
 	planes: {
 		mountain: { mouse: 7,  scrollDrift: 0,  scale: 1.035 },     // far: barely moves; scaled a touch so the lean never shows an edge
 		clouds:   { mouse: 13, scrollDrift: 0 },                   // between (the plate rig adds its own sway on top)
 		plateau:  { mouse: 24, scrollDrift: -3, scale: 1.02,
 			enter: [0.08, 0.42],   // scene progress: the plateau rises from `from` vh below to its place (Alex, 19 Sep: "не сразу должно появляться")
 			from: 72,              // vh below its place at the start: the mountain alone first, the camp arrives as the camera comes down
-			lift: [0.88, 0.985],   // hero-scroll window (as ACT.hero.soften): the plateau lifts `liftVh` more than the act
-			liftVh: 22 },
+			lift: [0.90, 0.99],    // hero-scroll window (as ACT.hero.soften): the near plane comes at the camera — it GROWS from its bottom edge (no edge ever shows) and lifts a little
+			liftVh: 6, grow: 0.14 },
 	},
 };
 
@@ -66,7 +66,7 @@ export function createLayers({ mountain, clouds, plateau, heroEnd = 0.56, cfg = 
 		const pl = P0.plateau;
 		const enter = smooth((P - pl.enter[0]) / (pl.enter[1] - pl.enter[0]));
 		const lift = smooth((h - pl.lift[0]) / (pl.lift[1] - pl.lift[0]));
-		place(plateau, pl, lerp(pl.from, 0, enter) - lift * pl.liftVh);
+		place(plateau, { ...pl, scale: (pl.scale || 1) + lift * (pl.grow || 0) }, lerp(pl.from, 0, enter) - lift * pl.liftVh);
 		requestAnimationFrame(frame);
 	}
 	requestAnimationFrame(frame);

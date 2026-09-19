@@ -34,7 +34,7 @@ export const TENT_GLOW = {
 	shape: [[0.7098, 0.134], [-0.0026, -0.051], [-1.8527, 0.2148], [-0.1084, 0.2369], [2.2005, 0.1867], [0.948, 0.1144], [0.7651, -0.1089], [0.7481, 0.0315]],
 	blur: 0.65,               // blur radius per layer, in `radius` tent widths (the sprite's soft edge, matched)
 	// the editor's dials (src/glow-editor.js) — all multipliers on the stack above
-	intensity: 0.9,           // the plateau's tent is 2x the old one on screen: the same stack at half strength (tune in the editor: G)          // brightness of the whole stack
+	intensity: 0.9,           // the fire behind the plate; tune in the editor: G          // brightness of the whole stack
 	spread: 0.3,              // how far the light reaches (radius / blur)
 	riseScale: 0.55,          // how high the plume climbs
 	// the palette: the seven layers run core → mid → ember (the pen's cream → orange → coal); null = the colours above
@@ -70,7 +70,7 @@ export const TENT_GLOW = {
 	dodge: { amount: 0.2, spread: 1.2, intensity: 1.6 },   // Alex's 18 Sep values, held back for the larger tent
 	/* TOP — a little of the light OVER the plate too (Alex, 19 Sep): the same stack, stretched sideways and flattened, faint —
 	   the haze the lamp throws in front of the tent, not the fire behind it */
-	top: { intensity: 0.26, stretch: 2.6, squash: 0.42, spread: 0.9 },
+	top: { intensity: 0.65, stretch: 2.6, squash: 0.42, spread: 0.9 },   // (Alex, 19 Sep: "усилить тот, который on top")
 };
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
