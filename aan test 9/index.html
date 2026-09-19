@@ -158,7 +158,7 @@
 		const GLOW_SINGLE6 = { ...TENT_GLOW, film: null, intensity: 0.6, top: { ...TENT_GLOW.top, intensity: 0.35 }, fadeIn: [152, 172], fadeOut: null,
 			track: [[150, 0.99, 0.995, 0.02], [156, 0.934, 0.963, 0.16], [162, 0.868, 0.944, 0.22], [168, 0.816, 0.918, 0.22], [174, 0.779, 0.894, 0.23], [180, 0.745, 0.867, 0.21], [186, 0.719, 0.844, 0.20], [192, 0.697, 0.827, 0.19], [198, 0.68, 0.811, 0.23], [204, 0.666, 0.797, 0.24], [210, 0.658, 0.786, 0.23], [216, 0.65, 0.777, 0.23], [222, 0.643, 0.768, 0.225], [228, 0.638, 0.763, 0.22], [234, 0.634, 0.757, 0.22], [240, 0.631, 0.752, 0.22]] };
 		/* the underwater versions: v1 = video2 from test 8 (the tent's light over the surface, the trench) · v2 = podvodoi1 (the grotto) · v3 = podvodoj 2 */
-		const WATER = Q.get('water') || 'v2';
+		const WATER = Q.get('water') || 'v3';   // v3 by default (Alex, 19 Sep)
 		const WATER_DIRS = { v1: 'assets/frames/water-old', old: 'assets/frames/water-old', v2: 'assets/frames/water', new: 'assets/frames/water', v3: 'assets/frames/water-v3' };
 		const waterDir = WATER_DIRS[WATER] || WATER_DIRS.v2;
 		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => `${waterDir}/${w > 1700 ? 1920 : w > 1000 ? 1600 : w > 520 ? 960 : 640}` }, loadAfter: 2500 });
