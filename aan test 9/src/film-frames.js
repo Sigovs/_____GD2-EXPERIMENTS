@@ -43,7 +43,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 	   So the frames near the current one are decoded explicitly (createImageBitmap, off the main thread) and kept; the
 	   ones that drift out of the window are closed. drawImage of a bitmap is a blit — no decode on the scroll. */
 	const bitmaps = new Array(cfg.frames).fill(null), decoding = new Set(), blobs = new Array(cfg.frames).fill(null);
-	const BITMAP_WINDOW = window.innerWidth > 700 ? 6 : 4;   // frames each side of the current one (13 bitmaps ≈ 100 MB at 1920 — small on purpose: GPU memory churn stalls the renderer)
+	const BITMAP_WINDOW = window.innerWidth > 700 ? 10 : 5;   // frames each side of the current one (13 bitmaps ≈ 100 MB at 1920 — small on purpose: GPU memory churn stalls the renderer)
 	const hasBitmaps = typeof createImageBitmap === 'function';
 	let target = 0, current = 0, raf = 0, ready = false;
 	let W = 0, H = 0, dpr = 1;
