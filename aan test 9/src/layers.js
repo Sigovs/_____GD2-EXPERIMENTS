@@ -24,7 +24,7 @@ export const LAYERS = {
 	night: { at: [0.37, 0.54], mountain: 1, clouds: 1 },   // OFF (Alex, 19 Sep: "уход горы в ночь отмени") — set mountain 0.28 / clouds 0.45 to bring it back
 	cloudsOut: [0.92, 0.985],   // hero scroll: the plates leave with the act at the hand-over (was descent.js's; the clouds' opacity is owned here now)
 	planes: {
-		mountain: { mouse: 7,  scrollDrift: 0,  scale: 1.035 },     // far: barely moves; scaled a touch so the lean never shows an edge
+		mountain: { mouse: 7,  scrollDrift: 0,  scale: 1 },         // far: barely moves; NOT enlarged (Alex, 19 Sep) — the act's overscan covers the lean
 		clouds:   { mouse: 13, scrollDrift: 0 },                   // between (the plate rig adds its own sway on top)
 		plateau:  { mouse: 24, scrollDrift: 0, scale: 1.06,   // no drift (it showed the plate's bottom edge — Alex, 19 Sep); 6% overscan covers the cursor lean
 			enter: [0.08, 0.42],   // scene progress: the plateau rises from `from` vh below to its place (Alex, 19 Sep: "не сразу должно появляться")

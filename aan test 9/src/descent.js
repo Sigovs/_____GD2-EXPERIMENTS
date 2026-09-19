@@ -30,7 +30,7 @@ export const ACT = {
 	hero: {
 		soften: [0.90, 0.99],           // blur 0 → blurPx, brightness 1 → dim, scale 1 → grow
 		out: [0.955, 0.99],             // opacity 1 → 0
-		blurPx: 2.5, dim: 0.85, grow: 1.015,
+		blurPx: 2.5, dim: 0.85, grow: 1,   // no growth of the act either (Alex, 19 Sep: the mountain stays its size)
 		lift: 0,                        // vh: NO lift of the whole act in test 9 — it showed the act's bottom edge as a straight seam over the water (Alex, 19 Sep); the near plane grows instead (layers.js)
 	},
 	water: { in: [0.93, 0.985] },       // opacity 0 → 1 — later: the water must not come up while the camp is still the picture (Alex, 19 Sep)
