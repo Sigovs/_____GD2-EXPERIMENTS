@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-18v">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-19a">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -26,7 +26,11 @@
 		<!-- ACT I — the mountain: the film and the tent's light in one wrapper, so the hand-over (src/descent.js)
 		     blurs and dissolves them together -->
 		<div id="act-hero" class="stage__act">
-			<canvas id="hero-film" class="stage__video" aria-hidden="true"></canvas>
+			<!-- MULTIPLANE (src/layers.js): far → near. The film, the cloud plates, the plateau with the tent (keyed
+			     from green; a frame sequence with alpha once its video lands), then the tent's light -->
+			<canvas id="hero-film" class="stage__video layer" aria-hidden="true"></canvas>
+			<canvas id="cloud-canvas" class="stage__clouds layer" aria-hidden="true"></canvas>
+			<img id="plateau" class="layer layer--plateau" src="assets/layers/plateau.png" alt="" decoding="async">
 			<!-- the tent's light, breathing and flickering over the film's tent (src/tent-glow.js) - under the clouds, in the fog -->
 			<canvas id="tent-glow" class="stage__glow" aria-hidden="true"></canvas>
 			<!-- the DODGE pass of the same light: mix-blend-mode color-dodge against the film (tent-glow.js → cfg.dodge) -->
@@ -41,8 +45,7 @@
 		<canvas id="water-life" class="stage__glow" aria-hidden="true"></canvas>
 		<!-- the descent route over the film — an instrument, rotoscoped to the film's frames (src/route-layer.js) -->
 		<canvas id="route-canvas" class="stage__route" aria-hidden="true"></canvas>
-		<!-- the one 3-D thing we keep: the scene's own clouds, over the film (src/cloud-layer.js) -->
-		<canvas id="cloud-canvas" class="stage__clouds" aria-hidden="true"></canvas>
+		<!-- the cloud canvas now lives inside #act-hero, between the film and the plateau -->
 		<canvas id="vignette-canvas" class="stage__vignette" aria-hidden="true"></canvas>
 	</div>
 
@@ -99,15 +102,18 @@
 	</script>
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
-		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18v';
-		import { createTentGlow } from './src/tent-glow.js?v=2026-09-18v';
-		import { createDescent, ACT } from './src/descent.js?v=2026-09-18v';
+		import { createFilmFrames } from './src/film-frames.js?v=2026-09-19a';
+		import { createTentGlow } from './src/tent-glow.js?v=2026-09-19a';
+		import { createDescent, ACT } from './src/descent.js?v=2026-09-19a';
 		// the two films: the hero scrubs the first part of the page, the water the rest — they overlap for the hand-over.
 		// Neither listens to the scroll itself: descent.js drives both from one progress.
 		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp', cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false } });   // the film ends early and holds on the tent
-		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => (w > 1000 ? 'assets/frames/water/1600' : 'assets/frames/water/960') }, loadAfter: 2500 });
+		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => (w > 1000 ? 'assets/frames/water/1600' : w > 520 ? 'assets/frames/water/960' : 'assets/frames/water/640') }, loadAfter: 2500 });
 		window.__water = water;
 		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), film });
+		// the planes: the film, the clouds, the plateau — each on its own move (src/layers.js)
+		import { createLayers } from './src/layers.js?v=2026-09-19a';
+		window.__layers = createLayers({ mountain: document.getElementById('hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: document.getElementById('plateau'), heroEnd: ACT.heroEnd });
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
 		import { createWaterLife } from './src/water-life.js?v=2026-09-18v';
 		const life = createWaterLife({ canvas: document.getElementById('water-life'), waterCanvas: document.getElementById('water-film') });

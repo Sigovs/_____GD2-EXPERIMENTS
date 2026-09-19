@@ -25,7 +25,7 @@
 
 export const ACT = {
 	heroEnd: 0.56,                      // the hero's share of the page; the water takes the rest (minus the overlap)
-	heroFilmEnd: 0.78,                  // in hero scroll: the film reaches the tent here and HOLDS — time to look at it before the water
+	heroFilmEnd: 0.90,                  // in hero scroll: the film plays to its last frame exactly where the hand-over begins (Alex, 19 Sep: "видео горы должно отыгрывать до конца")
 	waterStart: 0.90,                   // in hero scroll: where the water film starts (and starts loading its frames)
 	hero: {
 		soften: [0.88, 0.985],          // blur 0 → blurPx, brightness 1 → dim, scale 1 → grow

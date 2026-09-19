@@ -18,7 +18,7 @@
 export const FILM = {
 	frames: 241,
 	fps: 24,
-	dir: (w) => (w > 1000 ? 'assets/frames/1600' : w > 520 ? 'assets/frames/960' : 'assets/frames/640'),   // phones get 640: a third of the bytes, and a third of the decode memory
+	dir: (w) => (w > 1700 ? 'assets/frames/1920' : w > 1000 ? 'assets/frames/1600' : w > 520 ? 'assets/frames/960' : 'assets/frames/640'),   // wide screens get the native 1920 (the fine snow and rock of the new film soften when 1600 is stretched — Alex, 19 Sep); phones 640
 	name: (i) => `f${String(i + 1).padStart(3, '0')}.webp`,
 	range: [0, 1],         // the share of the page this film scrubs over (two films overlap where their ranges do — descent.js)
 	filmEnd: 1.0,          // within its range, the film spans this share (1 = all of it)
