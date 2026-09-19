@@ -30,7 +30,7 @@ export const LAYERS = {
 			enter: [0.08, 0.42],   // scene progress: the plateau rises from `from` vh below to its place (Alex, 19 Sep: "не сразу должно появляться")
 			from: 72,              // vh below its place at the start: the mountain alone first, the camp arrives as the camera comes down
 			lift: [0.90, 0.99],    // hero-scroll window (as ACT.hero.soften): the near plane comes at the camera — it GROWS from its bottom edge (no edge ever shows) and lifts a little
-			liftVh: 6, grow: 0.14 },
+			liftVh: 0, grow: 0.16 },   // no lift at all: even 6vh showed the plate's bottom edge (Alex, 19 Sep); the growth alone reads as the camera going under
 	},
 };
 

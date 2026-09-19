@@ -13,9 +13,9 @@
 
 export const VIGNETTE = {
 	color: [5, 8, 15],
-	top: { to: 0.34, amount: 0.55 },        // from the top edge down to `to` of the height
-	bottom: { from: 0.50, amount: 0.60 },   // from `from` of the height to the bottom edge
-	radial: { cx: 0.5, cy: 0.45, rx: 1.2, ry: 0.8, start: 0.3, amount: 0.45 },
+	top: { to: 0.30, amount: 1.0 },         // from the top edge down to `to` of the height — 100 → 0 (Alex, 19 Sep: the same gradient as below, flipped)
+	bottom: { from: 0.60, amount: 1.0 },    // from `from` of the height to the bottom edge — 100 → 0 over all the films (Alex, 19 Sep)
+	radial: { cx: 0.5, cy: 0.45, rx: 1.2, ry: 0.8, start: 0.3, amount: 0.3 },
 	maxWidth: 1600,                          // the canvas is drawn at most this wide and stretched — the dither survives the scale
 };
 

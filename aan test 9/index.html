@@ -121,7 +121,7 @@
 		window.__water = water;
 		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), topCanvas: document.getElementById('tent-glow-top'), film: plateauFilm });   // the light follows the PLATEAU's frames
 		// the planes: the film, the clouds, the plateau — each on its own move (src/layers.js)
-		import { createLayers } from './src/layers.js?v=2026-09-19g';
+		import { createLayers } from './src/layers.js?v=2026-09-19h';
 		window.__layers = createLayers({ mountain: document.getElementById('hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: document.getElementById('plane-plateau'), heroEnd: ACT.heroEnd });
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
 		import { createWaterLife } from './src/water-life.js?v=2026-09-18v';
@@ -149,7 +149,7 @@
 	</script>
 	<script type="module">
 		// the vignette, dithered on a canvas — a CSS gradient banded (src/vignette.js)
-		import { createVignette } from './src/vignette.js?v=2026-09-18e';
+		import { createVignette } from './src/vignette.js?v=2026-09-19h';
 		createVignette({ canvas: document.getElementById('vignette-canvas') });
 	</script>
 	<script type="module">
