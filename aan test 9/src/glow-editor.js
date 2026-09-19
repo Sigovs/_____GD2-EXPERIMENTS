@@ -13,16 +13,19 @@
  */
 
 /* saved dials -> the live cfg (used by the editor, and by the page on load so the work shows without the editor) */
-import { applyGrade } from './tent-glow.js?v=2026-09-19r';
+import { applyGrade } from './tent-glow.js?v=2026-09-19s';
+import { applyGrain, applyRadial } from './fx.js?v=2026-09-19s';
 
 export function applySaved(cfg, saved) {
 	if (!saved || Array.isArray(saved)) return;
 	for (const k of ['intensity', 'spread', 'riseScale', 'blur', 'drift', 'parallax', 'anchor']) if (typeof saved[k] === 'number') cfg[k] = saved[k];
-	for (const k of ['breath', 'tremble', 'flare', 'dodge', 'top', 'grade']) if (saved[k]) Object.assign(cfg[k], saved[k]);
+	for (const k of ['breath', 'tremble', 'flare', 'dodge', 'top', 'grade', 'grain', 'radial']) if (saved[k]) Object.assign(cfg[k], saved[k]);
 	if (typeof saved.blend === 'string') cfg.blend = saved.blend;
 	if (saved.palette) cfg.palette = { ...saved.palette };
 	if (saved.shape) cfg.shape = saved.shape;
 	if (cfg.grade) applyGrade(cfg.grade);
+	if (cfg.grain) applyGrain(cfg.grain);
+	if (cfg.radial) applyRadial(cfg.radial);
 }
 
 export function openGlowEditor({ glow, film }) {
@@ -69,7 +72,7 @@ export function openGlowEditor({ glow, film }) {
 	function resize() { canvas.width = innerWidth * devicePixelRatio; canvas.height = innerHeight * devicePixelRatio; }
 	addEventListener('resize', resize); resize();
 
-	const settings = () => ({ shape, intensity: cfg.intensity, spread: cfg.spread, riseScale: cfg.riseScale, blur: cfg.blur, breath: cfg.breath, tremble: cfg.tremble, flare: cfg.flare, drift: cfg.drift, parallax: cfg.parallax, anchor: cfg.anchor, palette: cfg.palette, blend: cfg.blend, dodge: cfg.dodge, top: cfg.top, grade: cfg.grade });
+	const settings = () => ({ shape, intensity: cfg.intensity, spread: cfg.spread, riseScale: cfg.riseScale, blur: cfg.blur, breath: cfg.breath, tremble: cfg.tremble, flare: cfg.flare, drift: cfg.drift, parallax: cfg.parallax, anchor: cfg.anchor, palette: cfg.palette, blend: cfg.blend, dodge: cfg.dodge, top: cfg.top, grade: cfg.grade, grain: cfg.grain, radial: cfg.radial });
 	function save() {
 		cfg.shape = shape;
 		try { localStorage.setItem(KEY, JSON.stringify(settings())); } catch {}
@@ -89,6 +92,10 @@ export function openGlowEditor({ glow, film }) {
 		['top.intensity', 'Top', 0, 1.5, 0.01, 0.26], ['top.stretch', 'Top stretch', 1, 5, 0.01, 2.6], ['top.squash', 'Top squash', 0.1, 1, 0.01, 0.42], ['top.spread', 'Top spread', 0.2, 2.5, 0.01, 0.9],
 		// GRADE — the whole stage
 		['grade.opacity', 'Grade amount', 0, 1, 0.01, 0.35], ['grade.contrast', 'Contrast', 0.6, 1.6, 0.01, 1.04], ['grade.saturate', 'Saturate', 0, 2, 0.01, 0.92], ['grade.brightness', 'Brightness*', 0.5, 1.5, 0.01, 1],
+		// GRAIN
+		['grain.amount', 'Grain', 0, 1, 0.01, 0.1], ['grain.size', 'Grain size', 0.5, 4, 0.05, 1.4], ['grain.fps', 'Grain fps', 1, 30, 1, 12],
+		// RADIAL
+		['radial.amount', 'Radial', 0, 1, 0.01, 0], ['radial.x', 'Radial X', 0, 1, 0.005, 0.5], ['radial.y', 'Radial Y', 0, 1, 0.005, 0.5], ['radial.size', 'Radial size', 0.1, 2, 0.01, 0.9], ['radial.soft', 'Radial soft', 0.02, 1, 0.01, 0.6],
 	];
 	const BLENDS = ['normal', 'screen', 'plus-lighter', 'overlay', 'soft-light', 'hard-light', 'color-dodge', 'lighten'];
 	const COLORS = [['core', 'Core', '#fefcc9'], ['mid', 'Mid', '#ffae34'], ['ember', 'Ember', '#451b0e']];
@@ -102,7 +109,7 @@ export function openGlowEditor({ glow, film }) {
 	DIALS.forEach(([path, label, min, max, step]) => {
 		const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = get(path); inp.style.width = '150px';
 		const out = document.createElement('span'); out.textContent = fmt(get(path), step); out.style.minWidth = '3.5em'; out.dataset.path = path;
-		inp.addEventListener('input', () => { set(path, +inp.value); out.textContent = fmt(inp.value, step); if (path.startsWith('grade.')) applyGrade(cfg.grade); save(); });
+		inp.addEventListener('input', () => { set(path, +inp.value); out.textContent = fmt(inp.value, step); if (path.startsWith('grade.')) applyGrade(cfg.grade); if (path.startsWith('grain.')) applyGrain(cfg.grain); if (path.startsWith('radial.')) applyRadial(cfg.radial); save(); });
 		row(label, inp, out);
 	});
 	if (!cfg.palette) cfg.palette = Object.fromEntries(COLORS.map(([k, , v]) => [k, v]));
@@ -124,6 +131,29 @@ export function openGlowEditor({ glow, film }) {
 		sel.value = cfg.grade.blend;
 		sel.addEventListener('change', () => { cfg.grade.blend = sel.value; applyGrade(cfg.grade); save(); });
 		row('Grade blend', sel, document.createElement('span'));
+	}
+	// GRAIN blend · RADIAL colour, blend, inside/outside
+	{
+		const mk = (opts, value, on) => { const s = document.createElement('select'); s.style.cssText = 'width:150px;font:inherit;background:#0b1018;color:#e8eef6;border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:2px 4px'; opts.forEach((b) => { const o = document.createElement('option'); o.value = b; o.textContent = b; s.append(o); }); s.value = value; s.addEventListener('change', () => on(s.value)); return s; };
+		row('Grain blend', mk(['overlay', 'soft-light', 'multiply', 'screen', 'normal'], cfg.grain.blend, (v) => { cfg.grain.blend = v; applyGrain(cfg.grain); save(); }), document.createElement('span'));
+		const rc = document.createElement('input'); rc.type = 'color'; rc.value = cfg.radial.color; rc.style.width = '150px'; rc.style.height = '24px';
+		const rco = document.createElement('span'); rco.textContent = cfg.radial.color;
+		rc.addEventListener('input', () => { cfg.radial.color = rc.value; rco.textContent = rc.value; applyRadial(cfg.radial); save(); });
+		row('Radial colour', rc, rco);
+		row('Radial blend', mk(['multiply', 'normal', 'screen', 'soft-light', 'overlay', 'color'], cfg.radial.blend, (v) => { cfg.radial.blend = v; applyRadial(cfg.radial); save(); }), document.createElement('span'));
+		row('Radial fills', mk(['outside', 'inside'], cfg.radial.invert ? 'outside' : 'inside', (v) => { cfg.radial.invert = v === 'outside'; applyRadial(cfg.radial); save(); }), document.createElement('span'));
+	}
+	// LAYERS — show / hide the planes to judge each alone (not saved)
+	{
+		const wrap = document.createElement('div'); wrap.style.cssText = 'grid-column:1/-1;display:flex;gap:14px;flex-wrap:wrap;margin-top:6px';
+		const planes = [['Mountain', () => document.getElementById('hero-film') || document.getElementById('hero-still') || document.getElementById('hero-3d')], ['Clouds', () => document.getElementById('cloud-canvas')], ['Plateau', () => document.getElementById('plateau')], ['Light', () => [document.getElementById('tent-glow'), document.getElementById('tent-dodge'), document.getElementById('tent-glow-top')]], ['Grade', () => document.getElementById('grade')], ['Vignette', () => document.getElementById('vignette-canvas')]];
+		planes.forEach(([label, get]) => {
+			const l = document.createElement('label'); l.style.cssText = 'display:flex;gap:6px;align-items:center;cursor:pointer';
+			const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = true;
+			cb.addEventListener('change', () => { const els = [].concat(get()).filter(Boolean); els.forEach((el) => { el.style.visibility = cb.checked ? '' : 'hidden'; }); });
+			l.append(cb, document.createTextNode(label)); wrap.append(l);
+		});
+		dials.append(wrap);
 	}
 	// the stack's own blend with the film (CSS mix-blend-mode on the glow canvas)
 	{

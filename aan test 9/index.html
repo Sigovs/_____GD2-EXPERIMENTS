@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-19r">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-19s">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -58,6 +58,9 @@
 		<!-- the GRADE: one colour over every plane with a blend mode, plus a filter on the whole stage — to pull the mountain, the
 		     clouds and the plateau into one palette (Alex, 19 Sep). Dials in the editor (G); values in tent-glow.js → cfg.grade -->
 		<div id="grade" class="stage__grade" aria-hidden="true"></div>
+		<!-- the finishing layers (src/fx.js, dials in the editor): a dithered radial in a colour, and film grain -->
+		<canvas id="fx-radial" class="stage__fx" aria-hidden="true"></canvas>
+		<canvas id="fx-grain" class="stage__fx" aria-hidden="true"></canvas>
 		<canvas id="vignette-canvas" class="stage__vignette" aria-hidden="true"></canvas>
 	</div>
 
@@ -115,7 +118,9 @@
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
 		import { createFilmFrames } from './src/film-frames.js?v=2026-09-19m';
-		import { createTentGlow, TENT_GLOW } from './src/tent-glow.js?v=2026-09-19r';
+		import { createTentGlow, TENT_GLOW } from './src/tent-glow.js?v=2026-09-19s';
+		import { applyGrain, applyRadial } from './src/fx.js?v=2026-09-19s';
+		applyGrain(TENT_GLOW.grain); applyRadial(TENT_GLOW.radial);
 		/* THE MOUNTAIN (Alex, 19 Sep: "оставь плато на любом тесте, я просто проверяю гору"): the plateau plate is ALWAYS on;
 		   this only picks the far plane's film. 'pullback' = the pull-back film (assets/frames); 'gora6' = the "6 sec video". */
 		const HERO = 'pullback';   // 'mountain3d' = the 3-D mountain of test 7 with its route (iframe, embed mode) · 'still' = one frame · 'pullback' | 'gora6' | 'gora5' = films
@@ -172,9 +177,9 @@
 		window.__drift = createDriftCards();
 		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
-		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-19r'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
+		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-19s'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)
-		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-19r'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
+		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-19s'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
 		if (new URLSearchParams(location.search).get('edit') === 'glow') openEditor();
 		addEventListener('keydown', (e) => { if ((e.key === 'g' || e.key === 'G') && !window.__glowEditor && !e.metaKey && !e.ctrlKey) openEditor(); });
 	</script>

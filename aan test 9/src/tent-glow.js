@@ -73,6 +73,9 @@ export const TENT_GLOW = {
 	top: { intensity: 0.65, stretch: 2.6, squash: 0.42, spread: 0.9 },   // (Alex, 19 Sep: "усилить тот, который on top")
 	/* GRADE — one colour over the whole stage with a blend mode, and a filter on the stage: the planes pulled into one palette */
 	grade: { blend: 'soft-light', color: '#6f86a6', opacity: 0.35, contrast: 1.04, saturate: 0.92, brightness: 1 },
+	/* GRAIN and a RADIAL (src/fx.js) — finishing layers, dials in the editor */
+	grain: { amount: 0.1, size: 1.4, fps: 12, blend: 'overlay' },
+	radial: { amount: 0, color: '#05080f', x: 0.5, y: 0.5, size: 0.9, soft: 0.6, blend: 'multiply', invert: true },
 };
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
