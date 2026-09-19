@@ -675,8 +675,19 @@ function readScroll() {
 	const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
 	scroll.target = THREE.MathUtils.clamp(window.scrollY / max, 0, 1);
 }
-window.addEventListener('scroll', readScroll, { passive: true });
-readScroll();
+/* EMBED (test 9, 19 Sep): the scene as the FAR PLANE of another page, in an iframe. The host posts the hero's scroll
+   (0..1) and the cursor; the page's own scroll is ignored, the statement and the abyss tail are off. */
+const EMBED = new URLSearchParams(location.search).has('embed');
+if (!EMBED) { window.addEventListener('scroll', readScroll, { passive: true }); readScroll(); }
+else {
+	heroText.group.visible = false;
+	window.addEventListener('message', (e) => {
+		const m = e.data && e.data.gd2;
+		if (!m) return;
+		if (typeof m.p === 'number') scroll.target = THREE.MathUtils.clamp(m.p, 0, 1) * DESCENT_SHARE * 0.999;   // the descent only — never into the abyss
+		if (typeof m.mx === 'number') mouse.set(m.mx, m.my);
+	});
+}
 
 /* ------------------------------------------------------------------ */
 /* Debug layer (off by default)                                        */

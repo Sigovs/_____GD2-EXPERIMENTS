@@ -11,6 +11,8 @@
 		/* The page scrolls (its height is set from descent-config.js); the scene stays fixed and reads scroll progress. */
 		#scene { position: fixed; inset: 0; display: block; width: 100vw; height: 100vh; touch-action: pan-y; cursor: grab; opacity: 0; transition: opacity 1.2s ease; }
 		body.is-ready #scene { opacity: 1; }
+		/* embedded as a far plane (test 9): no nav, no labels of its own, the host draws over it */
+		body.is-embed .nav, body.is-embed #route-labels { display: none; }
 		#scene:active { cursor: grabbing; }
 	</style>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,6 +32,7 @@
 	</script>
 </head>
 <body>
+	<script>if (new URLSearchParams(location.search).has('embed')) document.body.classList.add('is-embed');</script>
 	<canvas id="scene"></canvas>
 	<!-- route callouts: real text (the readings carry information), decorative parts are aria-hidden inside -->
 	<div id="route-labels"></div>
