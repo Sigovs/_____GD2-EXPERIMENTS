@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-19v">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-20f">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -62,6 +62,8 @@
 		<canvas id="fx-radial" class="stage__fx" aria-hidden="true"></canvas>
 		<canvas id="fx-grain" class="stage__fx" aria-hidden="true"></canvas>
 		<canvas id="vignette-canvas" class="stage__vignette" aria-hidden="true"></canvas>
+		<!-- the END: the water goes to a plain dark ground over the last of the scene (descent.js → ACT.end); the captions stay above it -->
+		<div id="stage-end" class="stage__end" aria-hidden="true"></div>
 	</div>
 
 	<!-- the route's callouts (route.css); the leaders are drawn in here by route-layer.js -->
@@ -105,6 +107,8 @@
 
 	<!-- the scroll length: how much travel the films get (progress.js measures the scene by this track) -->
 	<div class="spacer" aria-hidden="true"></div>
+	<!-- after the descent: plain dark ground (the next sections go here) -->
+	<section class="after" aria-hidden="true"></section>
 
 
 	<script type="importmap">
@@ -130,7 +134,7 @@
 		const HERO = Q.get('hero') || 'pullback';   // 'mountain3d' = the 3-D mountain of test 7 with its route (iframe, embed mode) · 'still' = one frame · 'pullback' | 'gora6' | 'gora5' = films
 		const HERO_DIRS = { pullback: 'assets/frames', gora6: 'assets/frames/gora6', gora5: 'assets/frames/gora5' };
 		const heroDir = (w) => `${HERO_DIRS[HERO]}/${w > 1700 ? 1920 : w > 1000 ? 1600 : w > 520 ? 960 : 640}`;
-		import { createDescent, ACT } from './src/descent.js?v=2026-09-19y';
+		import { createDescent, ACT } from './src/descent.js?v=2026-09-20f';
 		// the two films: the hero scrubs the first part of the page, the water the rest — they overlap for the hand-over.
 		// Neither listens to the scroll itself: descent.js drives both from one progress.
 		let film;
@@ -183,7 +187,7 @@
 		// photographs floating up through the water (src/drift-cards.js)
 		import { createDriftCards } from './src/drift-cards.js?v=2026-09-18x';
 		window.__drift = WATER === 'v3' ? null : createDriftCards();   // no photographs in the v3 water (Alex, 19 Sep)
-		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { if (P > 0.10) water.allowLoad(); life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
+		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), endEl: document.getElementById('stage-end'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { if (P > 0.10) water.allowLoad(); life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
 		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-20a'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)

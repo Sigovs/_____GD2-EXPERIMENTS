@@ -35,6 +35,7 @@ export const ACT = {
 	},
 	water: { in: [0.80, 1.0], rise: true, soft: 0.9 },   // a tall soft edge (0.85 vh) AND the whole film fading 0 → 100% as it rises — a gradient, never a line (Alex, 19 Sep: "переход грубый")   // the water RISES from the bottom (a soft edge `soft` viewport-heights tall) instead of fading over the whole frame (Alex, 19 Sep); rise: false = the plain crossfade
 	clouds: { out: [0.84, 0.98] },      // the plates leave with the hero
+	end: [0.92, 1.0],                   // page progress: the water goes to the plain dark ground (Alex, 19 Sep)
 };
 
 import { sceneProgress } from './progress.js?v=2026-09-18v';
@@ -43,7 +44,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const ramp = (v, [a, b]) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const lerp = (a, b, t) => a + (b - a) * t;
 
-export function createDescent({ heroWrap, waterCanvas, cloudCanvas, heroFilm, waterFilm, clouds, onWater = null, cfg = ACT }) {
+export function createDescent({ heroWrap, waterCanvas, cloudCanvas, heroFilm, waterFilm, clouds, endEl = null, onWater = null, cfg = ACT }) {
 	const progress = sceneProgress;
 	let last = -1, cloudsRef = clouds;
 
@@ -70,6 +71,7 @@ export function createDescent({ heroWrap, waterCanvas, cloudCanvas, heroFilm, wa
 		} else waterCanvas.style.opacity = w.toFixed(3);
 		waterCanvas.style.visibility = w > 0 ? 'visible' : 'hidden';   // explicit: the CSS default for the water is hidden
 		onWater?.(w, P);   // the water's life (caustics, motes, bubbles) follows the water's presence and the depth
+		if (endEl && cfg.end) endEl.style.opacity = ramp(P, cfg.end).toFixed(3);   // the end: to the plain dark ground
 
 		if (cloudCanvas) { const c = 1 - ramp(h, cfg.clouds.out); cloudCanvas.style.opacity = c.toFixed(3); cloudCanvas.style.visibility = c > 0 ? 'visible' : 'hidden'; }
 		last = P;
