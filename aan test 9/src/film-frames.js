@@ -39,22 +39,37 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 	const dir = cfg.dir(window.innerWidth);
 	const imgs = new Array(cfg.frames).fill(null);
 	const loading = new Set();
-	/* DECODED frames: the browser cannot hold three films' worth of decoded bitmaps and re-decodes on every scroll step.
-	   So the frames near the current one are decoded explicitly (createImageBitmap, off the main thread) and kept; the
-	   ones that drift out of the window are closed. drawImage of a bitmap is a blit — no decode on the scroll. */
+	/* DECODED frames: the browser cannot hold three films' worth of decoded frames and re-decodes on every scroll step.
+	   So the frames near the current one are decoded explicitly, off the main thread, and kept; the ones that drift out
+	   of the window are closed. drawImage of a decoded frame is a blit — no decode on the scroll.
+	   The decoder is WebCodecs' ImageDecoder (a VideoFrame per frame), NOT createImageBitmap: Chrome 153 crashed the whole
+	   renderer (an access violation in chrome.dll, the same address every time — seven crash dumps) after a few scrolls
+	   whenever the plateau's ALPHA frames went through createImageBitmap, at 1600 and above; from a Blob, from the <img>,
+	   premultiplied or not, closed or never closed. VideoFrames never did (Alex, 20 Sep: "после двух-трёх скроллов всё
+	   падает"). Where ImageDecoder is missing (Safari) the bitmap path stays — the crash is Chrome's. */
 	const bitmaps = new Array(cfg.frames).fill(null), decoding = new Set(), blobs = new Array(cfg.frames).fill(null);
-	const stats = { bitmap: 0, img: 0, nearest: 0 };   // where each drawn frame came from (diagnosis)
-	const BITMAP_WINDOW = window.innerWidth > 700 ? 16 : 6;   // frames each side of the current one (13 bitmaps ≈ 100 MB at 1920 — small on purpose: GPU memory churn stalls the renderer)
-	const hasBitmaps = typeof createImageBitmap === 'function';
+	const stats = { bitmap: 0, near: 0, img: 0, nearest: 0 };   // where each drawn frame came from (diagnosis)
+	/* the window: 10 frames each side while the film PLAYS (21 frames ≈ 170 MB at 1920), 3 while it is PARKED at either end —
+	   a hidden film (the water before the hand-over, the mountain after it) must not hold a full window. */
+	const BITMAP_WINDOW = window.innerWidth > 700 ? 10 : 4;
+	const PARKED_WINDOW = 3;
+	const win = () => (target <= 0.5 || target >= cfg.frames - 1.5) ? PARKED_WINDOW : BITMAP_WINDOW;
+	const useVideoFrames = typeof ImageDecoder === 'function';
+	const hasBitmaps = useVideoFrames || typeof createImageBitmap === 'function';
+	const decodeFrame = (i) => useVideoFrames
+		? blobs[i].arrayBuffer().then((buf) => { const dec = new ImageDecoder({ data: buf, type: blobs[i].type || 'image/webp' }); return dec.decode().then((r) => { dec.close(); return r.image; }); })
+		: createImageBitmap(blobs[i] || imgs[i]);
 	let target = 0, current = 0, raf = 0, ready = false;
 	let W = 0, H = 0, dpr = 1;
 
 	function resize() {
 		dpr = Math.min(window.devicePixelRatio || 1, 2);
+		const srcW = +(String(dir).match(/(\d+)\/?$/) || [0, 1920])[1];   // the frames' width: the canvas never exceeds it (a 1920 frame in a 3847-px canvas is the same picture at four times the blit and 31 MB a canvas)
 		// the size: the viewport, or the parent's box when the film sits in an OVERSCANNED act (test 9: the mountain act
 		// is 4vh/4vw larger than the screen on every side, so no move, lean, blur or scale inside it can show an edge)
 		const par = cfg.fitParent ? canvas.parentElement : null;   // layout size (offset*), not the transformed box: the plane may be scaled
 		W = par ? par.offsetWidth : window.innerWidth; H = par ? par.offsetHeight : window.innerHeight;
+		if (W && srcW) dpr = Math.min(dpr, srcW / W);
 		canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
 		canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
 		draw(true);
@@ -78,14 +93,24 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		}
 		return null;
 	}
+	// a DECODED frame near i (behind first, then ahead, out to the window): on a fast scroll the exact frame is still being
+	// decoded — a frame a few behind, already decoded, is the same picture for the eye and costs a blit, where the exact
+	// frame's <img> costs a 10-25 ms decode on the main thread (an alpha frame the most: the mountain act ran at 20-35 fps
+	// that way). The exact frame follows within a tick or two, when the scroll rests or the decoder catches up.
+	function nearBitmap(i, span = win() * 3) {
+		for (let d = 1; d <= span; d++) { if (bitmaps[i - d]) return bitmaps[i - d]; if (bitmaps[i + d]) return bitmaps[i + d]; }
+		return null;
+	}
 
 	let lastKey = '', lastPair = null;
+	canvas.addEventListener('contextrestored', () => { lastKey = ''; draw(true); });   // the GPU process came back: repaint, do not stay dark
 	function draw(force = false) {
 		if (!W) return;
 		const f = clamp(current, 0, cfg.frames - 1);
 		const i0 = Math.floor(f), i1 = Math.min(cfg.frames - 1, i0 + 1), t = f - i0;
-		const a = bitmaps[i0] || imgs[i0] || nearest(i0), b = bitmaps[i1] || imgs[i1] || nearest(i1);
-		stats[bitmaps[i0] ? 'bitmap' : imgs[i0] ? 'img' : 'nearest']++;
+		const na = bitmaps[i0] ? null : nearBitmap(i0);
+		const a = bitmaps[i0] || na || imgs[i0] || nearest(i0), b = bitmaps[i1] || nearBitmap(i1) || imgs[i1] || nearest(i1);
+		stats[bitmaps[i0] ? 'bitmap' : na ? 'near' : imgs[i0] ? 'img' : 'nearest']++;
 		const key = `${i0}:${t.toFixed(3)}:${!!a}:${!!b}`;
 		if (!force && key === lastKey) return;
 		lastKey = key;
@@ -117,20 +142,25 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		if (!hasBitmaps) return;
 		// (a hidden film keeps its window too — the water must have its first frames decoded BEFORE it comes up, or the
 		// hand-over starts with a stutter; Alex, 19 Sep: "подводное скачет")
-		const c = Math.round(current);
-		for (let i = 0; i < cfg.frames; i++) { if (Math.abs(i - c) > BITMAP_WINDOW && bitmaps[i]) { bitmaps[i].close(); bitmaps[i] = null; } }
-		for (let d = 0; d <= BITMAP_WINDOW; d++) for (const i of d ? [c + d, c - d] : [c]) {
+		const c = Math.round(current), w = win();
+		for (let i = 0; i < cfg.frames; i++) { if (Math.abs(i - c) > w && bitmaps[i]) { bitmaps[i].close(); bitmaps[i] = null; } }
+		// the direction of travel first: on a flick the frames AHEAD are the ones about to be drawn, the ones behind
+		// were already seen — decoding both sides evenly halved the useful throughput
+		const ahead = target >= current ? 1 : -1;
+		const order = [c];
+		for (let d = 1; d <= w; d++) order.push(c + d * ahead);
+		for (let d = 1; d <= w; d++) order.push(c - d * ahead);
+		for (const i of order) {
 			if (i < 0 || i >= cfg.frames) continue;
 			if (decoding.size >= 6) return;   // six in flight (off the main thread), nearest first; the next tend() continues
-			const near = true;
-			if (near && !bitmaps[i] && imgs[i] && !decoding.has(i)) {
+			if (!bitmaps[i] && blobs[i] && !decoding.has(i)) {
 				decoding.add(i);
-				createImageBitmap(blobs[i] || imgs[i]).then((bm) => { decoding.delete(i); if (Math.abs(i - Math.round(current)) <= BITMAP_WINDOW) { bitmaps[i] = bm; if (i === Math.floor(current) || i === Math.ceil(current)) draw(true); } else bm.close(); tend(); }).catch(() => { decoding.delete(i); tend(); });
+				decodeFrame(i).then((bm) => { decoding.delete(i); if (Math.abs(i - Math.round(current)) <= win()) { bitmaps[i] = bm; if (i === Math.floor(current) || i === Math.ceil(current)) draw(true); } else bm.close(); tend(); }).catch(() => { decoding.delete(i); tend(); });
 			}
 		}
 	}
 	let tendTimer = 0;
-	const tend = () => { if (!tendTimer) tendTimer = setTimeout(() => { tendTimer = 0; tendBitmaps(); }, 40); };
+	const tend = () => { if (!tendTimer) tendTimer = setTimeout(() => { tendTimer = 0; tendBitmaps(); }, 0); };   // coalesced to the next task, not throttled: a fast scroll needs the decoder fed the moment a slot frees
 	function evict() {
 		const c = Math.round(current), half = KEEP / 2;
 		for (let i = 0; i < cfg.frames; i++) {
@@ -148,7 +178,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 			blobs[i] = blob;
 			const img = new Image();
 			img.decoding = 'async';
-			img.onload = () => { imgs[i] = img; loading.delete(i); draw(true); pump(); tend(); };
+			img.onload = () => { imgs[i] = img; loading.delete(i); if (!lastPair || Math.abs(i - current) <= 1) draw(true); pump(); tend(); };   // redraw only for the frame on screen: drawing every arrival decoded all 241 through the browser's cache
 			img.onerror = () => { loading.delete(i); };
 			img.src = URL.createObjectURL(blob);
 		}).catch(() => { loading.delete(i); });

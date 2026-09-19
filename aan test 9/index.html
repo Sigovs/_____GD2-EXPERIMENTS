@@ -190,7 +190,7 @@
 	</script>
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
-		import { createFilmFrames } from './src/film-frames.js?v=2026-09-20n';
+		import { createFilmFrames } from './src/film-frames.js?v=2026-09-20v';
 		import { createTentGlow, TENT_GLOW } from './src/tent-glow.js?v=2026-09-20a';
 		import { applyGrain, applyRadial } from './src/fx.js?v=2026-09-20a';
 		applyGrain(TENT_GLOW.grain); applyRadial(TENT_GLOW.radial);
@@ -224,7 +224,8 @@
 			film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: HERO === 'pullback' ? 'previews/hero-poster.webp' : undefined, cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, fitParent: true, dir: heroDir, crossfade: false } });   // fitParent: the act overscans the viewport; crossfade off: two blended frames soften the fine snow while scrubbing
 		}
 		// the plateau plate: keyed frames with alpha, the same scrub as the mountain (src/layers.js moves the plane)
-		const plateauFilm = createFilmFrames({ canvas: document.getElementById('plateau'), cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, alpha: true, fitParent: true, dir: (w) => (w > 1700 ? 'assets/frames/plateau/1920' : w > 1000 ? 'assets/frames/plateau/1600' : w > 520 ? 'assets/frames/plateau/960' : 'assets/frames/plateau/640') }, loadAfter: 1e9 });   // the plateau waits for the mountain: its frames start once the mountain has most of its own (below)
+		// diagnosis switches (Alex, 20 Sep: the renderer crashes were bisected with these): ?noplateau, ?noglow, ?nolayers skip one module each
+		const plateauFilm = Q.has('noplateau') ? null : createFilmFrames({ canvas: document.getElementById('plateau'), cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, alpha: true, fitParent: true, dir: (w) => (w > 1700 ? 'assets/frames/plateau/1920' : w > 1000 ? 'assets/frames/plateau/1600' : w > 520 ? 'assets/frames/plateau/960' : 'assets/frames/plateau/640') }, loadAfter: 1e9 });   // the plateau waits for the mountain: its frames start once the mountain has most of its own (below)
 		window.__plateau = plateauFilm;
 		// the loading order (Alex, 19 Sep: the film jumped on the scroll — holes while three films loaded at once): the mountain
 		// first; the plateau once the mountain has 160 of its 241 frames; the water once the scroll nears it
@@ -239,10 +240,10 @@
 		const waterDir = WATER_DIRS[WATER] || WATER_DIRS.v2;
 		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => `${waterDir}/${w > 1700 ? 1920 : w > 1000 ? 1600 : w > 520 ? 960 : 640}` }, loadAfter: 1e9 });   // the water does not load at once: descent.js lets it start when the scroll nears the hand-over (Alex, 19 Sep: "подгружать позже")
 		window.__water = water;
-		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), topCanvas: document.getElementById('tent-glow-top'), film: plateauFilm || film, cfg: plateauFilm ? TENT_GLOW : GLOW_SINGLE6 });
+		window.__glow = Q.has('noglow') ? { cfg: TENT_GLOW, setPalette() {} } : createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), topCanvas: document.getElementById('tent-glow-top'), film: plateauFilm || film, cfg: plateauFilm ? TENT_GLOW : GLOW_SINGLE6 });
 		// the planes: the film, the clouds, the plateau — each on its own move (src/layers.js)
 		import { createLayers } from './src/layers.js?v=2026-09-19y';
-		window.__layers = createLayers({ mountain: HERO === 'mountain3d' ? null /* the 3-D scene has its own parallax */ : document.getElementById(HERO === 'still' ? 'hero-still' : 'hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: plateauFilm ? document.getElementById('plane-plateau') : null, heroEnd: ACT.heroEnd });   // single: the plane holds only the light, it does not move
+		window.__layers = Q.has('nolayers') ? null : createLayers({ mountain: HERO === 'mountain3d' ? null /* the 3-D scene has its own parallax */ : document.getElementById(HERO === 'still' ? 'hero-still' : 'hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: plateauFilm ? document.getElementById('plane-plateau') : null, heroEnd: ACT.heroEnd });   // single: the plane holds only the light, it does not move
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
 		import { createWaterLife } from './src/water-life.js?v=2026-09-20a';
 		const life = createWaterLife({ canvas: document.getElementById('water-life'), waterCanvas: document.getElementById('water-film') });
