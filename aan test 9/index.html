@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GD2 — the mountain</title>
+<meta name="description" content="The deeper you go, the more you know.">
+<!-- the intro (src/intro.js) holds the scene until its cue; the class is set here, only where scripts run, so a page without them is never blank -->
+<script>document.documentElement.classList.add('is-intro');</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-18v">
+<link rel="stylesheet" href="src/route.css">
+</head>
+<body>
+
+	<!-- ONE SCENE. The film is the scene; the scroll is its transport. The film is a FRAME SEQUENCE on a canvas
+	     (src/film-frames.js): a seek is a drawImage, no keyframe decode, no iOS seek jitter, and the two frames
+	     around the scroll position are crossfaded so 24 fps reads as smooth. The <video> transport is parked
+	     (src/hero-scrub.js) — swap the two script tags below to go back. -->
+	<div class="stage">
+		<!-- ACT I — the mountain: the film and the tent's light in one wrapper, so the hand-over (src/descent.js)
+		     blurs and dissolves them together -->
+		<div id="act-hero" class="stage__act">
+			<canvas id="hero-film" class="stage__video" aria-hidden="true"></canvas>
+			<!-- the tent's light, breathing and flickering over the film's tent (src/tent-glow.js) - under the clouds, in the fog -->
+			<canvas id="tent-glow" class="stage__glow" aria-hidden="true"></canvas>
+			<!-- the DODGE pass of the same light: mix-blend-mode color-dodge against the film (tent-glow.js → cfg.dodge) -->
+			<canvas id="tent-dodge" class="stage__glow stage__glow--dodge" aria-hidden="true"></canvas>
+		</div>
+		<!-- ACT II — the water: starts under the surface (the tent's light warped above), comes up over the mountain
+		     for a moment, then the scroll scrubs the descent. Same frame transport. -->
+		<canvas id="water-film" class="stage__video stage__act" aria-hidden="true"></canvas>
+		<!-- the water answers the cursor with rings: a wave field refracting the film (src/water-waves.js); hidden until it stirs -->
+		<canvas id="water-waves" class="stage__glow" aria-hidden="true" style="visibility:hidden"></canvas>
+		<!-- what moves in the water while the film is a still: caustics, the suspension, bubbles (src/water-life.js) -->
+		<canvas id="water-life" class="stage__glow" aria-hidden="true"></canvas>
+		<!-- the descent route over the film — an instrument, rotoscoped to the film's frames (src/route-layer.js) -->
+		<canvas id="route-canvas" class="stage__route" aria-hidden="true"></canvas>
+		<!-- the one 3-D thing we keep: the scene's own clouds, over the film (src/cloud-layer.js) -->
+		<canvas id="cloud-canvas" class="stage__clouds" aria-hidden="true"></canvas>
+		<canvas id="vignette-canvas" class="stage__vignette" aria-hidden="true"></canvas>
+	</div>
+
+	<!-- the route's callouts (route.css); the leaders are drawn in here by route-layer.js -->
+	<div id="route-labels" aria-hidden="true"></div>
+
+	<!-- the navigation (src/nav.css, src/nav.js): the header and the full-screen panel it opens.
+	     The previous inline link row with the letter-swap hover (src/nav-letter-swap.js) is cut, not deleted:
+	     restore the <ul> here and its script at the foot to bring it back. -->
+	<header class="nav">
+		<a class="nav__brand" href="#main" aria-label="GD2"><img src="assets/logo.png" srcset="assets/logo.png 1x, assets/logo@2x.png 2x" alt="GD2"></a>
+		<button class="nav__toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-panel"><span></span><span></span><span></span></button>
+	</header>
+	<nav class="nav__panel" id="nav-panel" aria-label="Primary" aria-hidden="true">
+		<div class="nav__inner">
+			<!-- the panel head (the name and the tagline) is cut (Alex, 18 Sep: "это из меню убери") -->
+			<div class="nav__body">
+				<ul class="nav__links">
+					<li data-reveal="link" data-i="0"><a class="nav__link" href="#main">Products &amp; Services</a></li>
+					<li data-reveal="link" data-i="1"><a class="nav__link" href="#main">Grow your Business</a></li>
+					<li data-reveal="link" data-i="2"><a class="nav__link" href="#main">Compliance</a></li>
+					<li data-reveal="link" data-i="3"><a class="nav__link" href="#main">Contact</a></li>
+				</ul>
+				<div class="nav__images">
+					<div class="nav__image" data-reveal="image" data-i="0"><img src="previews/hero-gora-poster.jpg" alt="" loading="lazy"></div>
+					<div class="nav__image" data-reveal="image" data-i="1"><img src="previews/camp.jpg" alt="" loading="lazy"></div>
+				</div>
+			</div>
+			<div class="nav__foot"><span data-reveal="head" data-i="2">GD2</span></div>
+		</div>
+	</nav>
+
+	<main id="main" class="hero">
+		<!-- the last word rotates (text-rise.js → rotateWord): the words in data-words are PLACEHOLDERS — replace with the client's -->
+		<h1 class="hero__title"><span class="hero__line">The deeper</span><br><span class="hero__line">you go,</span><br><span class="hero__line">the more you <span class="hero__rotate" data-words="know.|see.|learn.|find.">know.</span></span></h1>
+		<!-- the calls: two, no more (Alex, 18 Sep). Links are PLACEHOLDERS -->
+		<div class="hero__cta">
+			<a class="cta cta--primary" href="#main">Explore services</a>
+			<a class="cta cta--ghost" href="#main">Talk to us</a>
+		</div>
+	</main>
+
+	<!-- the scroll length: how much travel the films get (progress.js measures the scene by this track) -->
+	<div class="spacer" aria-hidden="true"></div>
+
+
+	<script type="importmap">
+	{
+		"imports": {
+			"three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+			"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+		}
+	}
+	</script>
+	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
+	<script type="module">
+		import { createFilmFrames } from './src/film-frames.js?v=2026-09-18v';
+		import { createTentGlow } from './src/tent-glow.js?v=2026-09-18v';
+		import { createDescent, ACT } from './src/descent.js?v=2026-09-18v';
+		// the two films: the hero scrubs the first part of the page, the water the rest — they overlap for the hand-over.
+		// Neither listens to the scroll itself: descent.js drives both from one progress.
+		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp', cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false } });   // the film ends early and holds on the tent
+		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => (w > 1000 ? 'assets/frames/water/1600' : 'assets/frames/water/960') }, loadAfter: 2500 });
+		window.__water = water;
+		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), film });
+		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
+		import { createWaterLife } from './src/water-life.js?v=2026-09-18v';
+		const life = createWaterLife({ canvas: document.getElementById('water-life'), waterCanvas: document.getElementById('water-film') });
+		window.__life = life;
+		// the water answers the cursor: rings (src/water-waves.js, WebGL2); where float targets are missing, the soft
+		// SVG lens of src/water-ripple.js stands in
+		import { createWaterWaves } from './src/water-waves.js?v=2026-09-18y';
+		// import { createWaterRipple } from './src/water-ripple.js?v=2026-09-18v';   // parked with the rings
+		const waves = createWaterWaves({ canvas: document.getElementById('water-waves'), film: water });
+		// the cursor's ripple is OFF (Alex, 18 Sep): no rings (WATER_WAVES.rings) and no SVG lens fallback either
+		const ripple = { setPresence() {} };   // was: waves.enabled ? … : createWaterRipple({ target: document.getElementById('water-film') })
+		window.__waves = waves;
+		window.__ripple = ripple;
+		// photographs floating up through the water (src/drift-cards.js)
+		import { createDriftCards } from './src/drift-cards.js?v=2026-09-18x';
+		window.__drift = createDriftCards();
+		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: film, waterFilm: water, clouds: null, onWater: (w, P) => { life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
+		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
+		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.shape') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-18m'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
+		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)
+		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-18m'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
+		if (new URLSearchParams(location.search).get('edit') === 'glow') openEditor();
+		addEventListener('keydown', (e) => { if ((e.key === 'g' || e.key === 'G') && !window.__glowEditor && !e.metaKey && !e.ctrlKey) openEditor(); });
+	</script>
+	<script type="module">
+		// the vignette, dithered on a canvas — a CSS gradient banded (src/vignette.js)
+		import { createVignette } from './src/vignette.js?v=2026-09-18e';
+		createVignette({ canvas: document.getElementById('vignette-canvas') });
+	</script>
+	<script type="module">
+		// one module, in order: the route over the film, the cloud plates over the route, then the intro
+		// that drives both. The clouds may fail (no WebGL): the intro still runs, without them.
+		import { createRouteLayer } from './src/route-layer.js';
+		import { runIntro } from './src/intro.js';
+		import * as THREE from 'three';
+		import { createCloudLayer } from './src/cloud-layer.js?v=2026-09-18e';   // the plate rig from the 3-D build — the clouds Alex approved
+		import { createCloudStack } from './src/cloud-stack.js?v=2026-09-18e';   // procedural fbm layers (parked — "не те облака")
+		const CLOUDS = 'plates';   // 'plates' (the rig's white breathing clouds — Alex: "это те облака") | 'stack' (procedural, parked)
+
+		// the route is OFF for now (Alex, 18 Sep: "уберём path вообще на данном этапе" — smooth scrolling first); the
+		// layer stays in the tree, one line brings it back
+		window.__route = null; // the route layer was rotoscoped to the <video>; if it comes back it reads window.__film.frame
+		document.getElementById('route-canvas')?.remove();
+
+		const cloudsUp = (async () => {
+			const loader = new THREE.TextureLoader();
+			const load = (f) => new Promise((res, rej) => loader.load(f, (t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; res(t); }, undefined, rej));
+			const [noise, perlin, cloudNoise] = await Promise.all([load('assets/textures/noise.webp'), load('assets/textures/perlinNoise.webp'), load('assets/textures/cloud-noise.png')]);
+			const clouds = CLOUDS === 'stack'
+				? createCloudStack({ canvas: document.getElementById('cloud-canvas'), noise: cloudNoise })
+				: await createCloudLayer({ canvas: document.getElementById('cloud-canvas'), textures: { noise, perlin }, hold: null });   // no hold: no statement on the page, and its rect was a straight edge
+			const progress = () => { const max = document.documentElement.scrollHeight - window.innerHeight; return max > 0 ? window.scrollY / max : 0; };
+			clouds.setProgress(0);   // from here on descent.js drives it (the hero's own progress, not the page's)
+			window.__clouds = clouds;
+			return clouds;
+		})().catch((e) => { console.warn('cloud layer off:', e); return null; });
+
+		// the intro opens inside the cloud, so it waits for the plates — but not past 2.5 s on a slow line
+		const clouds = await Promise.race([cloudsUp, new Promise((r) => setTimeout(() => r(null), 2500))]);
+		window.__descent?.setClouds(clouds);   // the hand-over (src/descent.js) drives the clouds from here on
+		runIntro({ route: window.__route, clouds });
+	</script>
+	<script type="module">import { initNav } from './src/nav.js'; window.__nav = initNav();</script>
+	<script type="module">
+		// the captions: text blocks that arrive with the scroll, over the mountain and under the water (src/captions.js)
+		import { createCaptions } from './src/captions.js?v=2026-09-18w';
+		window.__captions = createCaptions();
+	</script>
+</body>
+</html>

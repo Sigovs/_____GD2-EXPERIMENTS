@@ -1,0 +1,141 @@
+/*
+ * nav.css — the navigation: a fixed header (brand + hamburger) and a full-screen panel that
+ * wipes open with clip-path (nav.js). After the "immersive full-screen nav" component, done
+ * natively: the shell, the panel, the per-character hover on the links, the hamburger's cross.
+ *
+ * The panel is the page's own ground colour; the links are the site's one family at display
+ * size; nothing glows. Under prefers-reduced-motion the wipe is a fade and the reveals are
+ * instant (nav.js). Tokens up top.
+ */
+
+:root {
+	--nav-top: clamp(24px, 3.5vh, 40px);
+	--nav-x: clamp(24px, 4.5vw, 64px);
+	--nav-font: "Inter Tight", "Helvetica Neue", system-ui, sans-serif;   /* the site's one family */
+	--nav-ink: #e6edf8;
+	--nav-ink-2: rgba(230, 237, 248, 0.62);
+	--nav-ground: #05080f;             /* the page's ground (hero.css --ground) */
+	--nav-accent: #00ECFF;
+	--nav-ease: cubic-bezier(0.77, 0, 0.175, 1);         /* the wipe: slow in, slow out */
+	--nav-ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+	--nav-wipe: 1000ms;
+	--nav-shadow: 0 1px 10px rgba(2, 4, 10, 0.55);       /* legibility over stars, not decoration */
+}
+
+/* ---- the header: always there, above the panel ---- */
+.nav {
+	position: fixed;
+	left: 0; right: 0; top: 0;
+	z-index: 30;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--nav-top) var(--nav-x) 0;
+	pointer-events: none;              /* the scene keeps every gesture except on the controls */
+	font-family: var(--nav-font);
+	color: var(--nav-ink);
+}
+.nav__brand {
+	pointer-events: auto;
+	font-size: 1rem;
+	font-weight: 600;
+	letter-spacing: 0.15em;
+	text-transform: uppercase;
+	color: var(--nav-ink);
+	text-decoration: none;
+	text-shadow: var(--nav-shadow);
+	padding: 8px 0;
+}
+.nav__brand img { display: block; height: 48px; width: auto; }   /* the logo (assets/logo.png) — the header's only mark (34 → 48, Alex 18 Sep: "logo larger") */
+.nav__brand:focus-visible, .nav__toggle:focus-visible, .nav__link:focus-visible { outline: 2px solid var(--nav-accent); outline-offset: 4px; }
+
+.nav__toggle {
+	pointer-events: auto;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 6px;
+	width: 44px; height: 44px;         /* the hit area */
+	padding: 10px;
+	margin-right: -10px;
+	background: none; border: 0; cursor: pointer;
+	color: inherit;
+}
+.nav__toggle span {
+	display: block;
+	height: 2px; width: 100%;
+	background: currentColor;
+	box-shadow: var(--nav-shadow);
+	transform-origin: center;
+	transition: transform 700ms var(--nav-ease) 300ms, opacity 500ms var(--nav-ease) 300ms;
+}
+.nav.is-open .nav__toggle span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.nav.is-open .nav__toggle span:nth-child(2) { transform: scaleX(0); opacity: 0; }
+.nav.is-open .nav__toggle span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+/* ---- the panel: wipes open from the right (nav.js sets the clip-path), exits to the left ---- */
+.nav__panel {
+	position: fixed;
+	inset: 0;
+	z-index: 20;
+	background: var(--nav-ground);
+	color: var(--nav-ink);
+	font-family: var(--nav-font);
+	overflow-y: auto;
+	pointer-events: none;
+	clip-path: polygon(100% 0%, 100% 0%, 100% 100%, 100% 100%);
+	visibility: hidden;
+}
+.nav__panel.is-open { pointer-events: auto; visibility: visible; }
+.nav__panel:focus { outline: none; }
+.nav__panel.is-moving { visibility: visible; }
+
+.nav__inner {
+	box-sizing: border-box;
+	min-height: 100vh;
+	min-height: 100dvh;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 40px;
+	padding: calc(var(--nav-top) + 64px) var(--nav-x) 40px;
+	transform-origin: center;
+}
+
+.nav__head { display: flex; flex-direction: column; gap: 4px; }
+.nav__name { margin: 0; font-size: 0.875rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.9; }
+.nav__tagline { margin: 0; font-size: 0.9375rem; color: var(--nav-ink-2); }
+
+.nav__body { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 40px; }   /* flex: 1 — without the head the body owns the middle, so the links sit at the vertical centre (Alex, 18 Sep) */
+.nav__links { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.nav__links li { font-size: clamp(2rem, 4.6vw, 5.4rem); line-height: 1.08; letter-spacing: -0.02em; font-weight: 400; white-space: nowrap; }   /* our labels are long: sized so the longest fits beside the images */
+.nav__link { color: inherit; text-decoration: none; display: inline-block; white-space: nowrap; }
+/* the hover: every character slides up out of the line, its shadow copy sliding in beneath — staggered */
+.nav__link .w { display: inline-block; overflow: hidden; vertical-align: top; line-height: 1.08; }
+.nav__link .c { display: inline-block; white-space: pre; text-shadow: 0 1.2em currentColor; transition: transform 500ms cubic-bezier(0.625, 0.05, 0, 1); transition-delay: calc(var(--i) * 15ms); }
+.nav__link:hover .c, .nav__link:focus-visible .c { transform: translateY(-1.2em); }
+
+.nav__images { display: flex; align-items: flex-end; gap: 24px; }
+.nav__image { position: relative; width: 19vw; height: 13vw; overflow: hidden; border-radius: 6px; }
+.nav__image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 500ms var(--nav-ease-out); }
+.nav__image:hover img { transform: scale(1.05); }
+
+.nav__foot { display: flex; align-items: flex-end; justify-content: space-between; font-size: 0.875rem; color: var(--nav-ink-2); }
+
+/* what the reveal animates (nav.js) starts hidden */
+.nav__panel [data-reveal] { opacity: 0; }
+
+@media (max-width: 1025px) {
+	.nav__body { flex-direction: column; align-items: flex-start; justify-content: center; gap: 56px; }
+	.nav__links li { font-size: clamp(2.2rem, 8vw, 5rem); }
+	.nav__images { width: 100%; flex-direction: column; align-items: flex-start; gap: 12px; }
+	.nav__image { width: 60vw; height: 30vw; border-radius: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.nav__toggle span { transition: none; }
+	.nav__link .c { transition: none; }
+	.nav__link:hover .c, .nav__link:focus-visible .c { transform: none; text-shadow: none; opacity: 0.7; }
+	.nav__image img { transition: none; }
+	.nav__image:hover img { transform: none; }
+}

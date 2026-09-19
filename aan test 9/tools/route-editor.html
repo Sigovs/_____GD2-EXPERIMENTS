@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Route editor — aan test 8</title>
+<!-- tools/route-editor.html — lay the descent route on the film, key by key, by hand.
+     Points are edited in FILM coordinates (the frame is shown whole, 16:9), interpolated
+     between keys exactly as the page does (src/route-layer.js), and exported as the `keys`
+     block of src/route-config.js. Nothing here writes the config: copy the export, hand it over. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600&display=swap">
+<style>
+	:root { --bg: #0b0f16; --bar: #121824; --ink: #e8eef8; --ink-2: rgba(232, 238, 248, 0.62); --line: rgba(255, 255, 255, 0.14); --accent: #00ECFF; --ridge: #37d6ff; --camp: #ffa64d; --tent: #ffd84d; }
+	* { box-sizing: border-box; }
+	html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px/1.4 "Inter Tight", system-ui, sans-serif; overflow: hidden; }
+	.bar { position: fixed; left: 0; right: 0; top: 0; height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 12px; background: var(--bar); border-bottom: 1px solid var(--line); z-index: 5; white-space: nowrap; overflow-x: auto; }
+	.bar .g { display: flex; align-items: center; gap: 4px; }
+	.bar .g > span:first-child { color: var(--ink-2); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; margin-right: 2px; }
+	button, select, input[type=number] { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 3px; padding: 4px 7px; cursor: pointer; }
+	button:hover { border-color: rgba(255, 255, 255, 0.4); }
+	button.on { border-color: var(--accent); color: var(--accent); }
+	button.ridge.on { border-color: var(--ridge); color: var(--ridge); }
+	button.camp.on { border-color: var(--camp); color: var(--camp); }
+	button.tent.on { border-color: var(--tent); color: var(--tent); }
+	button.key { min-width: 0; padding: 4px 5px; font-variant-numeric: tabular-nums; font-size: 13px; }
+	button.key.on { background: rgba(0, 236, 255, 0.1); }
+	input[type=number] { width: 54px; cursor: text; }
+	.stage { position: fixed; left: 0; right: 0; top: 48px; bottom: 56px; }
+	.stage video, .stage canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+	.stage video { object-fit: contain; background: #000; }
+	.foot { position: fixed; left: 0; right: 0; bottom: 0; height: 56px; display: flex; align-items: center; gap: 14px; padding: 0 14px; background: var(--bar); border-top: 1px solid var(--line); z-index: 5; }
+	.foot input[type=range] { flex: 1; accent-color: var(--accent); }
+	.foot .f { font-variant-numeric: tabular-nums; min-width: 7ch; }
+	.hint { color: var(--ink-2); font-size: 13px; }
+	.toast { position: fixed; left: 50%; top: 60px; transform: translateX(-50%); background: var(--accent); color: #041016; padding: 6px 12px; border-radius: 3px; font-weight: 600; opacity: 0; transition: opacity .2s; z-index: 9; pointer-events: none; }
+	.toast.on { opacity: 1; }
+	textarea.export { position: fixed; left: 14px; right: 14px; top: 60px; bottom: 68px; z-index: 8; background: #05080f; color: var(--ink); border: 1px solid var(--accent); font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 12px; display: none; }
+	textarea.export.on { display: block; }
+</style>
+</head>
+<body>
+	<div class="bar">
+		<div class="g"><span>Key</span><span id="keys"></span><button id="addKey" title="add a key at the current film time">+ key</button><button id="delKey" title="remove the current key">−</button></div>
+		<div class="g"><span>Chain</span><button class="ridge on" data-chain="ridge">ridge</button><button class="camp" data-chain="camp">camp</button><button class="tent" data-chain="tent">tent</button></div>
+		<div class="g"><span>Edit</span><button id="modeAll" class="on" title="a move, a hide, a nudge applies to this point in EVERY key">all keys</button><button id="modeOne" title="only the current key changes — for fine adjustment">this key</button><button id="copyAll" title="lay this key's points on every key (then adjust the others)">copy → all</button></div>
+		<div class="g"><span>Point</span><span id="sel" class="hint">none</span><label class="hint">α <input id="alpha" type="number" min="0" max="1" step="0.1" value="1"></label><button id="hide" title="H — toggle hidden (α 0 / 1)">hide</button><button id="delPt" title="Delete — remove the point from every key">delete</button></div>
+		<div class="g"><span>View</span><button id="onion" class="on" title="the neighbouring keys' points, faint">onion</button><button id="render" class="on" title="the real route-layer rendering underneath">render</button><button id="grid" title="a 10 % grid over the frame">grid</button></div>
+		<div class="g"><span>Keys</span><button id="export">export</button><button id="copy">copy</button><button id="reset" title="back to src/route-config.js">reset</button></div>
+	</div>
+	<div class="stage">
+		<video id="film" playsinline muted preload="auto" src="../assets/videos/hero-gora.mp4"></video>
+		<canvas id="route"></canvas>
+		<canvas id="edit"></canvas>
+	</div>
+	<div class="foot">
+		<span class="f" id="ftime">f 0.000</span>
+		<input id="scrub" type="range" min="0" max="1000" value="0">
+		<span class="hint">drag a point (all keys, or this key) · double-click a segment to insert · ⌫ delete · H hide · ←/→ keys · [ ] step · S snap · A toggles all/this · autosaved</span>
+	</div>
+	<div class="toast" id="toast"></div>
+	<textarea class="export" id="exportBox" spellcheck="false"></textarea>
+	<script type="module" src="route-editor.js"></script>
+</body>
+</html>

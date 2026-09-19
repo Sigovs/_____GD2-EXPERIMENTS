@@ -1,0 +1,274 @@
+/*
+ * hero.css — one scene, full bleed. The film sits still in the viewport; the page scrolls
+ * past it and the scroll drives its time (src/hero-scrub.js). Nothing else moves.
+ */
+
+:root {
+	--ink: #eef3fb;
+	--ink-dim: rgba(238, 243, 251, 0.72);
+	--ground: #05080f;
+	--scene-vh: 1000;          /* how many viewport heights the two films get together (descent.js splits them) */
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--ground); }
+
+body {
+	margin: 0;
+	background: var(--ground);
+	color: var(--ink);
+	font-family: "Inter Tight", "Helvetica Neue", system-ui, sans-serif;
+	-webkit-font-smoothing: antialiased;
+}
+
+/* ---- the scene: fixed, full bleed, always covering ---- */
+.stage {
+	position: fixed;
+	inset: 0;
+	z-index: 0;
+	background: var(--ground);
+	overflow: hidden;
+}
+.stage__video {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+/* the frame's own edges: a touch of vignette so the type never sits on a bright corner */
+.stage__clouds {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	display: block;
+	pointer-events: none;
+}
+.stage__act {
+	position: absolute;
+	inset: 0;
+	will-change: opacity, filter, transform;
+	transform-origin: 50% 50%;
+}
+/* the water canvas is opaque (no alpha) and sits over the mountain: it starts INVISIBLE in CSS, so until
+   descent.js takes over (or if it never does) the mountain is never covered by a black canvas */
+#water-film { opacity: 0; visibility: hidden; }
+.stage__glow {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	display: block;
+	pointer-events: none;
+}
+.stage__glow--dodge { mix-blend-mode: color-dodge; opacity: 0; }
+.stage__route {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	display: block;
+	pointer-events: none;
+}
+.stage__vignette {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	display: block;
+	pointer-events: none;
+	/* no CSS gradient here: an 8-bit gradient steps in straight lines across the frame — the vignette is a
+	   dithered canvas (src/vignette.js) */
+}
+
+/* ---- the statement ---- */
+/* the statement is back (Alex, 18 Sep: "добавь теперь текст на hero"); captions.js takes it out as the scroll begins */
+.hero {
+	position: fixed;
+	z-index: 2;
+	left: clamp(24px, 6vw, 96px);
+	top: 50%;
+	transform: translateY(-50%);
+	max-width: none;
+	pointer-events: none;
+	will-change: opacity, transform;
+}
+.hero__title {
+	margin: 0;
+	font-size: clamp(2.2rem, 5.6vw, 6.6rem);
+	font-weight: 800;
+	line-height: 0.96;
+	letter-spacing: -0.025em;
+	text-wrap: balance;
+	text-shadow: 0 2px 40px rgba(2, 5, 12, 0.75);
+}
+
+/* ---- the intro (intro.js): what is not yet arrived is held here, so nothing flashes before its cue.
+        The html class is removed once the intro has landed; under reduced motion it never applies. ---- */
+.is-intro .stage,
+.is-intro .hero__line,
+.is-intro .nav { opacity: 0; animation: intro-safety 0s 3s forwards; }   /* the safety: whatever happens to the script, the page is there by 3 s */
+@keyframes intro-safety { to { opacity: 1; } }
+.hero__line {
+	display: inline-block;
+	white-space: nowrap;
+	will-change: opacity, transform;           /* one line each; so a line can move on its own */
+	vertical-align: top;
+	padding-bottom: 0.14em;
+	margin-bottom: -0.14em;
+}
+/* the mask the letters rise from (text-rise.js) — only while they rise: a mask would clip the title's shadow into a box */
+.is-intro .hero__line { overflow: hidden; }
+.is-intro .hero__title { text-shadow: none; }
+.hero__title { transition: text-shadow 400ms ease-out; }
+.hero__line .ch { display: inline-block; will-change: transform; }
+/* the rotating word (text-rise.js → rotateWord): its own mask, always — the words travel through it */
+/* the rotating word: no plate (Alex, 18 Sep: "убери зелёный box") — the same ink as the line, the words travel
+   through the mask. The accent green (#97C82C) stays a token for later, not a surface here. */
+.hero__rotate {
+	display: inline-block;
+	box-sizing: border-box;            /* text-rise.js owns the width as a border-box */
+	overflow: hidden;
+	vertical-align: top;
+	white-space: nowrap;
+	padding: 0.02em 0 0.08em;
+	margin: -0.02em 0 -0.08em;
+	color: inherit;
+}
+.hero__rotate .hero__word { display: inline-block; white-space: nowrap; }
+.hero__line .ch--space { width: 0.26em; }
+.is-intro .hero__line .ch { transform: translateY(110%); }   /* under the mask until the intro lifts them */
+@media (prefers-reduced-motion: reduce) {
+	.is-intro .stage, .is-intro .hero__line, .is-intro .nav { opacity: 1; }
+}
+
+/* ---- the scroll track ---- */
+.spacer { height: calc(var(--scene-vh) * 1vh); height: calc(var(--scene-vh) * 1svh); }   /* svh: the phone's URL bar must not change the scroll's length as it hides */
+
+@media (max-width: 700px) {
+	.hero { top: auto; bottom: 14vh; transform: none; max-width: none; right: clamp(24px, 6vw, 96px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	/* the film holds a frame; the page is a still */
+	.spacer { height: 100vh; }
+}
+
+/* ---- the captions (src/captions.js): text blocks that arrive with the scroll ---- */
+.captions { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+.caption {
+	position: absolute;
+	top: var(--y, 50%);
+	transform: translateY(-50%);
+	max-width: min(46vw, 640px);
+	visibility: hidden;
+}
+.caption--left  { left: clamp(24px, 6vw, 96px); text-align: left; }
+.caption--right { right: clamp(24px, 6vw, 96px); text-align: right; }
+.caption__eyebrow {
+	font-size: 0.875rem;               /* the floor: functional text never smaller */
+	font-weight: 600;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--ink-dim);
+	margin-bottom: 0.9em;
+	text-shadow: 0 1px 24px rgba(2, 5, 12, 0.8);
+}
+.caption__line { padding-bottom: 0.06em; }
+.caption__word { display: inline-block; will-change: opacity, transform, filter; }
+.caption__line {
+	font-size: clamp(1.5rem, 3.1vw, 3.4rem);
+	font-weight: 700;
+	line-height: 1.04;
+	letter-spacing: -0.02em;
+	text-shadow: 0 2px 40px rgba(2, 5, 12, 0.75);
+	will-change: opacity, transform;
+}
+.caption--water .caption__line { color: #dbe9f6; text-shadow: 0 2px 48px rgba(0, 8, 20, 0.9); }
+.caption--closing .caption__line { font-size: clamp(2.2rem, 5.6vw, 6.6rem); font-weight: 800; line-height: 0.96; letter-spacing: -0.025em; }
+.caption--closing { max-width: none; }
+@media (max-width: 700px) {
+	.caption { max-width: 82vw; }
+	.caption--right { right: auto; left: 24px; text-align: left; }
+}
+
+/* ---- the calls ---- */
+.cta {
+	display: inline-flex; align-items: center; gap: 0.6em;
+	padding: 0.85em 1.5em;
+	border-radius: 999px;
+	font-size: 0.9375rem; font-weight: 600; letter-spacing: 0.02em;
+	text-decoration: none; color: var(--ink);
+	border: 1px solid rgba(238, 243, 251, 0.35);
+	background: rgba(5, 8, 15, 0.25);
+	-webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+	transition: background 240ms ease, border-color 240ms ease, transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+	pointer-events: auto;
+}
+.cta:hover { background: rgba(238, 243, 251, 0.12); border-color: rgba(238, 243, 251, 0.6); transform: translateY(-1px); }
+.cta--primary { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.cta--primary:hover { background: #ffffff; border-color: #ffffff; }
+.cta:focus-visible { outline: 2px solid #97C82C; outline-offset: 3px; }
+.hero__cta { display: flex; gap: 12px; margin-top: clamp(20px, 3vw, 36px); pointer-events: auto; }
+.is-intro .hero__cta { opacity: 0; }
+.hero__cta { opacity: 1; transition: opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 200ms; }
+.caption__cta { margin-top: 1.4em; }
+.caption--right .caption__cta { display: flex; justify-content: flex-end; }
+
+/* ---- the drifting photographs (src/drift-cards.js) ---- */
+.drift { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+.drift__card {
+	position: absolute; top: 0; margin: 0;
+	aspect-ratio: var(--ratio, 4 / 5);
+	visibility: hidden; opacity: 0;
+	will-change: transform, opacity;
+	transform-origin: 50% 50%;
+}
+.drift__card img {
+	display: block; width: 100%; height: 100%; object-fit: cover;
+	border-radius: 6px;
+	box-shadow: 0 30px 80px rgba(0, 6, 18, 0.7), 0 0 0 1px rgba(200, 225, 255, 0.08) inset;
+	filter: saturate(0.85) brightness(0.92);
+}
+.drift__card figcaption {
+	margin-top: 10px;
+	font-size: 0.875rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+	color: var(--ink-dim);
+}
+
+/* ---- the brands, after the descent ---- */
+.brands {
+	position: relative; z-index: 3;
+	background: var(--ground);
+	padding: clamp(72px, 14vh, 160px) clamp(24px, 6vw, 96px) clamp(96px, 16vh, 200px);
+	border-top: 1px solid rgba(238, 243, 251, 0.06);
+}
+.brands__eyebrow {
+	margin: 0 0 clamp(28px, 4vw, 56px);
+	text-align: center;
+	font-size: 0.875rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+	color: #97C82C;
+	opacity: 0.85;
+}
+.brands__list {
+	list-style: none; margin: 0 auto; padding: 0;
+	max-width: 1400px;
+	display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+	gap: clamp(20px, 3.2vw, 56px) clamp(32px, 4.6vw, 88px);
+}
+.brands__list li {
+	font-size: clamp(1rem, 1.35vw, 1.35rem); font-weight: 600; letter-spacing: 0.06em;
+	color: rgba(238, 243, 251, 0.42);
+	white-space: nowrap;
+	transition: color 300ms ease;
+}
+.brands__list li:hover { color: rgba(238, 243, 251, 0.8); }
+@media (max-width: 700px) {
+	.hero__cta { flex-wrap: wrap; }
+	.drift__card { width: 46vw !important; }
+	.drift__card figcaption { font-size: 0.875rem; }
+	.brands__list { gap: 18px 28px; }
+}
