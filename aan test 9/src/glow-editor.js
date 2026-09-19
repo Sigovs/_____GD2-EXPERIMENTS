@@ -13,8 +13,8 @@
  */
 
 /* saved dials -> the live cfg (used by the editor, and by the page on load so the work shows without the editor) */
-import { applyGrade } from './tent-glow.js?v=2026-09-19s';
-import { applyGrain, applyRadial } from './fx.js?v=2026-09-19s';
+import { applyGrade } from './tent-glow.js?v=2026-09-19t';
+import { applyGrain, applyRadial } from './fx.js?v=2026-09-19t';
 
 export function applySaved(cfg, saved) {
 	if (!saved || Array.isArray(saved)) return;
@@ -93,7 +93,7 @@ export function openGlowEditor({ glow, film }) {
 		// GRADE — the whole stage
 		['grade.opacity', 'Grade amount', 0, 1, 0.01, 0.35], ['grade.contrast', 'Contrast', 0.6, 1.6, 0.01, 1.04], ['grade.saturate', 'Saturate', 0, 2, 0.01, 0.92], ['grade.brightness', 'Brightness*', 0.5, 1.5, 0.01, 1],
 		// GRAIN
-		['grain.amount', 'Grain', 0, 1, 0.01, 0.1], ['grain.size', 'Grain size', 0.5, 4, 0.05, 1.4], ['grain.fps', 'Grain fps', 1, 30, 1, 12],
+		['grain.amount', 'Grain', 0, 1, 0.01, 0.22], ['grain.size', 'Grain size', 0.5, 4, 0.05, 1.2], ['grain.fps', 'Grain fps', 1, 30, 1, 12],
 		// RADIAL
 		['radial.amount', 'Radial', 0, 1, 0.01, 0], ['radial.x', 'Radial X', 0, 1, 0.005, 0.5], ['radial.y', 'Radial Y', 0, 1, 0.005, 0.5], ['radial.size', 'Radial size', 0.1, 2, 0.01, 0.9], ['radial.soft', 'Radial soft', 0.02, 1, 0.01, 0.6],
 	];

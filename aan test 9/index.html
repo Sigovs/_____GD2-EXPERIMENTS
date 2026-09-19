@@ -118,8 +118,8 @@
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
 		import { createFilmFrames } from './src/film-frames.js?v=2026-09-19m';
-		import { createTentGlow, TENT_GLOW } from './src/tent-glow.js?v=2026-09-19s';
-		import { applyGrain, applyRadial } from './src/fx.js?v=2026-09-19s';
+		import { createTentGlow, TENT_GLOW } from './src/tent-glow.js?v=2026-09-19t';
+		import { applyGrain, applyRadial } from './src/fx.js?v=2026-09-19t';
 		applyGrain(TENT_GLOW.grain); applyRadial(TENT_GLOW.radial);
 		/* THE MOUNTAIN (Alex, 19 Sep: "оставь плато на любом тесте, я просто проверяю гору"): the plateau plate is ALWAYS on;
 		   this only picks the far plane's film. 'pullback' = the pull-back film (assets/frames); 'gora6' = the "6 sec video". */
@@ -177,9 +177,9 @@
 		window.__drift = createDriftCards();
 		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
-		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-19s'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
+		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-19t'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)
-		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-19s'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
+		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-19t'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
 		if (new URLSearchParams(location.search).get('edit') === 'glow') openEditor();
 		addEventListener('keydown', (e) => { if ((e.key === 'g' || e.key === 'G') && !window.__glowEditor && !e.metaKey && !e.ctrlKey) openEditor(); });
 	</script>

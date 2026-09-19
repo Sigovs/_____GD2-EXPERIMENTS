@@ -74,7 +74,7 @@ export const TENT_GLOW = {
 	/* GRADE — one colour over the whole stage with a blend mode, and a filter on the stage: the planes pulled into one palette */
 	grade: { blend: 'soft-light', color: '#6f86a6', opacity: 0.35, contrast: 1.04, saturate: 0.92, brightness: 1 },
 	/* GRAIN and a RADIAL (src/fx.js) — finishing layers, dials in the editor */
-	grain: { amount: 0.1, size: 1.4, fps: 12, blend: 'overlay' },
+	grain: { amount: 0.22, size: 1.2, fps: 12, blend: 'soft-light' },   // soft-light: the grain lives in the midtones, the blacks and the whites keep clean — like a negative
 	radial: { amount: 0, color: '#05080f', x: 0.5, y: 0.5, size: 0.9, soft: 0.6, blend: 'multiply', invert: true },
 };
 

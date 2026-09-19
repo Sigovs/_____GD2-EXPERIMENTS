@@ -15,11 +15,26 @@ const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), pa
 /* ---------------- grain ---------------- */
 let grainCanvas = null, grainCtx = null, tiles = [], grainCfg = null, grainRaf = 0, lastTile = 0, tileAt = 0;
 function makeTiles(n = 4, size = 256) {
+	// FILM grain, not white noise: a gaussian-ish distribution (three randoms summed), a small chroma part
+	// (the layers of a colour negative do not grain identically), then a soft 3x3 blur so a grain is a blob
+	// of ~1.5-2 px, never a single hard pixel
 	const out = [];
+	const gauss = () => (Math.random() + Math.random() + Math.random()) / 3 - 0.5;   // -0.5..0.5, peaked at 0
 	for (let k = 0; k < n; k++) {
+		const L = new Float32Array(size * size), C = new Float32Array(size * size * 3);
+		for (let i = 0; i < size * size; i++) { L[i] = gauss(); C[i * 3] = gauss() * 0.35; C[i * 3 + 1] = gauss() * 0.3; C[i * 3 + 2] = gauss() * 0.4; }
 		const c = document.createElement('canvas'); c.width = c.height = size;
 		const x = c.getContext('2d'); const img = x.createImageData(size, size); const d = img.data;
-		for (let i = 0; i < d.length; i += 4) { const v = 128 + (Math.random() - 0.5) * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+		const at = (i, j) => ((i + size) % size) * size + ((j + size) % size);   // tiling blur
+		for (let i = 0; i < size; i++) for (let j = 0; j < size; j++) {
+			let l = 0, r = 0, g = 0, b = 0;
+			for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {
+				const w = (di === 0 && dj === 0) ? 0.36 : (di === 0 || dj === 0) ? 0.1 : 0.06;
+				const q = at(i + di, j + dj); l += L[q] * w; r += C[q * 3] * w; g += C[q * 3 + 1] * w; b += C[q * 3 + 2] * w;
+			}
+			const o = (i * size + j) * 4;
+			d[o] = 128 + (l + r) * 255 * 1.9; d[o + 1] = 128 + (l + g) * 255 * 1.9; d[o + 2] = 128 + (l + b) * 255 * 1.9; d[o + 3] = 255;
+		}
 		x.putImageData(img, 0, 0); out.push(c);
 	}
 	return out;
@@ -43,7 +58,7 @@ export function applyGrain(g) {
 	if (!grainCanvas) {
 		grainCanvas = document.getElementById('fx-grain'); if (!grainCanvas) return;
 		grainCtx = grainCanvas.getContext('2d'); tiles = makeTiles();
-		const size = () => { grainCanvas.width = Math.round(innerWidth * Math.min(devicePixelRatio || 1, 1.5)); grainCanvas.height = Math.round(innerHeight * Math.min(devicePixelRatio || 1, 1.5)); tileAt = 0; };
+		const size = () => { const d = Math.min(devicePixelRatio || 1, 2); grainCanvas.width = Math.round(innerWidth * d); grainCanvas.height = Math.round(innerHeight * d); tileAt = 0; };
 		addEventListener('resize', size); size();
 	}
 	grainCanvas.style.opacity = String(clamp(g.amount, 0, 1));
