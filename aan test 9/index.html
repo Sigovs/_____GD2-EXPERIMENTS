@@ -175,7 +175,7 @@
 		window.__life = life;
 		// the sonar: arcs and a ping from where the diver would be — only with the v3 water (the canyon into the dark)
 		import { createSonar } from './src/sonar.js?v=2026-09-19z4';
-		const sonar = WATER === 'v3' && !LITE ? createSonar({ canvas: document.getElementById('sonar') }) : { setPresence() {} };
+		const sonar = Q.has('sonar') && WATER === 'v3' && !LITE ? createSonar({ canvas: document.getElementById('sonar') }) : { setPresence() {} };
 		window.__sonar = sonar;
 		// the water answers the cursor: rings (src/water-waves.js, WebGL2); where float targets are missing, the soft
 		// SVG lens of src/water-ripple.js stands in
