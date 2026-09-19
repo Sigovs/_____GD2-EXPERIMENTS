@@ -13,7 +13,7 @@
  */
 
 /* saved dials -> the live cfg (used by the editor, and by the page on load so the work shows without the editor) */
-import { applyGrade } from './tent-glow.js?v=2026-09-19t';
+import { applyGrade } from './tent-glow.js?v=2026-09-19u';
 import { applyGrain, applyRadial } from './fx.js?v=2026-09-19t';
 
 export function applySaved(cfg, saved) {
@@ -84,21 +84,21 @@ export function openGlowEditor({ glow, film }) {
 	// path, label, min, max, step, DEFAULT — the default is the module's own value, written here so Reset is a
 	// real reset (the cfg has already taken the saved dials by the time the editor opens)
 	const DIALS = [
-		['intensity', 'Brightness', 0, 3, 0.01, 1], ['spread', 'Spread', 0.2, 2.5, 0.01, 1], ['riseScale', 'Rise', 0, 2.5, 0.01, 1], ['blur', 'Blur', 0.05, 1.5, 0.01, 0.55],
-		['breath.depth', 'Breath', 0, 0.5, 0.01, 0.14], ['tremble.depth', 'Tremble', 0, 0.4, 0.01, 0.07], ['flare.depth', 'Flare', 0, 1, 0.01, 0.25], ['drift', 'Drift', 0, 0.15, 0.001, 0.035], ['parallax', 'Mouse lean', 0, 40, 1, 8], ['anchor', 'Anchor Y', -0.6, 0.6, 0.01, -0.02],
+		['intensity', 'Brightness', 0, 3, 0.01, 1.55], ['spread', 'Spread', 0.2, 2.5, 0.01, 0.42], ['riseScale', 'Rise', 0, 2.5, 0.01, 1.89], ['blur', 'Blur', 0.05, 1.5, 0.01, 0.55],
+		['breath.depth', 'Breath', 0, 0.5, 0.01, 0.15], ['tremble.depth', 'Tremble', 0, 0.4, 0.01, 0.08], ['flare.depth', 'Flare', 0, 1, 0.01, 0.25], ['drift', 'Drift', 0, 0.15, 0.001, 0.035], ['parallax', 'Mouse lean', 0, 40, 1, 10], ['anchor', 'Anchor Y', -0.6, 0.6, 0.01, -0.02],
 		// DODGE — a separate pass on its own canvas, mix-blend-mode: color-dodge
 		['dodge.amount', 'Dodge', 0, 1, 0.01, 0], ['dodge.spread', 'Dodge spread', 0.2, 2.5, 0.01, 1], ['dodge.intensity', 'Dodge bright', 0, 3, 0.01, 1],
 		// TOP — the light over the plate: stretched sideways
-		['top.intensity', 'Top', 0, 1.5, 0.01, 0.26], ['top.stretch', 'Top stretch', 1, 5, 0.01, 2.6], ['top.squash', 'Top squash', 0.1, 1, 0.01, 0.42], ['top.spread', 'Top spread', 0.2, 2.5, 0.01, 0.9],
+		['top.intensity', 'Top', 0, 1.5, 0.01, 0.55], ['top.stretch', 'Top stretch', 1, 5, 0.01, 1.79], ['top.squash', 'Top squash', 0.1, 1, 0.01, 0.42], ['top.spread', 'Top spread', 0.2, 2.5, 0.01, 0.9],
 		// GRADE — the whole stage
-		['grade.opacity', 'Grade amount', 0, 1, 0.01, 0.35], ['grade.contrast', 'Contrast', 0.6, 1.6, 0.01, 1.04], ['grade.saturate', 'Saturate', 0, 2, 0.01, 0.92], ['grade.brightness', 'Brightness*', 0.5, 1.5, 0.01, 1],
+		['grade.opacity', 'Grade amount', 0, 1, 0.01, 0.24], ['grade.contrast', 'Contrast', 0.6, 1.6, 0.01, 1.08], ['grade.saturate', 'Saturate', 0, 2, 0.01, 1.1], ['grade.brightness', 'Brightness*', 0.5, 1.5, 0.01, 0.94],
 		// GRAIN
-		['grain.amount', 'Grain', 0, 1, 0.01, 0.22], ['grain.size', 'Grain size', 0.5, 4, 0.05, 1.2], ['grain.fps', 'Grain fps', 1, 30, 1, 12],
+		['grain.amount', 'Grain', 0, 1, 0.01, 0.2], ['grain.size', 'Grain size', 0.5, 4, 0.05, 1.3], ['grain.fps', 'Grain fps', 1, 30, 1, 9],
 		// RADIAL
 		['radial.amount', 'Radial', 0, 1, 0.01, 0], ['radial.x', 'Radial X', 0, 1, 0.005, 0.5], ['radial.y', 'Radial Y', 0, 1, 0.005, 0.5], ['radial.size', 'Radial size', 0.1, 2, 0.01, 0.9], ['radial.soft', 'Radial soft', 0.02, 1, 0.01, 0.6],
 	];
 	const BLENDS = ['normal', 'screen', 'plus-lighter', 'overlay', 'soft-light', 'hard-light', 'color-dodge', 'lighten'];
-	const COLORS = [['core', 'Core', '#fefcc9'], ['mid', 'Mid', '#ffae34'], ['ember', 'Ember', '#451b0e']];
+	const COLORS = [['core', 'Core', '#ffb347'], ['mid', 'Mid', '#ff7300'], ['ember', 'Ember', '#7a1b2e']];
 	const GRADE_BLENDS = ['multiply', 'soft-light', 'overlay', 'color', 'hue', 'luminosity', 'screen', 'color-dodge', 'color-burn', 'hard-light', 'normal'];
 	const get = (path) => path.split('.').reduce((o, k) => o[k], cfg);
 	const set = (path, v) => { const ks = path.split('.'); const o = ks.slice(0, -1).reduce((o, k) => o[k], cfg); o[ks[ks.length - 1]] = v; };

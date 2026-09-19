@@ -32,16 +32,16 @@ export const TENT_GLOW = {
 	   shape, filled in its colour and blurred by its radius, exactly as text-shadow blurs the glyph. */
 	// Alex's shape, 18 Sep (drawn in the editor)
 	shape: [[0.7098, 0.134], [-0.0026, -0.051], [-1.8527, 0.2148], [-0.1084, 0.2369], [2.2005, 0.1867], [0.948, 0.1144], [0.7651, -0.1089], [0.7481, 0.0315]],
-	blur: 0.65,               // blur radius per layer, in `radius` tent widths (the sprite's soft edge, matched)
+	blur: 0.55,               // blur radius per layer, in `radius` tent widths (the sprite's soft edge, matched)
 	// the editor's dials (src/glow-editor.js) — all multipliers on the stack above
-	intensity: 0.9,           // the fire behind the plate; tune in the editor: G          // brightness of the whole stack
-	spread: 0.3,              // how far the light reaches (radius / blur)
-	riseScale: 0.55,          // how high the plume climbs
+	intensity: 1.55,          // Alex's 1.84, held a touch (19 Sep) — the fire behind the plate; tune in the editor: G          // brightness of the whole stack
+	spread: 0.42,             // how far the light reaches (radius / blur)
+	riseScale: 1.89,          // how high the plume climbs
 	// the palette: the seven layers run core → mid → ember (the pen's cream → orange → coal); null = the colours above
-	palette: { core: '#ff6600', mid: '#ff5900', ember: '#ff0000' },   // Alex, 18 Sep: pure fire, no cream (null = the pen's colours above)
+	palette: { core: '#ffb347', mid: '#ff7300', ember: '#7a1b2e' },   // 19 Sep: amber core, orange, a wine ember (Alex's magenta core read as neon)
 	fadeIn: [0, 6],           // frames: the tent is in the frame from the first one
 	fadeOut: [176, 214],      // frames: the foreground rocks cover the tent as the camera pushes in
-	anchor: 0.07,             // the flame sits a touch above the tent's centroid (Alex, 18 Sep)
+	anchor: -0.02,            // (Alex, 19 Sep)
 	// the stack, in the pen's order: radius and rise in tent widths, alpha 0..1. The core is wide and soft —
 	// the tent IS the source, so there is no hot spot, just the canopy's own light spreading
 	//          colour       radius  rise   alpha
@@ -54,11 +54,11 @@ export const TENT_GLOW = {
 		{ color: '#973716', radius: 1.90, rise: 0.38, alpha: 0.10 },
 		{ color: '#451b0e', radius: 2.30, rise: 0.48, alpha: 0.07 },
 	],
-	breath: { period: 2.6, depth: 0.04 },      // slow swell of the whole stack
+	breath: { period: 2.6, depth: 0.15 },      // slow swell of the whole stack
 	tremble: { period: 0.72, depth: 0.08 },    // the quick shiver of a flame
 	flare: { every: [3, 9], depth: 0.25, length: 0.35 },   // rare bursts: seconds between, extra brightness, duration (s)
-	drift: 0.048,                              // tent widths: how far the outer layers wander as they flicker
-	parallax: 13,                               // px: the lean toward the cursor
+	drift: 0.035,                              // tent widths: how far the outer layers wander as they flicker
+	parallax: 10,                               // px: the lean toward the cursor
 	mouseEase: 2.0,
 	sprite: 256,
 	/* how the stack meets the film (CSS mix-blend-mode on the glow canvas): 'normal' | 'screen' | 'plus-lighter' |
@@ -67,14 +67,14 @@ export const TENT_GLOW = {
 	/* DODGE — a separate pass (Alex, 18 Sep): the same stack drawn again on its own canvas with mix-blend-mode:
 	   color-dodge, so it burns the film's own highlights (the tent, the lit rocks) instead of adding light over them.
 	   amount = its opacity; spread/intensity scale that pass alone */
-	dodge: { amount: 0.2, spread: 1.2, intensity: 1.6 },   // Alex's 18 Sep values, held back for the larger tent
+	dodge: { amount: 0, spread: 1, intensity: 0.99 },   // off under the blue grade (Alex, 19 Sep)
 	/* TOP — a little of the light OVER the plate too (Alex, 19 Sep): the same stack, stretched sideways and flattened, faint —
 	   the haze the lamp throws in front of the tent, not the fire behind it */
-	top: { intensity: 0.65, stretch: 2.6, squash: 0.42, spread: 0.9 },   // (Alex, 19 Sep: "усилить тот, который on top")
+	top: { intensity: 0.55, stretch: 1.79, squash: 0.42, spread: 0.9 },
 	/* GRADE — one colour over the whole stage with a blend mode, and a filter on the stage: the planes pulled into one palette */
-	grade: { blend: 'soft-light', color: '#6f86a6', opacity: 0.35, contrast: 1.04, saturate: 0.92, brightness: 1 },
+	grade: { blend: 'soft-light', color: '#0066f5', opacity: 0.24, contrast: 1.08, saturate: 1.1, brightness: 0.94 },   // Alex's blue night (19 Sep), a touch lighter so the plateau's rocks keep their detail
 	/* GRAIN and a RADIAL (src/fx.js) — finishing layers, dials in the editor */
-	grain: { amount: 0.22, size: 1.2, fps: 12, blend: 'soft-light' },   // soft-light: the grain lives in the midtones, the blacks and the whites keep clean — like a negative
+	grain: { amount: 0.2, size: 1.3, fps: 9, blend: 'soft-light' },   // soft-light: the grain lives in the midtones, the blacks and the whites keep clean — like a negative
 	radial: { amount: 0, color: '#05080f', x: 0.5, y: 0.5, size: 0.9, soft: 0.6, blend: 'multiply', invert: true },
 };
 
