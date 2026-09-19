@@ -39,6 +39,12 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 	const dir = cfg.dir(window.innerWidth);
 	const imgs = new Array(cfg.frames).fill(null);
 	const loading = new Set();
+	/* DECODED frames: the browser cannot hold three films' worth of decoded bitmaps and re-decodes on every scroll step.
+	   So the frames near the current one are decoded explicitly (createImageBitmap, off the main thread) and kept; the
+	   ones that drift out of the window are closed. drawImage of a bitmap is a blit — no decode on the scroll. */
+	const bitmaps = new Array(cfg.frames).fill(null), decoding = new Set(), blobs = new Array(cfg.frames).fill(null);
+	const BITMAP_WINDOW = window.innerWidth > 700 ? 6 : 4;   // frames each side of the current one (13 bitmaps ≈ 100 MB at 1920 — small on purpose: GPU memory churn stalls the renderer)
+	const hasBitmaps = typeof createImageBitmap === 'function';
 	let target = 0, current = 0, raf = 0, ready = false;
 	let W = 0, H = 0, dpr = 1;
 
@@ -75,7 +81,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		if (!W) return;
 		const f = clamp(current, 0, cfg.frames - 1);
 		const i0 = Math.floor(f), i1 = Math.min(cfg.frames - 1, i0 + 1), t = f - i0;
-		const a = imgs[i0] || nearest(i0), b = imgs[i1] || nearest(i1);
+		const a = bitmaps[i0] || imgs[i0] || nearest(i0), b = bitmaps[i1] || imgs[i1] || nearest(i1);
 		const key = `${i0}:${t.toFixed(3)}:${!!a}:${!!b}`;
 		if (!force && key === lastKey) return;
 		lastKey = key;
@@ -102,6 +108,25 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 
 	// memory: far from the current frame, the full-resolution bitmaps are let go (the coarse grid stays, so
 	// scrubbing far away still shows a picture at once); they come back from the HTTP cache when needed
+	// the bitmap window follows the current frame: decode what is near, close what is far
+	function tendBitmaps() {
+		if (!hasBitmaps) return;
+		// a film whose canvas is not on screen (the water before the hand-over, the mountain after it) keeps no bitmaps
+		if (canvas.style.visibility === 'hidden' || (canvas.parentElement && canvas.parentElement.style.visibility === 'hidden')) { for (let i = 0; i < cfg.frames; i++) if (bitmaps[i]) { bitmaps[i].close(); bitmaps[i] = null; } return; }
+		const c = Math.round(current);
+		for (let i = 0; i < cfg.frames; i++) { if (Math.abs(i - c) > BITMAP_WINDOW && bitmaps[i]) { bitmaps[i].close(); bitmaps[i] = null; } }
+		for (let d = 0; d <= BITMAP_WINDOW; d++) for (const i of d ? [c + d, c - d] : [c]) {
+			if (i < 0 || i >= cfg.frames) continue;
+			if (decoding.size >= 2) return;   // two at a time, nearest first; the next tend() continues
+			const near = true;
+			if (near && !bitmaps[i] && imgs[i] && !decoding.has(i)) {
+				decoding.add(i);
+				createImageBitmap(blobs[i] || imgs[i]).then((bm) => { decoding.delete(i); if (Math.abs(i - Math.round(current)) <= BITMAP_WINDOW) { bitmaps[i] = bm; if (i === Math.floor(current) || i === Math.ceil(current)) draw(true); } else bm.close(); tend(); }).catch(() => { decoding.delete(i); tend(); });
+			}
+		}
+	}
+	let tendTimer = 0;
+	const tend = () => { if (!tendTimer) tendTimer = setTimeout(() => { tendTimer = 0; tendBitmaps(); }, 120); };
 	function evict() {
 		const c = Math.round(current), half = KEEP / 2;
 		for (let i = 0; i < cfg.frames; i++) {
@@ -113,11 +138,16 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 	function load(i) {
 		if (imgs[i] || loading.has(i) || i < 0 || i >= cfg.frames) return;
 		loading.add(i);
-		const img = new Image();
-		img.decoding = 'async';
-		img.onload = () => { imgs[i] = img; loading.delete(i); draw(true); pump(); };
-		img.onerror = () => { loading.delete(i); };
-		img.src = `${dir}/${cfg.name(i)}`;
+		// the bytes come in as a Blob (kept: ~100 KB a frame), the Image is made from them for the cheap fallback path;
+		// the window's bitmaps are decoded from the Blob, off the main thread
+		fetch(`${dir}/${cfg.name(i)}`).then((r) => r.ok ? r.blob() : Promise.reject(r.status)).then((blob) => {
+			blobs[i] = blob;
+			const img = new Image();
+			img.decoding = 'async';
+			img.onload = () => { imgs[i] = img; loading.delete(i); draw(true); pump(); tend(); };
+			img.onerror = () => { loading.delete(i); };
+			img.src = URL.createObjectURL(blob);
+		}).catch(() => { loading.delete(i); });
 	}
 	// priority: coarse grid first, then outward from the current frame
 	function pump() {
@@ -139,6 +169,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		target = clamp(local / cfg.filmEnd, 0, 1) * (cfg.frames - 1);
 		schedule();
 		pump();
+		tend();
 		if (KEEP < cfg.frames && !evictTimer) evictTimer = setTimeout(() => { evictTimer = 0; evict(); pump(); }, 800);
 	}
 
@@ -157,7 +188,8 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		setProgress(scrollProgress());
 	}
 
-	const api = { get progress() { return target / (cfg.frames - 1); }, get frame() { return current; }, get pair() { return lastPair; }, setProgress, cfg, canvas };
+	const api = { get progress() { return target / (cfg.frames - 1); }, get frame() { return current; }, get pair() { return lastPair; }, setProgress, cfg, canvas,
+		allowLoad() { if (!mayLoad) { mayLoad = true; if (!reduced) pump(); } } };   // a film that waits for its cue (the water: not before the scroll nears it)
 	if (!window.__film) window.__film = api;   // the first film is the page's film (the clouds, the glow read it)
 	return api;
 }

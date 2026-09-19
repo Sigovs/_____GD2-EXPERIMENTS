@@ -13,8 +13,8 @@
  */
 
 /* saved dials -> the live cfg (used by the editor, and by the page on load so the work shows without the editor) */
-import { applyGrade } from './tent-glow.js?v=2026-09-19u';
-import { applyGrain, applyRadial } from './fx.js?v=2026-09-19t';
+import { applyGrade } from './tent-glow.js?v=2026-09-20a';
+import { applyGrain, applyRadial } from './fx.js?v=2026-09-20a';
 
 export function applySaved(cfg, saved) {
 	if (!saved || Array.isArray(saved)) return;

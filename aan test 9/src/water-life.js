@@ -40,7 +40,7 @@ export function createWaterLife({ canvas, waterCanvas, textureUrl = 'assets/text
 
 	function resize() {
 		W = window.innerWidth; H = window.innerHeight;
-		dpr = Math.min(window.devicePixelRatio || 1, W < 700 ? 1 : 1.5);   // the life is soft too: a phone draws it at 1x
+		dpr = 1;   // the life is soft: one pixel per CSS pixel everywhere
 		canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
 		canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
 	}

@@ -132,7 +132,7 @@ export function createTentGlow({ canvas, dodgeCanvas = null, topCanvas = null, f
 		// the glow lives inside the overscanned plateau plane (test 9): its box, not the viewport, so the tent's frame maps 1:1
 		const par = canvas.parentElement;   // layout size (offset*), not the transformed box
 		W = par && par.offsetWidth ? par.offsetWidth : window.innerWidth; H = par && par.offsetHeight ? par.offsetHeight : window.innerHeight;
-		dpr = Math.min(window.devicePixelRatio || 1, W < 700 ? 1 : 2);   // the glow is soft: on a phone one pixel per CSS pixel is plenty, and the blurs are 9x cheaper
+		dpr = 0.5;   // the light is soft: HALF a pixel per CSS pixel everywhere — the 21 blurred fills per frame cost a quarter (Alex, 19 Sep: the scroll had become heavy)
 		for (const c of [canvas, dodgeCanvas, topCanvas]) { if (!c) continue; c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); c.style.width = W + 'px'; c.style.height = H + 'px'; }
 	}
 	window.addEventListener('resize', resize); resize();
@@ -151,13 +151,13 @@ export function createTentGlow({ canvas, dodgeCanvas = null, topCanvas = null, f
 		ctx.globalAlpha = alpha;
 		ctx.fillStyle = color;
 		if (hasFilter) {
-			ctx.filter = `blur(${blurPx.toFixed(1)}px)`;
+			ctx.filter = `blur(${(blurPx * dpr).toFixed(1)}px)`;   // the filter works in device pixels, the canvas is at `dpr` — keep the blur the same size on screen
 			ctx.beginPath(); pts.forEach(([rx, ry], i) => { const x = cx + rx * tw + dx, y = cy + ry * tw + dy; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath(); ctx.fill();
 			ctx.filter = 'none';
 		} else {
 			// no ctx.filter: the shadow is the blur — draw the shape off-screen and let its shadow land in place
 			const off = 4096;
-			ctx.shadowColor = color; ctx.shadowBlur = blurPx; ctx.shadowOffsetX = off; ctx.shadowOffsetY = 0;
+			ctx.shadowColor = color; ctx.shadowBlur = blurPx * dpr; ctx.shadowOffsetX = off; ctx.shadowOffsetY = 0;
 			ctx.beginPath(); pts.forEach(([rx, ry], i) => { const x = cx + rx * tw + dx - off, y = cy + ry * tw + dy; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath(); ctx.fill();
 			ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0;
 		}

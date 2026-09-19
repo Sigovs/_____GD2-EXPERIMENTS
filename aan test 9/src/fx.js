@@ -58,7 +58,7 @@ export function applyGrain(g) {
 	if (!grainCanvas) {
 		grainCanvas = document.getElementById('fx-grain'); if (!grainCanvas) return;
 		grainCtx = grainCanvas.getContext('2d'); tiles = makeTiles();
-		const size = () => { const d = Math.min(devicePixelRatio || 1, 2); grainCanvas.width = Math.round(innerWidth * d); grainCanvas.height = Math.round(innerHeight * d); tileAt = 0; };
+		const size = () => { const d = innerWidth > 2000 ? 1 : Math.min(devicePixelRatio || 1, 2); grainCanvas.width = Math.round(innerWidth * d); grainCanvas.height = Math.round(innerHeight * d); tileAt = 0; };   // on a big screen the grain is drawn at 1x — the tiles are soft blobs anyway
 		addEventListener('resize', size); size();
 	}
 	grainCanvas.style.opacity = String(clamp(g.amount, 0, 1));
