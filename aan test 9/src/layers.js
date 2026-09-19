@@ -21,7 +21,7 @@ export const LAYERS = {
 	mouseEase: 2.2,
 	/* NIGHT — the far planes sink into the dark as the camp comes on (Alex, 19 Sep: from where "We map the route"
 	   leaves, captions block 02 ends at 0.38). Scene progress window; the mountain and the clouds dim to these. */
-	night: { at: [0.37, 0.54], mountain: 0.28, clouds: 0.45 },
+	night: { at: [0.37, 0.54], mountain: 1, clouds: 1 },   // OFF (Alex, 19 Sep: "уход горы в ночь отмени") — set mountain 0.28 / clouds 0.45 to bring it back
 	cloudsOut: [0.92, 0.985],   // hero scroll: the plates leave with the act at the hand-over (was descent.js's; the clouds' opacity is owned here now)
 	planes: {
 		mountain: { mouse: 7,  scrollDrift: 0,  scale: 1.035 },     // far: barely moves; scaled a touch so the lean never shows an edge
@@ -30,7 +30,7 @@ export const LAYERS = {
 			enter: [0.08, 0.42],   // scene progress: the plateau rises from `from` vh below to its place (Alex, 19 Sep: "не сразу должно появляться")
 			from: 72,              // vh below its place at the start: the mountain alone first, the camp arrives as the camera comes down
 			lift: [0.90, 0.99],    // hero-scroll window (as ACT.hero.soften): the near plane comes at the camera — it GROWS from its bottom edge (no edge ever shows) and lifts a little
-			liftVh: 0, grow: 0.16 },   // no lift at all: even 6vh showed the plate's bottom edge (Alex, 19 Sep); the growth alone reads as the camera going under
+			liftVh: 0, grow: 0 },      // the plateau stays put through the hand-over (Alex, 19 Sep: "плато может никуда не уходить"); the water simply comes over it   // no lift at all: even 6vh showed the plate's bottom edge (Alex, 19 Sep); the growth alone reads as the camera going under
 	},
 };
 

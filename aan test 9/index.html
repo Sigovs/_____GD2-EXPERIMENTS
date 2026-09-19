@@ -121,7 +121,7 @@
 		window.__water = water;
 		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), topCanvas: document.getElementById('tent-glow-top'), film: plateauFilm });   // the light follows the PLATEAU's frames
 		// the planes: the film, the clouds, the plateau — each on its own move (src/layers.js)
-		import { createLayers } from './src/layers.js?v=2026-09-19h';
+		import { createLayers } from './src/layers.js?v=2026-09-19i';
 		window.__layers = createLayers({ mountain: document.getElementById('hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: document.getElementById('plane-plateau'), heroEnd: ACT.heroEnd });
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
 		import { createWaterLife } from './src/water-life.js?v=2026-09-18v';
