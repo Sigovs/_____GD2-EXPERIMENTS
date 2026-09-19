@@ -97,7 +97,7 @@ body {
 /* ?lite=1: the finishing layers off, to tell a heavy GPU from a bug */
 .is-lite .stage { filter: none !important; }
 .is-lite #grade, .is-lite #fx-grain, .is-lite #fx-radial, .is-lite #water-waves { display: none !important; }
-.stage__end { position: absolute; inset: 0; background: var(--ground); opacity: 0; pointer-events: none; }
+.stage__end { position: fixed; inset: 0; z-index: 1; background: var(--ground); opacity: 0; pointer-events: none; }
 .after { position: relative; z-index: 3; background: var(--ground); min-height: 60vh; }
 .stage__vignette {
 	position: absolute;
