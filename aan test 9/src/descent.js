@@ -35,7 +35,7 @@ export const ACT = {
 	},
 	water: { in: [0.80, 1.0], rise: true, soft: 0.9 },   // a tall soft edge (0.85 vh) AND the whole film fading 0 → 100% as it rises — a gradient, never a line (Alex, 19 Sep: "переход грубый")   // the water RISES from the bottom (a soft edge `soft` viewport-heights tall) instead of fading over the whole frame (Alex, 19 Sep); rise: false = the plain crossfade
 	clouds: { out: [0.84, 0.98] },      // the plates leave with the hero
-	end: [0.92, 1.0],                   // page progress: the water goes to the plain dark ground (Alex, 19 Sep)
+	end: [0.95, 1.0],                   // page progress: the water goes to the plain dark ground (Alex, 19 Sep) — short: the dark tail before the brands was a void
 };
 
 import { sceneProgress } from './progress.js?v=2026-09-18v';

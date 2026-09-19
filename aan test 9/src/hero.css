@@ -282,10 +282,11 @@ body {
 	background: var(--ground);
 	color: var(--ink);
 	padding-block: var(--space-8) var(--space-10);        /* bottom-heavy: the page closes, it does not stop (spacing D2) */
+	margin-top: -1px;
 	padding-inline: var(--gutter);
 }
 @media (min-width: 60rem) { .brands { padding-block: var(--space-9) var(--space-11); } }
-.brands__inner { max-width: 1400px; }
+.brands__inner { max-width: none; }   /* gutter to gutter, as every other mass on this page (the statement, the captions, the calls) */
 .brands__eyebrow {
 	margin: 0 0 var(--space-7);
 	font-size: 0.875rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;   /* the eyebrow role, as the captions */
@@ -302,17 +303,17 @@ body {
 @media (min-width: 80rem)  { .brands__grid { grid-template-columns: repeat(7, 1fr); } }   /* 14 logos: two full rows */
 .brands__cell {
 	/* a fixed slot: a wordmark or a logo sits in the same box, the grid never moves when the logos land */
-	min-height: 7rem;
-	display: flex; align-items: center; justify-content: flex-start;
-	padding: var(--space-5) var(--space-6) var(--space-5) 0;
+	min-height: clamp(7rem, 9vw, 11rem);
+	display: flex; align-items: center; justify-content: center;   /* a logo wall reads centred per cell; the eyebrow keeps the left edge */
+	padding: var(--space-5) var(--space-6);
 	border-bottom: 1px solid rgba(238, 243, 251, 0.10);
 	font-size: 1.0625rem; font-weight: 600; letter-spacing: 0.02em;
 	color: rgba(238, 243, 251, 0.46);
 	transition: color 320ms ease;
 }
 .brands__cell:hover { color: rgba(238, 243, 251, 0.86); }
-.brands__cell img { display: block; height: 3.4rem; width: auto; max-width: 100%; object-fit: contain; object-position: left center; opacity: 0.5; transition: opacity 320ms ease; }   /* every viewBox is cropped to its drawing: emblems sit at 3rem, the wide wordmarks lower (optical parity, not nominal) */
-.brands__cell--wide img { height: 2.2rem; }   /* one ink already (the SVG fills); the wall reads at 50%, a hover brings one up */
+.brands__cell img { display: block; height: clamp(2.8rem, 2.6vw, 4.4rem); width: auto; max-width: 100%; object-fit: contain; object-position: center; opacity: 0.55; transition: opacity 320ms ease; }   /* every viewBox is cropped to its drawing: emblems sit at 3rem, the wide wordmarks lower (optical parity, not nominal) */
+.brands__cell--wide img { height: clamp(1.9rem, 1.7vw, 2.9rem); }   /* one ink already (the SVG fills); the wall reads at 50%, a hover brings one up */
 .brands__cell:hover img { opacity: 0.92; }
 /* the arrival: each wordmark comes up once, in order, as the section enters (brands.js); still under reduced motion */
 .brands__cell > * { opacity: 0; transform: translateY(8px); transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1); transition-delay: var(--i, 0ms); }
@@ -327,7 +328,7 @@ body {
 	padding-inline: var(--gutter);
 	border-top: 1px solid rgba(238, 243, 251, 0.10);
 }
-.footer__inner { max-width: 1400px; }
+.footer__inner { max-width: none; }
 .footer__top {
 	display: grid; gap: var(--space-7) var(--space-8);
 	grid-template-columns: 1fr;
