@@ -30,12 +30,13 @@
 			     from green; a frame sequence with alpha once its video lands), then the tent's light -->
 			<canvas id="hero-film" class="stage__video layer" aria-hidden="true"></canvas>
 			<canvas id="cloud-canvas" class="stage__clouds layer" aria-hidden="true"></canvas>
-			<!-- the plateau is a FILM with alpha (plato2: the camera pushes in), scrubbed with the mountain -->
-			<canvas id="plateau" class="layer layer--plateau" aria-hidden="true"></canvas>
-			<!-- the tent's light, breathing and flickering over the film's tent (src/tent-glow.js) - under the clouds, in the fog -->
-			<canvas id="tent-glow" class="stage__glow" aria-hidden="true"></canvas>
-			<!-- the DODGE pass of the same light: mix-blend-mode color-dodge against the film (tent-glow.js → cfg.dodge) -->
-			<canvas id="tent-dodge" class="stage__glow stage__glow--dodge" aria-hidden="true"></canvas>
+			<!-- the near plane: the plateau FILM with alpha (plato2: the camera pushes in), scrubbed with the mountain, and the
+			     tent's light drawn over it (src/tent-glow.js) — one element, so layers.js moves them together -->
+			<div id="plane-plateau" class="layer">
+				<canvas id="plateau" class="layer layer--plateau" aria-hidden="true"></canvas>
+				<canvas id="tent-glow" class="stage__glow" aria-hidden="true"></canvas>
+				<canvas id="tent-dodge" class="stage__glow stage__glow--dodge" aria-hidden="true"></canvas>
+			</div>
 		</div>
 		<!-- ACT II — the water: starts under the surface (the tent's light warped above), comes up over the mountain
 		     for a moment, then the scroll scrubs the descent. Same frame transport. -->
@@ -104,7 +105,7 @@
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
 		import { createFilmFrames } from './src/film-frames.js?v=2026-09-19b';
-		import { createTentGlow } from './src/tent-glow.js?v=2026-09-19a';
+		import { createTentGlow } from './src/tent-glow.js?v=2026-09-19d';
 		import { createDescent, ACT } from './src/descent.js?v=2026-09-19a';
 		// the two films: the hero scrubs the first part of the page, the water the rest — they overlap for the hand-over.
 		// Neither listens to the scroll itself: descent.js drives both from one progress.
@@ -115,10 +116,10 @@
 		const heroFilms = { setProgress(p) { film.setProgress(p); plateauFilm.setProgress(p); }, get frame() { return film.frame; }, get progress() { return film.progress; }, cfg: film.cfg };
 		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => (w > 1000 ? 'assets/frames/water/1600' : w > 520 ? 'assets/frames/water/960' : 'assets/frames/water/640') }, loadAfter: 2500 });
 		window.__water = water;
-		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), film });
+		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), film: plateauFilm });   // the light follows the PLATEAU's frames
 		// the planes: the film, the clouds, the plateau — each on its own move (src/layers.js)
 		import { createLayers } from './src/layers.js?v=2026-09-19c';
-		window.__layers = createLayers({ mountain: document.getElementById('hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: document.getElementById('plateau'), heroEnd: ACT.heroEnd });
+		window.__layers = createLayers({ mountain: document.getElementById('hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: document.getElementById('plane-plateau'), heroEnd: ACT.heroEnd });
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
 		import { createWaterLife } from './src/water-life.js?v=2026-09-18v';
 		const life = createWaterLife({ canvas: document.getElementById('water-life'), waterCanvas: document.getElementById('water-film') });
@@ -137,9 +138,9 @@
 		window.__drift = createDriftCards();
 		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
-		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.shape') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-18m'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
+		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-19d'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)
-		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-18m'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
+		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-19d'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
 		if (new URLSearchParams(location.search).get('edit') === 'glow') openEditor();
 		addEventListener('keydown', (e) => { if ((e.key === 'g' || e.key === 'G') && !window.__glowEditor && !e.metaKey && !e.ctrlKey) openEditor(); });
 	</script>

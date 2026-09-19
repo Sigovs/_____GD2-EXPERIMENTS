@@ -24,7 +24,7 @@ export function applySaved(cfg, saved) {
 
 export function openGlowEditor({ glow, film }) {
 	const cfg = glow.cfg;
-	const KEY = 'gd2.tent-glow.shape';
+	const KEY = 'gd2.tent-glow.t9';
 
 	const ui = document.createElement('div');
 	ui.innerHTML = `

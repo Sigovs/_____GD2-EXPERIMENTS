@@ -21,10 +21,12 @@
  */
 
 export const TENT_GLOW = {
-	enabled: false,   // OFF in test 9: the tent's light is baked into the plateau plate (Alex, 19 Sep)
+	enabled: true,    // back ON over the plateau plate: the blurry fire behind the tent, as in test 8 (Alex, 19 Sep)
 	frameAspect: 16 / 9,
 	// [frame, u, v, w] — the tent's centre (0..1 of the frame) and its lit width (0..1 of the frame width)
-	track: [[179, 0.9363, 0.9952, 0.0344], [182, 0.9107, 0.9873, 0.0625], [184, 0.8925, 0.9823, 0.0719], [189, 0.8485, 0.9664, 0.105], [194, 0.7999, 0.9404, 0.1112], [199, 0.7498, 0.9111, 0.125], [204, 0.7024, 0.883, 0.11], [209, 0.6575, 0.8563, 0.1412], [214, 0.6175, 0.8337, 0.1294], [219, 0.5831, 0.814, 0.1212], [224, 0.5552, 0.7983, 0.1194], [229, 0.534, 0.7862, 0.1275], [234, 0.5186, 0.7771, 0.1444], [239, 0.5088, 0.7703, 0.1325], [240, 0.5079, 0.7693, 0.1431]],
+	// test 9: the tent in the PLATEAU plate (plato2) — rotoscoped from the keyed frames; it sits still while the camera pushes in, and the
+	// foreground rocks cover it from ~frame 185 (the light goes with it: fadeOut)
+	track: [[-1, 0.489, 0.601, 0.146], [0, 0.489, 0.601, 0.146], [90, 0.492, 0.603, 0.144], [180, 0.504, 0.6015, 0.143], [216, 0.515, 0.59, 0.14], [240, 0.515, 0.59, 0.14]],
 	/* the shape the light is cast from — a polygon in tent widths from the tracked centroid, drawn by hand in the
 	   editor (src/glow-editor.js: open with ?edit=glow or press G). Empty = the circular stack. Each layer is this
 	   shape, filled in its colour and blurred by its radius, exactly as text-shadow blurs the glyph. */
@@ -32,12 +34,13 @@ export const TENT_GLOW = {
 	shape: [[0.7098, 0.134], [-0.0026, -0.051], [-1.8527, 0.2148], [-0.1084, 0.2369], [2.2005, 0.1867], [0.948, 0.1144], [0.7651, -0.1089], [0.7481, 0.0315]],
 	blur: 0.65,               // blur radius per layer, in `radius` tent widths (the sprite's soft edge, matched)
 	// the editor's dials (src/glow-editor.js) — all multipliers on the stack above
-	intensity: 2.03,          // brightness of the whole stack
+	intensity: 0.9,           // the plateau's tent is 2x the old one on screen: the same stack at half strength (tune in the editor: G)          // brightness of the whole stack
 	spread: 0.3,              // how far the light reaches (radius / blur)
-	riseScale: 1.27,          // how high the plume climbs
+	riseScale: 0.55,          // how high the plume climbs
 	// the palette: the seven layers run core → mid → ember (the pen's cream → orange → coal); null = the colours above
 	palette: { core: '#ff6600', mid: '#ff5900', ember: '#ff0000' },   // Alex, 18 Sep: pure fire, no cream (null = the pen's colours above)
-	fadeIn: [192, 226],       // frames: the light comes up as the tent settles into the frame (earlier it reads as a sunrise over the edge)
+	fadeIn: [0, 6],           // frames: the tent is in the frame from the first one
+	fadeOut: [176, 214],      // frames: the foreground rocks cover the tent as the camera pushes in
 	anchor: 0.07,             // the flame sits a touch above the tent's centroid (Alex, 18 Sep)
 	// the stack, in the pen's order: radius and rise in tent widths, alpha 0..1. The core is wide and soft —
 	// the tent IS the source, so there is no hot spot, just the canopy's own light spreading
@@ -64,7 +67,7 @@ export const TENT_GLOW = {
 	/* DODGE — a separate pass (Alex, 18 Sep): the same stack drawn again on its own canvas with mix-blend-mode:
 	   color-dodge, so it burns the film's own highlights (the tent, the lit rocks) instead of adding light over them.
 	   amount = its opacity; spread/intensity scale that pass alone */
-	dodge: { amount: 0.37, spread: 1.47, intensity: 2.41 },   // Alex, 18 Sep
+	dodge: { amount: 0.2, spread: 1.2, intensity: 1.6 },   // Alex's 18 Sep values, held back for the larger tent
 };
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -182,7 +185,7 @@ export function createTentGlow({ canvas, dodgeCanvas = null, film, cfg = TENT_GL
 			const tw = tent.w * c.fw * clamp((W / H) / 1.2, 0.5, 1);   // the tent's lit width on screen — on a portrait phone the cover crop makes the tent huge, so the light is held back
 			const cx = c.x + tent.u * c.fw + lean.x * cfg.parallax;
 			const cy = c.y + tent.v * c.fh - tw * cfg.anchor + lean.y * cfg.parallax * 0.5;
-			const on = smooth((f - cfg.fadeIn[0]) / (cfg.fadeIn[1] - cfg.fadeIn[0]));
+			const on = smooth((f - cfg.fadeIn[0]) / (cfg.fadeIn[1] - cfg.fadeIn[0])) * (cfg.fadeOut ? 1 - smooth((f - cfg.fadeOut[0]) / (cfg.fadeOut[1] - cfg.fadeOut[0])) : 1);
 			ctx.globalCompositeOperation = 'lighter';
 			cfg.layers.forEach((l, i) => {
 				const k = flicker(t, i);
