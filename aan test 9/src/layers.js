@@ -22,7 +22,7 @@ export const LAYERS = {
 	/* NIGHT — the far planes sink into the dark as the camp comes on (Alex, 19 Sep: from where "We map the route"
 	   leaves, captions block 02 ends at 0.38). Scene progress window; the mountain and the clouds dim to these. */
 	night: { at: [0.37, 0.54], mountain: 1, clouds: 1 },   // OFF (Alex, 19 Sep: "уход горы в ночь отмени") — set mountain 0.28 / clouds 0.45 to bring it back
-	cloudsOut: [0.92, 0.985],   // hero scroll: the plates leave with the act at the hand-over (was descent.js's; the clouds' opacity is owned here now)
+	cloudsOut: [0.84, 0.98],   // hero scroll: the plates leave with the act at the hand-over (was descent.js's; the clouds' opacity is owned here now)
 	planes: {
 		mountain: { mouse: 7,  scrollDrift: 0,  scale: 1 },         // far: barely moves; NOT enlarged (Alex, 19 Sep) — the act's overscan covers the lean
 		clouds:   { mouse: 13, scrollDrift: 0 },                   // between (the plate rig adds its own sway on top)

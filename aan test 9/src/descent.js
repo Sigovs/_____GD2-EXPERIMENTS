@@ -26,15 +26,15 @@
 export const ACT = {
 	heroEnd: 0.56,                      // the hero's share of the page; the water takes the rest (minus the overlap)
 	heroFilmEnd: 0.90,                  // in hero scroll: the film plays to its last frame exactly where the hand-over begins (Alex, 19 Sep: "видео горы должно отыгрывать до конца")
-	waterStart: 0.90,                   // in hero scroll: where the water film starts (and starts loading its frames)
+	waterStart: 0.80,                   // in hero scroll: where the water film starts — the hand-over is LONG now (~110vh of scroll; Alex, 19 Sep: "резко, можно плавнее")
 	hero: {
-		soften: [0.90, 0.99],           // blur 0 → blurPx, brightness 1 → dim, scale 1 → grow
-		out: [0.955, 0.99],             // opacity 1 → 0
+		soften: [0.84, 1.0],            // blur 0 → blurPx, brightness 1 → dim
+		out: [0.93, 1.0],               // opacity 1 → 0
 		blurPx: 2.5, dim: 0.85, grow: 1,   // no growth of the act either (Alex, 19 Sep: the mountain stays its size)
 		lift: 0,                        // vh: NO lift of the whole act in test 9 — it showed the act's bottom edge as a straight seam over the water (Alex, 19 Sep); the near plane grows instead (layers.js)
 	},
-	water: { in: [0.92, 0.99], rise: true, soft: 0.85 },   // a tall soft edge (0.85 vh) AND the whole film fading 0 → 100% as it rises — a gradient, never a line (Alex, 19 Sep: "переход грубый")   // the water RISES from the bottom (a soft edge `soft` viewport-heights tall) instead of fading over the whole frame (Alex, 19 Sep); rise: false = the plain crossfade
-	clouds: { out: [0.92, 0.985] },     // the plates leave with the hero
+	water: { in: [0.80, 1.0], rise: true, soft: 0.9 },   // a tall soft edge (0.85 vh) AND the whole film fading 0 → 100% as it rises — a gradient, never a line (Alex, 19 Sep: "переход грубый")   // the water RISES from the bottom (a soft edge `soft` viewport-heights tall) instead of fading over the whole frame (Alex, 19 Sep); rise: false = the plain crossfade
+	clouds: { out: [0.84, 0.98] },      // the plates leave with the hero
 };
 
 import { sceneProgress } from './progress.js?v=2026-09-18v';
