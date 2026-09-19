@@ -108,21 +108,30 @@
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
 		import { createFilmFrames } from './src/film-frames.js?v=2026-09-19m';
-		import { createTentGlow } from './src/tent-glow.js?v=2026-09-19m';
+		import { createTentGlow, TENT_GLOW } from './src/tent-glow.js?v=2026-09-19m';
+		/* HERO MODE (Alex, 19 Sep): 'multiplane' = the pull-back mountain + the keyed plateau plate (plato2) as the near plane;
+		   'single6' = the "6 sec video" alone — the tent is baked into it (no plate). Swap the string to compare. */
+		const HERO = 'single6';
+		const HERO_DIRS = { multiplane: 'assets/frames', single6: 'assets/frames/gora6' };
+		const heroDir = (w) => `${HERO_DIRS[HERO]}/${w > 1700 ? 1920 : w > 1000 ? 1600 : w > 520 ? 960 : 640}`;
 		import { createDescent, ACT } from './src/descent.js?v=2026-09-19g';
 		// the two films: the hero scrubs the first part of the page, the water the rest — they overlap for the hand-over.
 		// Neither listens to the scroll itself: descent.js drives both from one progress.
-		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp', cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, fitParent: true } });   // fitParent: the act overscans the viewport
+		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: HERO === 'multiplane' ? 'previews/hero-poster.webp' : undefined, cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, fitParent: true, dir: heroDir } });   // fitParent: the act overscans the viewport
 		// the plateau plate: keyed frames with alpha, the same scrub as the mountain (src/layers.js moves the plane)
-		const plateauFilm = createFilmFrames({ canvas: document.getElementById('plateau'), cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, alpha: true, fitParent: true, dir: (w) => (w > 1700 ? 'assets/frames/plateau/1920' : w > 1000 ? 'assets/frames/plateau/1600' : w > 520 ? 'assets/frames/plateau/960' : 'assets/frames/plateau/640') }, loadAfter: 900 });
+		const plateauFilm = HERO === 'multiplane' ? createFilmFrames({ canvas: document.getElementById('plateau'), cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, alpha: true, fitParent: true, dir: (w) => (w > 1700 ? 'assets/frames/plateau/1920' : w > 1000 ? 'assets/frames/plateau/1600' : w > 520 ? 'assets/frames/plateau/960' : 'assets/frames/plateau/640') }, loadAfter: 900 }) : null;
+		if (!plateauFilm) document.getElementById('plateau').remove();   // single: no plate — the plane keeps the light only
 		window.__plateau = plateauFilm;
-		const heroFilms = { setProgress(p) { film.setProgress(p); plateauFilm.setProgress(p); }, get frame() { return film.frame; }, get progress() { return film.progress; }, cfg: film.cfg };
+		const heroFilms = { setProgress(p) { film.setProgress(p); plateauFilm?.setProgress(p); }, get frame() { return film.frame; }, get progress() { return film.progress; }, cfg: film.cfg };
+		// the tent's light: over the plate's tent (multiplane) or the film's own tent (single6 — rotoscoped from its frames)
+		const GLOW_SINGLE6 = { ...TENT_GLOW, film: null, intensity: 0.6, top: { ...TENT_GLOW.top, intensity: 0.35 }, fadeIn: [152, 172], fadeOut: null,
+			track: [[150, 0.99, 0.995, 0.02], [156, 0.934, 0.963, 0.16], [162, 0.868, 0.944, 0.22], [168, 0.816, 0.918, 0.22], [174, 0.779, 0.894, 0.23], [180, 0.745, 0.867, 0.21], [186, 0.719, 0.844, 0.20], [192, 0.697, 0.827, 0.19], [198, 0.68, 0.811, 0.23], [204, 0.666, 0.797, 0.24], [210, 0.658, 0.786, 0.23], [216, 0.65, 0.777, 0.23], [222, 0.643, 0.768, 0.225], [228, 0.638, 0.763, 0.22], [234, 0.634, 0.757, 0.22], [240, 0.631, 0.752, 0.22]] };
 		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => (w > 1000 ? 'assets/frames/water/1600' : w > 520 ? 'assets/frames/water/960' : 'assets/frames/water/640') }, loadAfter: 2500 });
 		window.__water = water;
-		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), topCanvas: document.getElementById('tent-glow-top'), film: plateauFilm });   // the light follows the PLATEAU's frames
+		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), topCanvas: document.getElementById('tent-glow-top'), film: plateauFilm || film, cfg: plateauFilm ? TENT_GLOW : GLOW_SINGLE6 });
 		// the planes: the film, the clouds, the plateau — each on its own move (src/layers.js)
 		import { createLayers } from './src/layers.js?v=2026-09-19j';
-		window.__layers = createLayers({ mountain: document.getElementById('hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: document.getElementById('plane-plateau'), heroEnd: ACT.heroEnd });
+		window.__layers = createLayers({ mountain: document.getElementById('hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: plateauFilm ? document.getElementById('plane-plateau') : null, heroEnd: ACT.heroEnd });   // single: the plane holds only the light, it does not move
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
 		import { createWaterLife } from './src/water-life.js?v=2026-09-18v';
 		const life = createWaterLife({ canvas: document.getElementById('water-life'), waterCanvas: document.getElementById('water-film') });
