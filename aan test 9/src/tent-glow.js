@@ -71,6 +71,8 @@ export const TENT_GLOW = {
 	/* TOP — a little of the light OVER the plate too (Alex, 19 Sep): the same stack, stretched sideways and flattened, faint —
 	   the haze the lamp throws in front of the tent, not the fire behind it */
 	top: { intensity: 0.65, stretch: 2.6, squash: 0.42, spread: 0.9 },   // (Alex, 19 Sep: "усилить тот, который on top")
+	/* GRADE — one colour over the whole stage with a blend mode, and a filter on the stage: the planes pulled into one palette */
+	grade: { blend: 'soft-light', color: '#6f86a6', opacity: 0.35, contrast: 1.04, saturate: 0.92, brightness: 1 },
 };
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -96,7 +98,14 @@ function makeSprite(color, size) {
 const toHex = ([r, g, b]) => '#' + [r, g, b].map((v) => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('');
 const mixHex = (a, b, t) => { const A = hex(a), B = hex(b); return toHex(A.map((v, i) => v + (B[i] - v) * t)); };
 
+export function applyGrade(g) {
+	const r = document.documentElement.style;
+	r.setProperty('--grade-blend', g.blend); r.setProperty('--grade-color', g.color); r.setProperty('--grade-opacity', String(g.opacity));
+	r.setProperty('--stage-contrast', String(g.contrast)); r.setProperty('--stage-saturate', String(g.saturate)); r.setProperty('--stage-brightness', String(g.brightness));
+}
+
 export function createTentGlow({ canvas, dodgeCanvas = null, topCanvas = null, film, cfg = TENT_GLOW }) {
+	if (cfg.grade) applyGrade(cfg.grade);
 	const ctx = canvas.getContext('2d');
 	const dctx = dodgeCanvas ? dodgeCanvas.getContext('2d') : null;
 	const tctx = topCanvas ? topCanvas.getContext('2d') : null;

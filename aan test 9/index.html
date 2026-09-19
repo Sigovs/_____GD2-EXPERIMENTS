@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-19q">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-19r">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -55,6 +55,9 @@
 		<!-- the descent route over the film — an instrument, rotoscoped to the film's frames (src/route-layer.js) -->
 		<canvas id="route-canvas" class="stage__route" aria-hidden="true"></canvas>
 		<!-- the cloud canvas now lives inside #act-hero, between the film and the plateau -->
+		<!-- the GRADE: one colour over every plane with a blend mode, plus a filter on the whole stage — to pull the mountain, the
+		     clouds and the plateau into one palette (Alex, 19 Sep). Dials in the editor (G); values in tent-glow.js → cfg.grade -->
+		<div id="grade" class="stage__grade" aria-hidden="true"></div>
 		<canvas id="vignette-canvas" class="stage__vignette" aria-hidden="true"></canvas>
 	</div>
 
@@ -112,10 +115,10 @@
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
 		import { createFilmFrames } from './src/film-frames.js?v=2026-09-19m';
-		import { createTentGlow, TENT_GLOW } from './src/tent-glow.js?v=2026-09-19m';
+		import { createTentGlow, TENT_GLOW } from './src/tent-glow.js?v=2026-09-19r';
 		/* THE MOUNTAIN (Alex, 19 Sep: "оставь плато на любом тесте, я просто проверяю гору"): the plateau plate is ALWAYS on;
 		   this only picks the far plane's film. 'pullback' = the pull-back film (assets/frames); 'gora6' = the "6 sec video". */
-		const HERO = 'still';   // 'mountain3d' = the 3-D mountain of test 7 with its route (iframe, embed mode) · 'still' = one frame · 'pullback' | 'gora6' | 'gora5' = films
+		const HERO = 'pullback';   // 'mountain3d' = the 3-D mountain of test 7 with its route (iframe, embed mode) · 'still' = one frame · 'pullback' | 'gora6' | 'gora5' = films
 		const HERO_DIRS = { pullback: 'assets/frames', gora6: 'assets/frames/gora6', gora5: 'assets/frames/gora5' };
 		const heroDir = (w) => `${HERO_DIRS[HERO]}/${w > 1700 ? 1920 : w > 1000 ? 1600 : w > 520 ? 960 : 640}`;
 		import { createDescent, ACT } from './src/descent.js?v=2026-09-19n';
@@ -136,7 +139,7 @@
 			document.body.classList.add('is-ready'); document.body.dispatchEvent(new Event('ready'));
 			film = { setProgress() {}, get frame() { return 240; }, get progress() { return 1; }, cfg: { range: [0, 1] } };   // the far plane has no frames: the light and the hand-over read a finished film
 		} else {
-			film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: HERO === 'pullback' ? 'previews/hero-poster.webp' : undefined, cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, fitParent: true, dir: heroDir } });   // fitParent: the act overscans the viewport
+			film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: HERO === 'pullback' ? 'previews/hero-poster.webp' : undefined, cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, fitParent: true, dir: heroDir, crossfade: false } });   // fitParent: the act overscans the viewport; crossfade off: two blended frames soften the fine snow while scrubbing
 		}
 		// the plateau plate: keyed frames with alpha, the same scrub as the mountain (src/layers.js moves the plane)
 		const plateauFilm = createFilmFrames({ canvas: document.getElementById('plateau'), cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, alpha: true, fitParent: true, dir: (w) => (w > 1700 ? 'assets/frames/plateau/1920' : w > 1000 ? 'assets/frames/plateau/1600' : w > 520 ? 'assets/frames/plateau/960' : 'assets/frames/plateau/640') }, loadAfter: 900 });
@@ -169,9 +172,9 @@
 		window.__drift = createDriftCards();
 		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
-		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-19f'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
+		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-19r'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)
-		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-19f'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
+		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-19r'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
 		if (new URLSearchParams(location.search).get('edit') === 'glow') openEditor();
 		addEventListener('keydown', (e) => { if ((e.key === 'g' || e.key === 'G') && !window.__glowEditor && !e.metaKey && !e.ctrlKey) openEditor(); });
 	</script>

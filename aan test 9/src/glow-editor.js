@@ -13,13 +13,16 @@
  */
 
 /* saved dials -> the live cfg (used by the editor, and by the page on load so the work shows without the editor) */
+import { applyGrade } from './tent-glow.js?v=2026-09-19r';
+
 export function applySaved(cfg, saved) {
 	if (!saved || Array.isArray(saved)) return;
 	for (const k of ['intensity', 'spread', 'riseScale', 'blur', 'drift', 'parallax', 'anchor']) if (typeof saved[k] === 'number') cfg[k] = saved[k];
-	for (const k of ['breath', 'tremble', 'flare', 'dodge', 'top']) if (saved[k]) Object.assign(cfg[k], saved[k]);
+	for (const k of ['breath', 'tremble', 'flare', 'dodge', 'top', 'grade']) if (saved[k]) Object.assign(cfg[k], saved[k]);
 	if (typeof saved.blend === 'string') cfg.blend = saved.blend;
 	if (saved.palette) cfg.palette = { ...saved.palette };
 	if (saved.shape) cfg.shape = saved.shape;
+	if (cfg.grade) applyGrade(cfg.grade);
 }
 
 export function openGlowEditor({ glow, film }) {
@@ -66,7 +69,7 @@ export function openGlowEditor({ glow, film }) {
 	function resize() { canvas.width = innerWidth * devicePixelRatio; canvas.height = innerHeight * devicePixelRatio; }
 	addEventListener('resize', resize); resize();
 
-	const settings = () => ({ shape, intensity: cfg.intensity, spread: cfg.spread, riseScale: cfg.riseScale, blur: cfg.blur, breath: cfg.breath, tremble: cfg.tremble, flare: cfg.flare, drift: cfg.drift, parallax: cfg.parallax, anchor: cfg.anchor, palette: cfg.palette, blend: cfg.blend, dodge: cfg.dodge, top: cfg.top });
+	const settings = () => ({ shape, intensity: cfg.intensity, spread: cfg.spread, riseScale: cfg.riseScale, blur: cfg.blur, breath: cfg.breath, tremble: cfg.tremble, flare: cfg.flare, drift: cfg.drift, parallax: cfg.parallax, anchor: cfg.anchor, palette: cfg.palette, blend: cfg.blend, dodge: cfg.dodge, top: cfg.top, grade: cfg.grade });
 	function save() {
 		cfg.shape = shape;
 		try { localStorage.setItem(KEY, JSON.stringify(settings())); } catch {}
@@ -84,9 +87,12 @@ export function openGlowEditor({ glow, film }) {
 		['dodge.amount', 'Dodge', 0, 1, 0.01, 0], ['dodge.spread', 'Dodge spread', 0.2, 2.5, 0.01, 1], ['dodge.intensity', 'Dodge bright', 0, 3, 0.01, 1],
 		// TOP — the light over the plate: stretched sideways
 		['top.intensity', 'Top', 0, 1.5, 0.01, 0.26], ['top.stretch', 'Top stretch', 1, 5, 0.01, 2.6], ['top.squash', 'Top squash', 0.1, 1, 0.01, 0.42], ['top.spread', 'Top spread', 0.2, 2.5, 0.01, 0.9],
+		// GRADE — the whole stage
+		['grade.opacity', 'Grade amount', 0, 1, 0.01, 0.35], ['grade.contrast', 'Contrast', 0.6, 1.6, 0.01, 1.04], ['grade.saturate', 'Saturate', 0, 2, 0.01, 0.92], ['grade.brightness', 'Brightness*', 0.5, 1.5, 0.01, 1],
 	];
 	const BLENDS = ['normal', 'screen', 'plus-lighter', 'overlay', 'soft-light', 'hard-light', 'color-dodge', 'lighten'];
 	const COLORS = [['core', 'Core', '#fefcc9'], ['mid', 'Mid', '#ffae34'], ['ember', 'Ember', '#451b0e']];
+	const GRADE_BLENDS = ['multiply', 'soft-light', 'overlay', 'color', 'hue', 'luminosity', 'screen', 'color-dodge', 'color-burn', 'hard-light', 'normal'];
 	const get = (path) => path.split('.').reduce((o, k) => o[k], cfg);
 	const set = (path, v) => { const ks = path.split('.'); const o = ks.slice(0, -1).reduce((o, k) => o[k], cfg); o[ks[ks.length - 1]] = v; };
 	const DEFAULTS = Object.fromEntries(DIALS.map(([path, , , , , def]) => [path, def]));
@@ -96,7 +102,7 @@ export function openGlowEditor({ glow, film }) {
 	DIALS.forEach(([path, label, min, max, step]) => {
 		const inp = document.createElement('input'); inp.type = 'range'; inp.min = min; inp.max = max; inp.step = step; inp.value = get(path); inp.style.width = '150px';
 		const out = document.createElement('span'); out.textContent = fmt(get(path), step); out.style.minWidth = '3.5em'; out.dataset.path = path;
-		inp.addEventListener('input', () => { set(path, +inp.value); out.textContent = fmt(inp.value, step); save(); });
+		inp.addEventListener('input', () => { set(path, +inp.value); out.textContent = fmt(inp.value, step); if (path.startsWith('grade.')) applyGrade(cfg.grade); save(); });
 		row(label, inp, out);
 	});
 	if (!cfg.palette) cfg.palette = Object.fromEntries(COLORS.map(([k, , v]) => [k, v]));
@@ -107,6 +113,18 @@ export function openGlowEditor({ glow, film }) {
 		row(label, inp, out);
 	});
 	glow.setPalette(cfg.palette);
+	// the GRADE's colour and blend
+	{
+		const inp = document.createElement('input'); inp.type = 'color'; inp.value = cfg.grade.color; inp.style.width = '150px'; inp.style.height = '24px';
+		const out = document.createElement('span'); out.textContent = cfg.grade.color; out.dataset.gradeColor = '1';
+		inp.addEventListener('input', () => { cfg.grade.color = inp.value; out.textContent = inp.value; applyGrade(cfg.grade); save(); });
+		row('Grade colour', inp, out);
+		const sel = document.createElement('select'); sel.style.cssText = 'width:150px;font:inherit;background:#0b1018;color:#e8eef6;border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:2px 4px';
+		GRADE_BLENDS.forEach((b) => { const o = document.createElement('option'); o.value = b; o.textContent = b; sel.append(o); });
+		sel.value = cfg.grade.blend;
+		sel.addEventListener('change', () => { cfg.grade.blend = sel.value; applyGrade(cfg.grade); save(); });
+		row('Grade blend', sel, document.createElement('span'));
+	}
 	// the stack's own blend with the film (CSS mix-blend-mode on the glow canvas)
 	{
 		const sel = document.createElement('select'); sel.style.cssText = 'width:150px;font:inherit;background:#0b1018;color:#e8eef6;border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:2px 4px';

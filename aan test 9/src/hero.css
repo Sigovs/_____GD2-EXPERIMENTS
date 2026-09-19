@@ -86,6 +86,13 @@ body {
 	display: block;
 	pointer-events: none;
 }
+.stage__grade {
+	position: absolute; inset: 0; pointer-events: none;
+	background: var(--grade-color, #6f86a6);
+	mix-blend-mode: var(--grade-blend, soft-light);
+	opacity: var(--grade-opacity, 0.35);
+}
+.stage { filter: contrast(var(--stage-contrast, 1)) saturate(var(--stage-saturate, 1)) brightness(var(--stage-brightness, 1)); }
 .stage__vignette {
 	position: absolute;
 	inset: 0;
