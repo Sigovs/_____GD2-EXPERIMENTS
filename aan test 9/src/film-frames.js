@@ -43,7 +43,8 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 	   So the frames near the current one are decoded explicitly (createImageBitmap, off the main thread) and kept; the
 	   ones that drift out of the window are closed. drawImage of a bitmap is a blit — no decode on the scroll. */
 	const bitmaps = new Array(cfg.frames).fill(null), decoding = new Set(), blobs = new Array(cfg.frames).fill(null);
-	const BITMAP_WINDOW = window.innerWidth > 700 ? 10 : 5;   // frames each side of the current one (13 bitmaps ≈ 100 MB at 1920 — small on purpose: GPU memory churn stalls the renderer)
+	const stats = { bitmap: 0, img: 0, nearest: 0 };   // where each drawn frame came from (diagnosis)
+	const BITMAP_WINDOW = window.innerWidth > 700 ? 16 : 6;   // frames each side of the current one (13 bitmaps ≈ 100 MB at 1920 — small on purpose: GPU memory churn stalls the renderer)
 	const hasBitmaps = typeof createImageBitmap === 'function';
 	let target = 0, current = 0, raf = 0, ready = false;
 	let W = 0, H = 0, dpr = 1;
@@ -82,6 +83,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		const f = clamp(current, 0, cfg.frames - 1);
 		const i0 = Math.floor(f), i1 = Math.min(cfg.frames - 1, i0 + 1), t = f - i0;
 		const a = bitmaps[i0] || imgs[i0] || nearest(i0), b = bitmaps[i1] || imgs[i1] || nearest(i1);
+		stats[bitmaps[i0] ? 'bitmap' : imgs[i0] ? 'img' : 'nearest']++;
 		const key = `${i0}:${t.toFixed(3)}:${!!a}:${!!b}`;
 		if (!force && key === lastKey) return;
 		lastKey = key;
@@ -117,7 +119,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		for (let i = 0; i < cfg.frames; i++) { if (Math.abs(i - c) > BITMAP_WINDOW && bitmaps[i]) { bitmaps[i].close(); bitmaps[i] = null; } }
 		for (let d = 0; d <= BITMAP_WINDOW; d++) for (const i of d ? [c + d, c - d] : [c]) {
 			if (i < 0 || i >= cfg.frames) continue;
-			if (decoding.size >= 2) return;   // two at a time, nearest first; the next tend() continues
+			if (decoding.size >= 6) return;   // six in flight (off the main thread), nearest first; the next tend() continues
 			const near = true;
 			if (near && !bitmaps[i] && imgs[i] && !decoding.has(i)) {
 				decoding.add(i);
@@ -126,7 +128,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		}
 	}
 	let tendTimer = 0;
-	const tend = () => { if (!tendTimer) tendTimer = setTimeout(() => { tendTimer = 0; tendBitmaps(); }, 120); };
+	const tend = () => { if (!tendTimer) tendTimer = setTimeout(() => { tendTimer = 0; tendBitmaps(); }, 40); };
 	function evict() {
 		const c = Math.round(current), half = KEEP / 2;
 		for (let i = 0; i < cfg.frames; i++) {
@@ -189,7 +191,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 	}
 
 	const api = { get progress() { return target / (cfg.frames - 1); }, get frame() { return current; }, get pair() { return lastPair; }, setProgress, cfg, canvas,
-		get loaded() { let n = 0; for (let i = 0; i < cfg.frames; i++) if (imgs[i]) n++; return n; },
+		get loaded() { let n = 0; for (let i = 0; i < cfg.frames; i++) if (imgs[i]) n++; return n; }, stats,
 		allowLoad() { if (!mayLoad) { mayLoad = true; if (!reduced) pump(); } } };   // a film that waits for its cue (the water: not before the scroll nears it)
 	if (!window.__film) window.__film = api;   // the first film is the page's film (the clouds, the glow read it)
 	return api;

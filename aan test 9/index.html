@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-20g">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-20p">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -109,8 +109,59 @@
 
 	<!-- the scroll length: how much travel the films get (progress.js measures the scene by this track) -->
 	<div class="spacer" aria-hidden="true"></div>
-	<!-- after the descent: plain dark ground (the next sections go here) -->
-	<section class="after" aria-hidden="true"></section>
+	<!-- after the descent, on the plain ground: the brands. The page's last chapter — the same ink, the same left edge, the
+	     eyebrow role at rank three, a quiet grid of logos — one ink (assets/brands/*.svg, fills normalised), fixed-height slots. -->
+	<section class="brands" id="brands" aria-labelledby="brands-title">
+		<div class="brands__inner">
+			<p class="brands__eyebrow" id="brands-title">Brands who trust us</p>
+			<ul class="brands__grid">
+				<li class="brands__cell"><img src="assets/brands/lamborghini.svg" alt="Lamborghini" loading="lazy" decoding="async"></li>
+				<li class="brands__cell"><img src="assets/brands/bentley.svg" alt="Bentley" loading="lazy" decoding="async"></li>
+				<li class="brands__cell"><img src="assets/brands/aston-martin.svg" alt="Aston Martin" loading="lazy" decoding="async"></li>
+				<li class="brands__cell"><img src="assets/brands/rolls-royce.svg" alt="Rolls-Royce" loading="lazy" decoding="async"></li>
+				<li class="brands__cell"><img src="assets/brands/ferrari.svg" alt="Ferrari" loading="lazy" decoding="async"></li>
+				<li class="brands__cell brands__cell--wide"><img src="assets/brands/pagani.svg" alt="Pagani" loading="lazy" decoding="async"></li>
+				<li class="brands__cell"><img src="assets/brands/lotus.svg" alt="Lotus" loading="lazy" decoding="async"></li>
+				<li class="brands__cell"><img src="assets/brands/rimac.svg" alt="Rimac" loading="lazy" decoding="async"></li>
+				<li class="brands__cell"><img src="assets/brands/czinger.svg" alt="Czinger" loading="lazy" decoding="async"></li>
+				<li class="brands__cell"><img src="assets/brands/pininfarina.svg" alt="Pininfarina" loading="lazy" decoding="async"></li>
+				<li class="brands__cell"><img src="assets/brands/touring-superleggera.svg" alt="Touring Superleggera" loading="lazy" decoding="async"></li>
+				<li class="brands__cell brands__cell--wide"><img src="assets/brands/sothebys.svg" alt="Sotheby's" loading="lazy" decoding="async"></li>
+				<li class="brands__cell brands__cell--wide"><img src="assets/brands/dupont-registry.svg" alt="duPont Registry" loading="lazy" decoding="async"></li>
+				<li class="brands__cell brands__cell--wide"><img src="assets/brands/gorsuch.svg" alt="Gorsuch" loading="lazy" decoding="async"></li>
+			</ul>
+		</div>
+	</section>
+
+	<!-- the footer: the same ground and left edge; navigation, contact, the social set (one icon set, Lucide-style strokes
+	     matched to the 600 text), and the small print. Phone, mail and links are PLACEHOLDERS. -->
+	<footer class="footer" aria-label="Footer">
+		<div class="footer__inner">
+			<div class="footer__top">
+				<a class="footer__brand" href="#main" aria-label="GD2"><img src="assets/logo.png" srcset="assets/logo.png 1x, assets/logo@2x.png 2x" alt="GD2"></a>
+				<nav class="footer__nav" aria-label="Footer navigation">
+					<a href="#main">Products &amp; Services</a>
+					<a href="#main">Grow your Business</a>
+					<a href="#main">Compliance</a>
+					<a href="#main">Contact</a>
+				</nav>
+				<div class="footer__contact">
+					<a href="tel:+10000000000">+1 (000) 000-0000</a>
+					<a href="mailto:hello@gd2.com">hello@gd2.com</a>
+				</div>
+				<ul class="footer__social" aria-label="Social media">
+					<li><a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a></li>
+					<li><a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a></li>
+					<li><a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a></li>
+					<li><a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg></a></li>
+				</ul>
+			</div>
+			<div class="footer__bottom">
+				<span>© 2026 GD2. All rights reserved.</span>
+				<nav class="footer__legal" aria-label="Legal"><a href="#">Privacy</a><a href="#">Terms</a></nav>
+			</div>
+		</div>
+	</footer>
 
 
 	<script type="importmap">
@@ -123,7 +174,7 @@
 	</script>
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
-		import { createFilmFrames } from './src/film-frames.js?v=2026-09-20h';
+		import { createFilmFrames } from './src/film-frames.js?v=2026-09-20m';
 		import { createTentGlow, TENT_GLOW } from './src/tent-glow.js?v=2026-09-20a';
 		import { applyGrain, applyRadial } from './src/fx.js?v=2026-09-20a';
 		applyGrain(TENT_GLOW.grain); applyRadial(TENT_GLOW.radial);
@@ -184,7 +235,9 @@
 		// SVG lens of src/water-ripple.js stands in
 		import { createWaterWaves } from './src/water-waves.js?v=2026-09-18y';
 		// import { createWaterRipple } from './src/water-ripple.js?v=2026-09-18v';   // parked with the rings
-		const waves = LITE ? { enabled: false, setPresence() {} } : createWaterWaves({ canvas: document.getElementById('water-waves'), film: water });
+		// the WebGL surface (the ambient sine-field distortion + the cursor rings) is OFF by default (Alex, 19 Sep: the water
+		// "looks like a hack" — a generic wobble over a good film); ?waves=1 brings it back
+		const waves = (LITE || !Q.has('waves')) ? { enabled: false, setPresence() {} } : createWaterWaves({ canvas: document.getElementById('water-waves'), film: water });
 		// the cursor's ripple is OFF (Alex, 18 Sep): no rings (WATER_WAVES.rings) and no SVG lens fallback either
 		const ripple = { setPresence() {} };   // was: waves.enabled ? … : createWaterRipple({ target: document.getElementById('water-film') })
 		window.__waves = waves;
@@ -239,6 +292,15 @@
 		runIntro({ route: window.__route, clouds });
 	</script>
 	<script type="module">import { initNav } from './src/nav.js'; window.__nav = initNav();</script>
+	<script type="module">
+		// the brands arrive once, in order, as the section enters the viewport
+		const brands = document.getElementById('brands');
+		if (brands) {
+			brands.querySelectorAll('.brands__cell > *').forEach((el, i) => el.style.setProperty('--i', `${i * 45}ms`));
+			const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { brands.classList.add('is-in'); io.disconnect(); } }, { threshold: 0.2 });
+			io.observe(brands);
+		}
+	</script>
 	<script type="module">
 		// the captions: text blocks that arrive with the scroll, over the mountain and under the water (src/captions.js)
 		import { createCaptions } from './src/captions.js?v=2026-09-18w';

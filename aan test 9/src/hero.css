@@ -98,7 +98,6 @@ body {
 .is-lite .stage { filter: none !important; }
 .is-lite #grade, .is-lite #fx-grain, .is-lite #fx-radial, .is-lite #water-waves { display: none !important; }
 .stage__end { position: fixed; inset: 0; z-index: 1; background: var(--ground); opacity: 0; pointer-events: none; }
-.after { position: relative; z-index: 3; background: var(--ground); min-height: 60vh; }
 .stage__vignette {
 	position: absolute;
 	inset: 0;
@@ -265,36 +264,104 @@ body {
 	color: var(--ink-dim);
 }
 
-/* ---- the brands, after the descent ---- */
-.brands {
-	position: relative; z-index: 3;
-	background: var(--ground);
-	padding: clamp(72px, 14vh, 160px) clamp(24px, 6vw, 96px) clamp(96px, 16vh, 200px);
-	border-top: 1px solid rgba(238, 243, 251, 0.06);
-}
-.brands__eyebrow {
-	margin: 0 0 clamp(28px, 4vw, 56px);
-	text-align: center;
-	font-size: 0.875rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
-	color: #97C82C;
-	opacity: 0.85;
-}
-.brands__list {
-	list-style: none; margin: 0 auto; padding: 0;
-	max-width: 1400px;
-	display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
-	gap: clamp(20px, 3.2vw, 56px) clamp(32px, 4.6vw, 88px);
-}
-.brands__list li {
-	font-size: clamp(1rem, 1.35vw, 1.35rem); font-weight: 600; letter-spacing: 0.06em;
-	color: rgba(238, 243, 251, 0.42);
-	white-space: nowrap;
-	transition: color 300ms ease;
-}
-.brands__list li:hover { color: rgba(238, 243, 251, 0.8); }
 @media (max-width: 700px) {
 	.hero__cta { flex-wrap: wrap; }
 	.drift__card { width: 46vw !important; }
 	.drift__card figcaption { font-size: 0.875rem; }
-	.brands__list { gap: 18px 28px; }
 }
+
+/* ---- the spacing scale (4px base; spacing-taste I2) — the section values below resolve to it ---- */
+:root {
+	--space-4: 1rem; --space-5: 1.5rem; --space-6: 2rem; --space-7: 3rem; --space-8: 4rem; --space-9: 6rem; --space-10: 8rem; --space-11: 12rem;
+	--gutter: clamp(24px, 6vw, 96px);   /* the page's left edge — the statement, the captions and this section share it */
+}
+
+/* ---- the brands: the page's last chapter, on the plain ground ---- */
+.brands {
+	position: relative; z-index: 3;
+	background: var(--ground);
+	color: var(--ink);
+	padding-block: var(--space-8) var(--space-10);        /* bottom-heavy: the page closes, it does not stop (spacing D2) */
+	padding-inline: var(--gutter);
+}
+@media (min-width: 60rem) { .brands { padding-block: var(--space-9) var(--space-11); } }
+.brands__inner { max-width: 1400px; }
+.brands__eyebrow {
+	margin: 0 0 var(--space-7);
+	font-size: 0.875rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;   /* the eyebrow role, as the captions */
+	color: var(--ink-dim);
+}
+.brands__grid {
+	list-style: none; margin: 0; padding: 0;
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	border-top: 1px solid rgba(238, 243, 251, 0.10);
+}
+@media (min-width: 40rem)  { .brands__grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 60rem)  { .brands__grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 80rem)  { .brands__grid { grid-template-columns: repeat(7, 1fr); } }   /* 14 logos: two full rows */
+.brands__cell {
+	/* a fixed slot: a wordmark or a logo sits in the same box, the grid never moves when the logos land */
+	min-height: 7rem;
+	display: flex; align-items: center; justify-content: flex-start;
+	padding: var(--space-5) var(--space-6) var(--space-5) 0;
+	border-bottom: 1px solid rgba(238, 243, 251, 0.10);
+	font-size: 1.0625rem; font-weight: 600; letter-spacing: 0.02em;
+	color: rgba(238, 243, 251, 0.46);
+	transition: color 320ms ease;
+}
+.brands__cell:hover { color: rgba(238, 243, 251, 0.86); }
+.brands__cell img { display: block; height: 3.4rem; width: auto; max-width: 100%; object-fit: contain; object-position: left center; opacity: 0.5; transition: opacity 320ms ease; }   /* every viewBox is cropped to its drawing: emblems sit at 3rem, the wide wordmarks lower (optical parity, not nominal) */
+.brands__cell--wide img { height: 2.2rem; }   /* one ink already (the SVG fills); the wall reads at 50%, a hover brings one up */
+.brands__cell:hover img { opacity: 0.92; }
+/* the arrival: each wordmark comes up once, in order, as the section enters (brands.js); still under reduced motion */
+.brands__cell > * { opacity: 0; transform: translateY(8px); transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1); transition-delay: var(--i, 0ms); }
+.brands.is-in .brands__cell > * { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .brands__cell > * { opacity: 1; transform: none; transition: none; } }
+
+/* ---- the footer: the page's last mass ---- */
+.footer {
+	position: relative; z-index: 3;
+	background: var(--ground); color: var(--ink);
+	padding-block: var(--space-8) var(--space-8);
+	padding-inline: var(--gutter);
+	border-top: 1px solid rgba(238, 243, 251, 0.10);
+}
+.footer__inner { max-width: 1400px; }
+.footer__top {
+	display: grid; gap: var(--space-7) var(--space-8);
+	grid-template-columns: 1fr;
+	align-items: start;
+}
+@media (min-width: 60rem) { .footer__top { grid-template-columns: auto 1fr auto auto; gap: var(--space-8) var(--space-9); } }
+.footer__brand img { display: block; height: 30px; width: auto; }
+.footer__nav { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-6); }
+.footer__nav a { margin-right: var(--space-6); }   /* belt and braces: the header's nav.css resets gaps on <nav> children */
+.footer__nav a, .footer__contact a, .footer__legal a {
+	font-size: 0.9375rem; font-weight: 600; letter-spacing: 0.02em;
+	color: rgba(238, 243, 251, 0.72); text-decoration: none;
+	transition: color 240ms ease;
+}
+.footer__nav a:hover, .footer__contact a:hover, .footer__legal a:hover { color: var(--ink); }
+.footer__contact { display: flex; flex-direction: column; gap: var(--space-3); }
+.footer__contact a { font-variant-numeric: tabular-nums; }
+.footer__social { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--space-4); }
+.footer__social a {
+	display: grid; place-items: center;
+	width: 44px; height: 44px;                       /* the hit area; the glyph is 20px, stroke 1.75 — matched to the 600 text beside it */
+	border-radius: 999px; border: 1px solid rgba(238, 243, 251, 0.14);
+	color: rgba(238, 243, 251, 0.72);
+	transition: color 240ms ease, border-color 240ms ease;
+}
+.footer__social a:hover { color: var(--ink); border-color: rgba(238, 243, 251, 0.4); }
+.footer__social svg { width: 20px; height: 20px; }
+.footer__bottom {
+	margin-top: var(--space-9);
+	padding-top: var(--space-5);
+	border-top: 1px solid rgba(238, 243, 251, 0.10);
+	display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3) var(--space-6);
+	font-size: 0.875rem; color: var(--ink-dim);   /* the floor: 14px, never smaller */
+}
+.footer__legal { display: flex; gap: var(--space-5); }
+.footer__legal a { font-size: 0.875rem; font-weight: 500; }
+.footer a:focus-visible, .brands a:focus-visible { outline: 2px solid #97C82C; outline-offset: 3px; }
