@@ -123,7 +123,7 @@
 	</script>
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
-		import { createFilmFrames } from './src/film-frames.js?v=2026-09-20e';
+		import { createFilmFrames } from './src/film-frames.js?v=2026-09-20h';
 		import { createTentGlow, TENT_GLOW } from './src/tent-glow.js?v=2026-09-20a';
 		import { applyGrain, applyRadial } from './src/fx.js?v=2026-09-20a';
 		applyGrain(TENT_GLOW.grain); applyRadial(TENT_GLOW.radial);
@@ -157,8 +157,11 @@
 			film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: HERO === 'pullback' ? 'previews/hero-poster.webp' : undefined, cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, fitParent: true, dir: heroDir, crossfade: false } });   // fitParent: the act overscans the viewport; crossfade off: two blended frames soften the fine snow while scrubbing
 		}
 		// the plateau plate: keyed frames with alpha, the same scrub as the mountain (src/layers.js moves the plane)
-		const plateauFilm = createFilmFrames({ canvas: document.getElementById('plateau'), cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, alpha: true, fitParent: true, dir: (w) => (w > 1700 ? 'assets/frames/plateau/1920' : w > 1000 ? 'assets/frames/plateau/1600' : w > 520 ? 'assets/frames/plateau/960' : 'assets/frames/plateau/640') }, loadAfter: 900 });
+		const plateauFilm = createFilmFrames({ canvas: document.getElementById('plateau'), cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, alpha: true, fitParent: true, dir: (w) => (w > 1700 ? 'assets/frames/plateau/1920' : w > 1000 ? 'assets/frames/plateau/1600' : w > 520 ? 'assets/frames/plateau/960' : 'assets/frames/plateau/640') }, loadAfter: 1e9 });   // the plateau waits for the mountain: its frames start once the mountain has most of its own (below)
 		window.__plateau = plateauFilm;
+		// the loading order (Alex, 19 Sep: the film jumped on the scroll — holes while three films loaded at once): the mountain
+		// first; the plateau once the mountain has 160 of its 241 frames; the water once the scroll nears it
+		{ const t = setInterval(() => { if (film.loaded === undefined || film.loaded >= 160) { plateauFilm?.allowLoad(); clearInterval(t); } }, 250); }
 		const heroFilms = { setProgress(p) { film.setProgress(p); plateauFilm?.setProgress(p); }, get frame() { return film.frame; }, get progress() { return film.progress; }, cfg: film.cfg };
 		// the tent's light: over the plate's tent (multiplane) or the film's own tent (single6 — rotoscoped from its frames)
 		const GLOW_SINGLE6 = { ...TENT_GLOW, film: null, intensity: 0.6, top: { ...TENT_GLOW.top, intensity: 0.35 }, fadeIn: [152, 172], fadeOut: null,
@@ -189,7 +192,7 @@
 		// photographs floating up through the water (src/drift-cards.js)
 		import { createDriftCards } from './src/drift-cards.js?v=2026-09-18x';
 		window.__drift = WATER === 'v3' ? null : createDriftCards();   // no photographs in the v3 water (Alex, 19 Sep)
-		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), endEl: document.getElementById('stage-end'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { if (P > 0.10) water.allowLoad(); life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
+		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), endEl: document.getElementById('stage-end'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { if (P > 0.06) water.allowLoad(); life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
 		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-20a'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)

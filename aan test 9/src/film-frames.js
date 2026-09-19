@@ -111,8 +111,8 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 	// the bitmap window follows the current frame: decode what is near, close what is far
 	function tendBitmaps() {
 		if (!hasBitmaps) return;
-		// a film whose canvas is not on screen (the water before the hand-over, the mountain after it) keeps no bitmaps
-		if (canvas.style.visibility === 'hidden' || (canvas.parentElement && canvas.parentElement.style.visibility === 'hidden')) { for (let i = 0; i < cfg.frames; i++) if (bitmaps[i]) { bitmaps[i].close(); bitmaps[i] = null; } return; }
+		// (a hidden film keeps its window too — the water must have its first frames decoded BEFORE it comes up, or the
+		// hand-over starts with a stutter; Alex, 19 Sep: "подводное скачет")
 		const c = Math.round(current);
 		for (let i = 0; i < cfg.frames; i++) { if (Math.abs(i - c) > BITMAP_WINDOW && bitmaps[i]) { bitmaps[i].close(); bitmaps[i] = null; } }
 		for (let d = 0; d <= BITMAP_WINDOW; d++) for (const i of d ? [c + d, c - d] : [c]) {
@@ -189,6 +189,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 	}
 
 	const api = { get progress() { return target / (cfg.frames - 1); }, get frame() { return current; }, get pair() { return lastPair; }, setProgress, cfg, canvas,
+		get loaded() { let n = 0; for (let i = 0; i < cfg.frames; i++) if (imgs[i]) n++; return n; },
 		allowLoad() { if (!mayLoad) { mayLoad = true; if (!reduced) pump(); } } };   // a film that waits for its cue (the water: not before the scroll nears it)
 	if (!window.__film) window.__film = api;   // the first film is the page's film (the clouds, the glow read it)
 	return api;
