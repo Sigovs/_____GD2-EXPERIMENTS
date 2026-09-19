@@ -30,7 +30,8 @@
 			     from green; a frame sequence with alpha once its video lands), then the tent's light -->
 			<canvas id="hero-film" class="stage__video layer" aria-hidden="true"></canvas>
 			<canvas id="cloud-canvas" class="stage__clouds layer" aria-hidden="true"></canvas>
-			<img id="plateau" class="layer layer--plateau" src="assets/layers/plateau.png" alt="" decoding="async">
+			<!-- the plateau is a FILM with alpha (plato2: the camera pushes in), scrubbed with the mountain -->
+			<canvas id="plateau" class="layer layer--plateau" aria-hidden="true"></canvas>
 			<!-- the tent's light, breathing and flickering over the film's tent (src/tent-glow.js) - under the clouds, in the fog -->
 			<canvas id="tent-glow" class="stage__glow" aria-hidden="true"></canvas>
 			<!-- the DODGE pass of the same light: mix-blend-mode color-dodge against the film (tent-glow.js → cfg.dodge) -->
@@ -102,17 +103,21 @@
 	</script>
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
-		import { createFilmFrames } from './src/film-frames.js?v=2026-09-19a';
+		import { createFilmFrames } from './src/film-frames.js?v=2026-09-19b';
 		import { createTentGlow } from './src/tent-glow.js?v=2026-09-19a';
 		import { createDescent, ACT } from './src/descent.js?v=2026-09-19a';
 		// the two films: the hero scrubs the first part of the page, the water the rest — they overlap for the hand-over.
 		// Neither listens to the scroll itself: descent.js drives both from one progress.
 		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp', cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false } });   // the film ends early and holds on the tent
+		// the plateau plate: keyed frames with alpha, the same scrub as the mountain (src/layers.js moves the plane)
+		const plateauFilm = createFilmFrames({ canvas: document.getElementById('plateau'), cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, alpha: true, dir: (w) => (w > 1700 ? 'assets/frames/plateau/1920' : w > 1000 ? 'assets/frames/plateau/1600' : w > 520 ? 'assets/frames/plateau/960' : 'assets/frames/plateau/640') }, loadAfter: 900 });
+		window.__plateau = plateauFilm;
+		const heroFilms = { setProgress(p) { film.setProgress(p); plateauFilm.setProgress(p); }, get frame() { return film.frame; }, get progress() { return film.progress; }, cfg: film.cfg };
 		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => (w > 1000 ? 'assets/frames/water/1600' : w > 520 ? 'assets/frames/water/960' : 'assets/frames/water/640') }, loadAfter: 2500 });
 		window.__water = water;
 		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), film });
 		// the planes: the film, the clouds, the plateau — each on its own move (src/layers.js)
-		import { createLayers } from './src/layers.js?v=2026-09-19a';
+		import { createLayers } from './src/layers.js?v=2026-09-19c';
 		window.__layers = createLayers({ mountain: document.getElementById('hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: document.getElementById('plateau'), heroEnd: ACT.heroEnd });
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
 		import { createWaterLife } from './src/water-life.js?v=2026-09-18v';
@@ -130,7 +135,7 @@
 		// photographs floating up through the water (src/drift-cards.js)
 		import { createDriftCards } from './src/drift-cards.js?v=2026-09-18x';
 		window.__drift = createDriftCards();
-		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: film, waterFilm: water, clouds: null, onWater: (w, P) => { life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
+		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
 		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.shape') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-18m'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)

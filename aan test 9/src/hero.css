@@ -58,7 +58,7 @@ body {
 #water-film { opacity: 0; visibility: hidden; }
 /* the planes (src/layers.js): every one fills the act and is moved by transform only */
 .layer { position: absolute; inset: 0; width: 100%; height: 100%; will-change: transform; transform-origin: 50% 50%; }
-.layer--plateau { object-fit: cover; object-position: 50% 100%; pointer-events: none; display: block; }
+.layer--plateau { pointer-events: none; display: block; }
 .stage__glow {
 	position: absolute;
 	inset: 0;

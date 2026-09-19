@@ -32,7 +32,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfter = 0 }) {
 	const cfg = { ...FILM, ...overrides };
-	const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+	const ctx = canvas.getContext('2d', { alpha: !!cfg.alpha, desynchronized: true });   // alpha: a keyed plate over other planes
 	let mayLoad = loadAfter === 0;   // a second film waits its turn, so the first one's frames come in first
 	const KEEP = typeof cfg.keep === 'function' ? cfg.keep(window.innerWidth) : cfg.keep;
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -78,6 +78,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 		lastKey = key;
 		if (!a) return;
 		lastPair = { a, b: (cfg.crossfade && b && b !== a && t > 0.02) ? b : null, t };   // what is on the canvas now (water-waves.js samples the same pair)
+		if (cfg.alpha) ctx.clearRect(0, 0, canvas.width, canvas.height);   // a transparent plate must not stack its old frames
 		ctx.globalAlpha = 1;
 		ctx.drawImage(a, ...cover(a));
 		if (cfg.crossfade && b && b !== a && t > 0.02) {

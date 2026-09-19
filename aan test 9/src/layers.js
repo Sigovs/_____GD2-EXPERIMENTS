@@ -23,8 +23,8 @@ export const LAYERS = {
 		mountain: { mouse: 7,  scrollDrift: 0,  scale: 1.035 },     // far: barely moves; scaled a touch so the lean never shows an edge
 		clouds:   { mouse: 13, scrollDrift: 0 },                   // between (the plate rig adds its own sway on top)
 		plateau:  { mouse: 24, scrollDrift: -3, scale: 1.02,
-			enter: [0.06, 0.40],   // scene progress: the plateau rises from `from` vh below to its place
-			from: 58,              // vh below its place at the start
+			enter: [0.08, 0.42],   // scene progress: the plateau rises from `from` vh below to its place (Alex, 19 Sep: "не сразу должно появляться")
+			from: 72,              // vh below its place at the start: the mountain alone first, the camp arrives as the camera comes down
 			lift: [0.88, 0.985],   // hero-scroll window (as ACT.hero.soften): the plateau lifts `liftVh` more than the act
 			liftVh: 22 },
 	},
