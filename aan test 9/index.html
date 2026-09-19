@@ -182,7 +182,7 @@
 		window.__ripple = ripple;
 		// photographs floating up through the water (src/drift-cards.js)
 		import { createDriftCards } from './src/drift-cards.js?v=2026-09-18x';
-		window.__drift = createDriftCards();
+		window.__drift = WATER === 'v3' ? null : createDriftCards();   // no photographs in the v3 water (Alex, 19 Sep)
 		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { if (P > 0.10) water.allowLoad(); life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
 		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-20a'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
