@@ -272,6 +272,7 @@ body {
 
 /* ---- the spacing scale (4px base; spacing-taste I2) — the section values below resolve to it ---- */
 :root {
+	--space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem;
 	--space-4: 1rem; --space-5: 1.5rem; --space-6: 2rem; --space-7: 3rem; --space-8: 4rem; --space-9: 6rem; --space-10: 8rem; --space-11: 12rem;
 	--gutter: clamp(24px, 6vw, 96px);   /* the page's left edge — the statement, the captions and this section share it */
 }
@@ -287,10 +288,11 @@ body {
 }
 @media (min-width: 60rem) { .brands { padding-block: var(--space-9) var(--space-11); } }
 .brands__inner { max-width: none; }   /* gutter to gutter, as every other mass on this page (the statement, the captions, the calls) */
-.brands__eyebrow {
+.brands__title {
+	/* a chapter heading, not a label: the page's other masses are display-scale, a 14px caption could not close them */
 	margin: 0 0 var(--space-7);
-	font-size: 0.875rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;   /* the eyebrow role, as the captions */
-	color: var(--ink-dim);
+	font-size: clamp(1.375rem, 1.1vw + 0.9rem, 2rem); font-weight: 600; line-height: 1.15; letter-spacing: -0.015em;
+	color: var(--ink); text-wrap: balance;
 }
 .brands__grid {
 	list-style: none; margin: 0; padding: 0;
@@ -303,17 +305,19 @@ body {
 @media (min-width: 80rem)  { .brands__grid { grid-template-columns: repeat(7, 1fr); } }   /* 14 logos: two full rows */
 .brands__cell {
 	/* a fixed slot: a wordmark or a logo sits in the same box, the grid never moves when the logos land */
-	min-height: clamp(7rem, 9vw, 11rem);
-	display: flex; align-items: center; justify-content: center;   /* a logo wall reads centred per cell; the eyebrow keeps the left edge */
-	padding: var(--space-5) var(--space-6);
+	min-height: clamp(6.5rem, 8vw, 10rem);
+	display: flex; align-items: center; justify-content: center;   /* a logo wall reads centred per cell; the heading keeps the left edge */
+	padding: var(--space-4) clamp(0.75rem, 2vw, 2rem);
 	border-bottom: 1px solid rgba(238, 243, 251, 0.10);
 	font-size: 1.0625rem; font-weight: 600; letter-spacing: 0.02em;
 	color: rgba(238, 243, 251, 0.46);
 	transition: color 320ms ease;
 }
 .brands__cell:hover { color: rgba(238, 243, 251, 0.86); }
-.brands__cell img { display: block; height: clamp(2.8rem, 2.6vw, 4.4rem); width: auto; max-width: 100%; object-fit: contain; object-position: center; opacity: 0.55; transition: opacity 320ms ease; }   /* every viewBox is cropped to its drawing: emblems sit at 3rem, the wide wordmarks lower (optical parity, not nominal) */
-.brands__cell--wide img { height: clamp(1.9rem, 1.7vw, 2.9rem); }   /* one ink already (the SVG fills); the wall reads at 50%, a hover brings one up */
+/* OPTICAL sizing: every viewBox is cropped to its drawing, then each mark takes its own share of one unit (--k, set
+   on the cell) so the INK reads even across the wall — a crest and a wide wordmark are never the same height. */
+.brands__cell { --logo: clamp(2.75rem, 2.8vw, 4.5rem); --k: 1; }
+.brands__cell img { display: block; height: calc(var(--logo) * var(--k)); width: auto; max-width: 100%; object-fit: contain; object-position: center; opacity: 0.55; transition: opacity 320ms ease; }   /* one ink already (the SVG fills); the wall reads at 55%, a hover brings one up */
 .brands__cell:hover img { opacity: 0.92; }
 /* the arrival: each wordmark comes up once, in order, as the section enters (brands.js); still under reduced motion */
 .brands__cell > * { opacity: 0; transform: translateY(8px); transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1); transition-delay: var(--i, 0ms); }
@@ -334,10 +338,10 @@ body {
 	grid-template-columns: 1fr;
 	align-items: start;
 }
-@media (min-width: 60rem) { .footer__top { grid-template-columns: auto 1fr auto auto; gap: var(--space-8) var(--space-9); } }
+@media (min-width: 60rem) { .footer__top { grid-template-columns: auto 1fr auto auto; gap: var(--space-8) var(--space-9); align-items: center; } }   /* one row: the mark, the links, the contact and the icons share a centre line */
 .footer__brand img { display: block; height: 30px; width: auto; }
 .footer__nav { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-6); }
-.footer__nav a { margin-right: var(--space-6); }   /* belt and braces: the header's nav.css resets gaps on <nav> children */
+@media (max-width: 59.99rem) { .footer__nav { flex-direction: column; gap: var(--space-3); } }   /* stacked: a list, not a ragged wrap */
 .footer__nav a, .footer__contact a, .footer__legal a {
 	font-size: 0.9375rem; font-weight: 600; letter-spacing: 0.02em;
 	color: rgba(238, 243, 251, 0.72); text-decoration: none;
@@ -366,3 +370,6 @@ body {
 .footer__legal { display: flex; gap: var(--space-5); }
 .footer__legal a { font-size: 0.875rem; font-weight: 500; }
 .footer a:focus-visible, .brands a:focus-visible { outline: 2px solid #97C82C; outline-offset: 3px; }
+.footer a { text-underline-offset: 0.2em; }
+/* the browser's own surfaces take the palette too */
+::selection { background: rgba(151, 200, 44, 0.32); color: var(--ink); }
