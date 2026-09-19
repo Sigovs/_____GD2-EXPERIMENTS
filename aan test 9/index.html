@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-19s">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-19v">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -124,6 +124,8 @@
 		/* THE MOUNTAIN (Alex, 19 Sep: "оставь плато на любом тесте, я просто проверяю гору"): the plateau plate is ALWAYS on;
 		   this only picks the far plane's film. 'pullback' = the pull-back film (assets/frames); 'gora6' = the "6 sec video". */
 		const Q = new URLSearchParams(location.search);
+		/* ?lite=1 — a diagnosis switch (Alex, 19 Sep: "стало тяжело крутить"): no stage filter, no grade / grain / radial layers, no WebGL water surface */
+		const LITE = Q.has('lite'); if (LITE) document.documentElement.classList.add('is-lite');
 		/* VERSIONS (Alex, 19 Sep): ?water=old | new, ?hero=pullback | still | gora6 | gora5 | mountain3d — to compare without editing */
 		const HERO = Q.get('hero') || 'pullback';   // 'mountain3d' = the 3-D mountain of test 7 with its route (iframe, embed mode) · 'still' = one frame · 'pullback' | 'gora6' | 'gora5' = films
 		const HERO_DIRS = { pullback: 'assets/frames', gora6: 'assets/frames/gora6', gora5: 'assets/frames/gora5' };
@@ -173,7 +175,7 @@
 		// SVG lens of src/water-ripple.js stands in
 		import { createWaterWaves } from './src/water-waves.js?v=2026-09-18y';
 		// import { createWaterRipple } from './src/water-ripple.js?v=2026-09-18v';   // parked with the rings
-		const waves = createWaterWaves({ canvas: document.getElementById('water-waves'), film: water });
+		const waves = LITE ? { enabled: false, setPresence() {} } : createWaterWaves({ canvas: document.getElementById('water-waves'), film: water });
 		// the cursor's ripple is OFF (Alex, 18 Sep): no rings (WATER_WAVES.rings) and no SVG lens fallback either
 		const ripple = { setPresence() {} };   // was: waves.enabled ? … : createWaterRipple({ target: document.getElementById('water-film') })
 		window.__waves = waves;
