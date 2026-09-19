@@ -277,13 +277,43 @@ body {
 	--gutter: clamp(24px, 6vw, 96px);   /* the page's left edge — the statement, the captions and this section share it */
 }
 
+/* ---- about us: the page surfaces onto the plain ground and says who was speaking ---- */
+.about {
+	position: relative; z-index: 3;
+	background: var(--ground); color: var(--ink);
+	padding-block: var(--space-10) var(--space-8);          /* the top carries the arrival from the dark; the brands below bring their own space */
+	margin-top: -1px;
+	padding-inline: var(--gutter);
+}
+@media (min-width: 60rem) { .about { padding-block: var(--space-11) var(--space-9); } }
+.about__inner { display: grid; gap: var(--space-6); }
+@media (min-width: 60rem) { .about__inner { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--space-8); } }
+.about__title {
+	margin: 0;
+	font-size: clamp(1.375rem, 1.1vw + 0.9rem, 2rem); font-weight: 600; line-height: 1.15; letter-spacing: -0.015em;   /* the chapter rank, as the brands' title */
+	color: rgba(238, 243, 251, 0.82);
+}
+.about__lead {
+	margin: 0 0 var(--space-7);
+	max-width: 24ch;
+	font-size: clamp(1.625rem, 2.3vw, 2.9rem); font-weight: 700; line-height: 1.08; letter-spacing: -0.022em;   /* the caption rank: the statement of the chapter */
+	color: var(--ink); text-wrap: balance;
+}
+.about__copy { display: grid; gap: var(--space-5); }
+@media (min-width: 80rem) { .about__copy { grid-template-columns: 1fr 1fr; gap: var(--space-8); } }
+.about__copy p {
+	margin: 0; max-width: 36rem;
+	font-size: clamp(1rem, 0.35vw + 0.95rem, 1.125rem); line-height: 1.6; font-weight: 400;
+	color: var(--ink-dim); text-wrap: pretty;
+}
+.about__cta { margin-top: var(--space-7); }
+
 /* ---- the brands: the page's last chapter, on the plain ground ---- */
 .brands {
 	position: relative; z-index: 3;
 	background: var(--ground);
 	color: var(--ink);
 	padding-block: var(--space-8) var(--space-10);        /* bottom-heavy: the page closes, it does not stop (spacing D2) */
-	margin-top: -1px;
 	padding-inline: var(--gutter);
 }
 @media (min-width: 60rem) { .brands { padding-block: var(--space-9) var(--space-11); } }

@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-20s">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-20t">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -109,7 +109,23 @@
 
 	<!-- the scroll length: how much travel the films get (progress.js measures the scene by this track) -->
 	<div class="spacer" aria-hidden="true"></div>
-	<!-- after the descent, on the plain ground: the brands. The page's last chapter — the same ink, the same left edge, the
+	<!-- after the descent, on the plain ground: ABOUT US — the page surfaces and says who was speaking. The same left
+	     edge and ink as the brands; the heading at the chapter rank, the lead at the caption rank, the body built for
+	     reading (measure, 1.6 leading). COPY IS PLACEHOLDER — the client's lines go here. -->
+	<section class="about" id="about" aria-labelledby="about-title">
+		<div class="about__inner">
+			<h2 class="about__title" id="about-title">About us</h2>
+			<div class="about__body">
+				<p class="about__lead">We take companies where they could not go alone — and bring them back with the map.</p>
+				<div class="about__copy">
+					<p>GD2 is a growth and compliance partner for businesses that climb. We plan the route, carry the load and read the pressure, so the companies we work with grow without losing their footing.</p>
+					<p>Strategy, operations and regulatory work sit under one roof, with one team accountable for the whole descent. Founded by operators, not consultants: we build every engagement around the decision that has to be made next — not the deck that has to be presented.</p>
+				</div>
+				<div class="about__cta"><a class="cta cta--ghost" href="#main">Talk to us</a></div>
+			</div>
+		</div>
+	</section>
+	<!-- the brands. The page's last chapter — the same ink, the same left edge, the
 	     eyebrow role at rank three, a quiet grid of logos — one ink (assets/brands/*.svg, fills normalised), fixed-height slots. -->
 	<section class="brands" id="brands" aria-labelledby="brands-title">
 		<div class="brands__inner">
