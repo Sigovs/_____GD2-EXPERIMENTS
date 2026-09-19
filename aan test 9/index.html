@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-20r">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-20s">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -292,15 +292,6 @@
 		runIntro({ route: window.__route, clouds });
 	</script>
 	<script type="module">import { initNav } from './src/nav.js'; window.__nav = initNav();</script>
-	<script type="module">
-		// the brands arrive once, in order, as the section enters the viewport
-		const brands = document.getElementById('brands');
-		if (brands) {
-			brands.querySelectorAll('.brands__cell > *').forEach((el, i) => el.style.setProperty('--i', `${i * 45}ms`));
-			const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { brands.classList.add('is-in'); io.disconnect(); } }, { threshold: 0.2 });
-			io.observe(brands);
-		}
-	</script>
 	<script type="module">
 		// the captions: text blocks that arrive with the scroll, over the mountain and under the water (src/captions.js)
 		import { createCaptions } from './src/captions.js?v=2026-09-18w';
