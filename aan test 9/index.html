@@ -33,9 +33,10 @@
 			<!-- the near plane: the plateau FILM with alpha (plato2: the camera pushes in), scrubbed with the mountain, and the
 			     tent's light drawn over it (src/tent-glow.js) — one element, so layers.js moves them together -->
 			<div id="plane-plateau" class="layer">
-				<canvas id="plateau" class="layer layer--plateau" aria-hidden="true"></canvas>
+				<!-- the light sits BEHIND the plate (Alex, 19 Sep): the tent and the rocks cover it, the glow goes into the air behind -->
 				<canvas id="tent-glow" class="stage__glow" aria-hidden="true"></canvas>
 				<canvas id="tent-dodge" class="stage__glow stage__glow--dodge" aria-hidden="true"></canvas>
+				<canvas id="plateau" class="layer layer--plateau" aria-hidden="true"></canvas>
 			</div>
 		</div>
 		<!-- ACT II — the water: starts under the surface (the tent's light warped above), comes up over the mountain
@@ -118,7 +119,7 @@
 		window.__water = water;
 		window.__glow = createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), film: plateauFilm });   // the light follows the PLATEAU's frames
 		// the planes: the film, the clouds, the plateau — each on its own move (src/layers.js)
-		import { createLayers } from './src/layers.js?v=2026-09-19c';
+		import { createLayers } from './src/layers.js?v=2026-09-19e';
 		window.__layers = createLayers({ mountain: document.getElementById('hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: document.getElementById('plane-plateau'), heroEnd: ACT.heroEnd });
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
 		import { createWaterLife } from './src/water-life.js?v=2026-09-18v';
@@ -136,7 +137,7 @@
 		// photographs floating up through the water (src/drift-cards.js)
 		import { createDriftCards } from './src/drift-cards.js?v=2026-09-18x';
 		window.__drift = createDriftCards();
-		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: document.getElementById('cloud-canvas'), heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
+		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
 		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-19d'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)

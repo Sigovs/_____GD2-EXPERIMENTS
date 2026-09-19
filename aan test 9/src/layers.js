@@ -19,6 +19,10 @@ import { sceneProgress } from './progress.js?v=2026-09-19a';
 
 export const LAYERS = {
 	mouseEase: 2.2,
+	/* NIGHT — the far planes sink into the dark as the camp comes on (Alex, 19 Sep: from where "We map the route"
+	   leaves, captions block 02 ends at 0.38). Scene progress window; the mountain and the clouds dim to these. */
+	night: { at: [0.37, 0.54], mountain: 0.28, clouds: 0.45 },
+	cloudsOut: [0.90, 0.97],   // hero scroll: the plates leave with the act at the hand-over (was descent.js's; the clouds' opacity is owned here now)
 	planes: {
 		mountain: { mouse: 7,  scrollDrift: 0,  scale: 1.035 },     // far: barely moves; scaled a touch so the lean never shows an edge
 		clouds:   { mouse: 13, scrollDrift: 0 },                   // between (the plate rig adds its own sway on top)
@@ -54,6 +58,10 @@ export function createLayers({ mountain, clouds, plateau, heroEnd = 0.56, cfg = 
 		};
 		place(mountain, P0.mountain);
 		place(clouds, P0.clouds);
+		// the night: the far planes dim (the near plane keeps its own light — the tent)
+		const n = smooth((P - cfg.night.at[0]) / (cfg.night.at[1] - cfg.night.at[0]));
+		if (mountain) mountain.style.filter = n > 0.002 ? `brightness(${lerp(1, cfg.night.mountain, n).toFixed(3)}) saturate(${lerp(1, 0.75, n).toFixed(3)})` : '';
+		if (clouds) { const out = 1 - smooth((h - cfg.cloudsOut[0]) / (cfg.cloudsOut[1] - cfg.cloudsOut[0])); const o = lerp(1, cfg.night.clouds, n) * out; clouds.style.opacity = o.toFixed(3); clouds.style.visibility = o > 0.002 ? 'visible' : 'hidden'; }
 		// the plateau: rises in, then lifts out ahead of the act
 		const pl = P0.plateau;
 		const enter = smooth((P - pl.enter[0]) / (pl.enter[1] - pl.enter[0]));
