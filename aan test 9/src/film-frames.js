@@ -69,7 +69,9 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 	}
 
 	function nearest(i) {
-		// the closest loaded frame (for a frame not yet in): keeps the picture continuous while loading
+		// the closest loaded frame (for a frame not yet in): keeps the picture continuous while loading. The frame BEHIND is
+		// preferred (up to 12 back) — while frames are still arriving, jumping ahead and back again reads as a stutter
+		for (let d = 1; d <= 12; d++) if (imgs[i - d]) return imgs[i - d];
 		for (let d = 0; d < cfg.frames; d++) {
 			if (imgs[i - d]) return imgs[i - d];
 			if (imgs[i + d]) return imgs[i + d];
