@@ -44,7 +44,10 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 
 	function resize() {
 		dpr = Math.min(window.devicePixelRatio || 1, 2);
-		W = window.innerWidth; H = window.innerHeight;
+		// the size: the viewport, or the parent's box when the film sits in an OVERSCANNED act (test 9: the mountain act
+		// is 4vh/4vw larger than the screen on every side, so no move, lean, blur or scale inside it can show an edge)
+		const par = cfg.fitParent ? canvas.parentElement : null;   // layout size (offset*), not the transformed box: the plane may be scaled
+		W = par ? par.offsetWidth : window.innerWidth; H = par ? par.offsetHeight : window.innerHeight;
 		canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
 		canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
 		draw(true);

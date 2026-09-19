@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-19g">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-19k">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -107,14 +107,14 @@
 	</script>
 	<!-- <script type="module" src="src/hero-scrub.js"></script>  the <video> transport, parked -->
 	<script type="module">
-		import { createFilmFrames } from './src/film-frames.js?v=2026-09-19b';
-		import { createTentGlow } from './src/tent-glow.js?v=2026-09-19g';
+		import { createFilmFrames } from './src/film-frames.js?v=2026-09-19m';
+		import { createTentGlow } from './src/tent-glow.js?v=2026-09-19m';
 		import { createDescent, ACT } from './src/descent.js?v=2026-09-19g';
 		// the two films: the hero scrubs the first part of the page, the water the rest — they overlap for the hand-over.
 		// Neither listens to the scroll itself: descent.js drives both from one progress.
-		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp', cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false } });   // the film ends early and holds on the tent
+		const film = createFilmFrames({ canvas: document.getElementById('hero-film'), poster: 'previews/hero-poster.webp', cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, fitParent: true } });   // fitParent: the act overscans the viewport
 		// the plateau plate: keyed frames with alpha, the same scrub as the mountain (src/layers.js moves the plane)
-		const plateauFilm = createFilmFrames({ canvas: document.getElementById('plateau'), cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, alpha: true, dir: (w) => (w > 1700 ? 'assets/frames/plateau/1920' : w > 1000 ? 'assets/frames/plateau/1600' : w > 520 ? 'assets/frames/plateau/960' : 'assets/frames/plateau/640') }, loadAfter: 900 });
+		const plateauFilm = createFilmFrames({ canvas: document.getElementById('plateau'), cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, alpha: true, fitParent: true, dir: (w) => (w > 1700 ? 'assets/frames/plateau/1920' : w > 1000 ? 'assets/frames/plateau/1600' : w > 520 ? 'assets/frames/plateau/960' : 'assets/frames/plateau/640') }, loadAfter: 900 });
 		window.__plateau = plateauFilm;
 		const heroFilms = { setProgress(p) { film.setProgress(p); plateauFilm.setProgress(p); }, get frame() { return film.frame; }, get progress() { return film.progress; }, cfg: film.cfg };
 		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => (w > 1000 ? 'assets/frames/water/1600' : w > 520 ? 'assets/frames/water/960' : 'assets/frames/water/640') }, loadAfter: 2500 });

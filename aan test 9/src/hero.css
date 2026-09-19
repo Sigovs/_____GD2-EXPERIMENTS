@@ -50,6 +50,11 @@ body {
 .stage__act {
 	position: absolute;
 	inset: 0;
+}
+/* the mountain act OVERSCANS the viewport: 4vh / 4vw beyond every edge (Alex, 19 Sep: an edge kept showing at the bottom
+   of the hand-over on his screen). Its planes fill it (film-frames fitParent), so nothing inside can reveal a border. */
+#act-hero {
+	inset: -4vh -4vw;
 	will-change: opacity, filter, transform;
 	transform-origin: 50% 50%;
 }

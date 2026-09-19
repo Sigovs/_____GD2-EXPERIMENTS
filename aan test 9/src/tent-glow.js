@@ -117,7 +117,9 @@ export function createTentGlow({ canvas, dodgeCanvas = null, topCanvas = null, f
 	let W = 0, H = 0, dpr = 1;
 
 	function resize() {
-		W = window.innerWidth; H = window.innerHeight;
+		// the glow lives inside the overscanned plateau plane (test 9): its box, not the viewport, so the tent's frame maps 1:1
+		const par = canvas.parentElement;   // layout size (offset*), not the transformed box
+		W = par && par.offsetWidth ? par.offsetWidth : window.innerWidth; H = par && par.offsetHeight ? par.offsetHeight : window.innerHeight;
 		dpr = Math.min(window.devicePixelRatio || 1, W < 700 ? 1 : 2);   // the glow is soft: on a phone one pixel per CSS pixel is plenty, and the blurs are 9x cheaper
 		for (const c of [canvas, dodgeCanvas, topCanvas]) { if (!c) continue; c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); c.style.width = W + 'px'; c.style.height = H + 'px'; }
 	}
