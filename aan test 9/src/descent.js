@@ -33,7 +33,7 @@ export const ACT = {
 		blurPx: 2.5, dim: 0.85, grow: 1,   // no growth of the act either (Alex, 19 Sep: the mountain stays its size)
 		lift: 0,                        // vh: NO lift of the whole act in test 9 — it showed the act's bottom edge as a straight seam over the water (Alex, 19 Sep); the near plane grows instead (layers.js)
 	},
-	water: { in: [0.93, 0.985], rise: true, soft: 0.38 },   // the water RISES from the bottom (a soft edge `soft` viewport-heights tall) instead of fading over the whole frame (Alex, 19 Sep); rise: false = the plain crossfade
+	water: { in: [0.92, 0.99], rise: true, soft: 0.85 },   // a tall soft edge (0.85 vh) AND the whole film fading 0 → 100% as it rises — a gradient, never a line (Alex, 19 Sep: "переход грубый")   // the water RISES from the bottom (a soft edge `soft` viewport-heights tall) instead of fading over the whole frame (Alex, 19 Sep); rise: false = the plain crossfade
 	clouds: { out: [0.92, 0.985] },     // the plates leave with the hero
 };
 
@@ -66,7 +66,7 @@ export function createDescent({ heroWrap, waterCanvas, cloudCanvas, heroFilm, wa
 			const soft = cfg.water.soft, level = (1 + soft) - w * (1 + 2 * soft);   // top of the edge, in viewport heights from the top
 			const mask = w <= 0 ? 'linear-gradient(to bottom, transparent 0%, transparent 100%)' : w >= 1 ? 'none' : `linear-gradient(to bottom, transparent ${(level * 100).toFixed(1)}%, #000 ${((level + soft) * 100).toFixed(1)}%)`;
 			waterCanvas.style.webkitMaskImage = mask; waterCanvas.style.maskImage = mask;
-			waterCanvas.style.opacity = w > 0 ? '1' : '0';
+			waterCanvas.style.opacity = w.toFixed(3);   // and the film itself comes from 0 to 100% as its level rises
 		} else waterCanvas.style.opacity = w.toFixed(3);
 		waterCanvas.style.visibility = w > 0 ? 'visible' : 'hidden';   // explicit: the CSS default for the water is hidden
 		onWater?.(w, P);   // the water's life (caustics, motes, bubbles) follows the water's presence and the depth
