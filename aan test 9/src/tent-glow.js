@@ -68,6 +68,9 @@ export const TENT_GLOW = {
 	   color-dodge, so it burns the film's own highlights (the tent, the lit rocks) instead of adding light over them.
 	   amount = its opacity; spread/intensity scale that pass alone */
 	dodge: { amount: 0.2, spread: 1.2, intensity: 1.6 },   // Alex's 18 Sep values, held back for the larger tent
+	/* TOP — a little of the light OVER the plate too (Alex, 19 Sep): the same stack, stretched sideways and flattened, faint —
+	   the haze the lamp throws in front of the tent, not the fire behind it */
+	top: { intensity: 0.26, stretch: 2.6, squash: 0.42, spread: 0.9 },
 };
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -93,9 +96,10 @@ function makeSprite(color, size) {
 const toHex = ([r, g, b]) => '#' + [r, g, b].map((v) => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('');
 const mixHex = (a, b, t) => { const A = hex(a), B = hex(b); return toHex(A.map((v, i) => v + (B[i] - v) * t)); };
 
-export function createTentGlow({ canvas, dodgeCanvas = null, film, cfg = TENT_GLOW }) {
+export function createTentGlow({ canvas, dodgeCanvas = null, topCanvas = null, film, cfg = TENT_GLOW }) {
 	const ctx = canvas.getContext('2d');
 	const dctx = dodgeCanvas ? dodgeCanvas.getContext('2d') : null;
+	const tctx = topCanvas ? topCanvas.getContext('2d') : null;
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	const base = cfg.layers.map((l) => l.color);
 	let sprites = cfg.layers.map((l) => makeSprite(l.color, cfg.sprite));
@@ -115,7 +119,7 @@ export function createTentGlow({ canvas, dodgeCanvas = null, film, cfg = TENT_GL
 	function resize() {
 		W = window.innerWidth; H = window.innerHeight;
 		dpr = Math.min(window.devicePixelRatio || 1, W < 700 ? 1 : 2);   // the glow is soft: on a phone one pixel per CSS pixel is plenty, and the blurs are 9x cheaper
-		for (const c of [canvas, dodgeCanvas]) { if (!c) continue; c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); c.style.width = W + 'px'; c.style.height = H + 'px'; }
+		for (const c of [canvas, dodgeCanvas, topCanvas]) { if (!c) continue; c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); c.style.width = W + 'px'; c.style.height = H + 'px'; }
 	}
 	window.addEventListener('resize', resize); resize();
 
@@ -177,7 +181,7 @@ export function createTentGlow({ canvas, dodgeCanvas = null, film, cfg = TENT_GL
 		const f = film?.frame ?? 0;
 		const tent = cfg.enabled ? tentAt(f) : null;
 		// one pass of the stack into a context, with its own spread and intensity
-		function stack(ctx, spread, intensity) {
+		function stack(ctx, spread, intensity, squeeze = null) {
 			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 			ctx.clearRect(0, 0, W, H);
 			if (!tent) return;
@@ -186,6 +190,7 @@ export function createTentGlow({ canvas, dodgeCanvas = null, film, cfg = TENT_GL
 			const cx = c.x + tent.u * c.fw + lean.x * cfg.parallax;
 			const cy = c.y + tent.v * c.fh - tw * cfg.anchor + lean.y * cfg.parallax * 0.5;
 			const on = smooth((f - cfg.fadeIn[0]) / (cfg.fadeIn[1] - cfg.fadeIn[0])) * (cfg.fadeOut ? 1 - smooth((f - cfg.fadeOut[0]) / (cfg.fadeOut[1] - cfg.fadeOut[0])) : 1);
+			if (squeeze) { ctx.translate(cx, cy); ctx.scale(squeeze[0], squeeze[1]); ctx.translate(-cx, -cy); }   // the top pass: stretched sideways, flattened
 			ctx.globalCompositeOperation = 'lighter';
 			cfg.layers.forEach((l, i) => {
 				const k = flicker(t, i);
@@ -202,6 +207,7 @@ export function createTentGlow({ canvas, dodgeCanvas = null, film, cfg = TENT_GL
 		}
 		stack(ctx, cfg.spread, cfg.intensity);
 		if (canvas.style.mixBlendMode !== cfg.blend) canvas.style.mixBlendMode = cfg.blend;
+		if (tctx) { const tp = cfg.top; if (tp.intensity > 0 && tent) stack(tctx, cfg.spread * tp.spread, cfg.intensity * tp.intensity, [tp.stretch, tp.squash]); else { tctx.setTransform(1, 0, 0, 1, 0, 0); tctx.clearRect(0, 0, topCanvas.width, topCanvas.height); } }
 		if (dctx) {
 			const d = cfg.dodge;
 			const show = d.amount > 0 && tent;

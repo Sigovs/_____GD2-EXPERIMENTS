@@ -16,7 +16,7 @@
 export function applySaved(cfg, saved) {
 	if (!saved || Array.isArray(saved)) return;
 	for (const k of ['intensity', 'spread', 'riseScale', 'blur', 'drift', 'parallax', 'anchor']) if (typeof saved[k] === 'number') cfg[k] = saved[k];
-	for (const k of ['breath', 'tremble', 'flare', 'dodge']) if (saved[k]) Object.assign(cfg[k], saved[k]);
+	for (const k of ['breath', 'tremble', 'flare', 'dodge', 'top']) if (saved[k]) Object.assign(cfg[k], saved[k]);
 	if (typeof saved.blend === 'string') cfg.blend = saved.blend;
 	if (saved.palette) cfg.palette = { ...saved.palette };
 	if (saved.shape) cfg.shape = saved.shape;
@@ -66,7 +66,7 @@ export function openGlowEditor({ glow, film }) {
 	function resize() { canvas.width = innerWidth * devicePixelRatio; canvas.height = innerHeight * devicePixelRatio; }
 	addEventListener('resize', resize); resize();
 
-	const settings = () => ({ shape, intensity: cfg.intensity, spread: cfg.spread, riseScale: cfg.riseScale, blur: cfg.blur, breath: cfg.breath, tremble: cfg.tremble, flare: cfg.flare, drift: cfg.drift, parallax: cfg.parallax, anchor: cfg.anchor, palette: cfg.palette, blend: cfg.blend, dodge: cfg.dodge });
+	const settings = () => ({ shape, intensity: cfg.intensity, spread: cfg.spread, riseScale: cfg.riseScale, blur: cfg.blur, breath: cfg.breath, tremble: cfg.tremble, flare: cfg.flare, drift: cfg.drift, parallax: cfg.parallax, anchor: cfg.anchor, palette: cfg.palette, blend: cfg.blend, dodge: cfg.dodge, top: cfg.top });
 	function save() {
 		cfg.shape = shape;
 		try { localStorage.setItem(KEY, JSON.stringify(settings())); } catch {}
@@ -82,6 +82,8 @@ export function openGlowEditor({ glow, film }) {
 		['breath.depth', 'Breath', 0, 0.5, 0.01, 0.14], ['tremble.depth', 'Tremble', 0, 0.4, 0.01, 0.07], ['flare.depth', 'Flare', 0, 1, 0.01, 0.25], ['drift', 'Drift', 0, 0.15, 0.001, 0.035], ['parallax', 'Mouse lean', 0, 40, 1, 8], ['anchor', 'Anchor Y', -0.6, 0.6, 0.01, -0.02],
 		// DODGE — a separate pass on its own canvas, mix-blend-mode: color-dodge
 		['dodge.amount', 'Dodge', 0, 1, 0.01, 0], ['dodge.spread', 'Dodge spread', 0.2, 2.5, 0.01, 1], ['dodge.intensity', 'Dodge bright', 0, 3, 0.01, 1],
+		// TOP — the light over the plate: stretched sideways
+		['top.intensity', 'Top', 0, 1.5, 0.01, 0.26], ['top.stretch', 'Top stretch', 1, 5, 0.01, 2.6], ['top.squash', 'Top squash', 0.1, 1, 0.01, 0.42], ['top.spread', 'Top spread', 0.2, 2.5, 0.01, 0.9],
 	];
 	const BLENDS = ['normal', 'screen', 'plus-lighter', 'overlay', 'soft-light', 'hard-light', 'color-dodge', 'lighten'];
 	const COLORS = [['core', 'Core', '#fefcc9'], ['mid', 'Mid', '#ffae34'], ['ember', 'Ember', '#451b0e']];
