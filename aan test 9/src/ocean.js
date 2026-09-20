@@ -10,17 +10,17 @@ import * as THREE from 'three';
 import { Water } from 'three/addons/objects/Water.js';
 
 export const OCEAN = {
-	color: 0x0a2a4e,       // the water's own colour (night)
-	sun: 0xe6eeff,         // the low light on the ripples (a moon)
-	sunDir: [0.2, 0.22, -1],
-	sky: 0x0d1c30,         // what the surface reflects (a dome, no picture)
-	distortion: 3.6,
-	size: 6,               // ripple scale (Water's `size`)
-	speed: 0.45,           // time scale
-	tilt: 34,              // deg: the camera looks down at the surface (90 = straight down); low = the moon's path stretches toward us
+	color: 0x04142a,       // the water's own colour (night) — deep, the ripples read as light on it, not as grey
+	sun: 0xffffff,         // the moon on the ripples
+	sunDir: [0.05, 0.16, -1],   // low, ahead: the glitter path runs toward us
+	sky: 0x070f1c,         // what the surface reflects (a dome, no picture)
+	distortion: 7,
+	size: 14,              // ripple scale (Water's `size`): fine, sharp
+	speed: 0.6,            // time scale
+	tilt: 22,              // deg: the camera looks down at the surface (90 = straight down); low = the moon's path stretches toward us
 	height: 26,            // camera height
 	fog: 0x05080f,         // the page's ground
-	fogNear: 30, fogFar: 260,
+	fogNear: 40, fogFar: 200,
 	mouse: 2.5,            // deg of tilt with the cursor
 };
 
