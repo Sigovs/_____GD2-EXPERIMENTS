@@ -266,8 +266,15 @@
 		// the loading order (Alex, 19 Sep: the film jumped on the scroll — holes while three films loaded at once): the mountain
 		// first; the plateau once the mountain has 160 of its 241 frames; the water once the scroll nears it
 		{ const t = setInterval(() => { if (film.loaded === undefined || film.loaded >= 160) { plateauFilm?.allowLoad(); clearInterval(t); } }, 250); }
-		// v4: the plateau scrubs with the scroll as in v3 (Alex, 20 Sep: "замени плато на v3") — it rises through the cloud pass, then the camera pushes in over the still mountain
-		const heroFilms = { setProgress(p) { film.setProgress(p); plateauFilm?.setProgress(p); }, get frame() { return film.frame; }, get progress() { return film.progress; }, cfg: film.cfg };
+		// v4: the plateau PLAYS BY ITSELF, not on the scrub (Alex, 20 Sep: "плато должно само играть — это loop video, подсветка палатки
+		// внутри видео"): a seamless loop at the video's 24 fps; the tent's light is baked in, so tent-glow.js stays off here. The scroll only raises it.
+		const V4_PLATEAU = { fps: 24 };
+		if (V4 && plateauFilm) {
+			const r1 = plateauFilm.cfg.range[1]; const t0 = performance.now();
+			const play = (now) => { const frame = (((now - t0) / 1000) * V4_PLATEAU.fps) % 241; plateauFilm.setProgress(r1 * frame / 240); requestAnimationFrame(play); };
+			requestAnimationFrame(play);
+		}
+		const heroFilms = { setProgress(p) { film.setProgress(p); if (!V4) plateauFilm?.setProgress(p); }, get frame() { return film.frame; }, get progress() { return film.progress; }, cfg: film.cfg };
 		// the tent's light: over the plate's tent (multiplane) or the film's own tent (single6 — rotoscoped from its frames)
 		const GLOW_SINGLE6 = { ...TENT_GLOW, film: null, intensity: 0.6, top: { ...TENT_GLOW.top, intensity: 0.35 }, fadeIn: [152, 172], fadeOut: null,
 			track: [[150, 0.99, 0.995, 0.02], [156, 0.934, 0.963, 0.16], [162, 0.868, 0.944, 0.22], [168, 0.816, 0.918, 0.22], [174, 0.779, 0.894, 0.23], [180, 0.745, 0.867, 0.21], [186, 0.719, 0.844, 0.20], [192, 0.697, 0.827, 0.19], [198, 0.68, 0.811, 0.23], [204, 0.666, 0.797, 0.24], [210, 0.658, 0.786, 0.23], [216, 0.65, 0.777, 0.23], [222, 0.643, 0.768, 0.225], [228, 0.638, 0.763, 0.22], [234, 0.634, 0.757, 0.22], [240, 0.631, 0.752, 0.22]] };
@@ -277,7 +284,8 @@
 		const waterDir = WATER_DIRS[WATER] || WATER_DIRS.v2;
 		const water = createFilmFrames({ canvas: document.getElementById('water-film'), cfg: { range: [ACT.heroEnd * ACT.waterStart, 1], scroll: false, dir: (w) => `${waterDir}/${w > 1700 ? 1920 : w > 1000 ? 1600 : w > 520 ? 960 : 640}` }, loadAfter: 1e9 });   // the water does not load at once: descent.js lets it start when the scroll nears the hand-over (Alex, 19 Sep: "подгружать позже")
 		window.__water = water;
-		window.__glow = Q.has('noglow') ? { cfg: TENT_GLOW, setPalette() {} } : createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), topCanvas: document.getElementById('tent-glow-top'), film: plateauFilm || film, cfg: plateauFilm ? TENT_GLOW : GLOW_SINGLE6 });
+		// (v4: no glow of ours — the tent's light is in the plateau video itself)
+		window.__glow = (Q.has('noglow') || V4) ? { cfg: TENT_GLOW, setPalette() {} } : createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), topCanvas: document.getElementById('tent-glow-top'), film: plateauFilm || film, cfg: plateauFilm ? TENT_GLOW : GLOW_SINGLE6 });
 		// the planes: the film, the clouds, the plateau — each on its own move (src/layers.js)
 		import { createLayers } from './src/layers.js?v=2026-09-20b';
 		// VERSION 4: the cloud pass (src/mist.js) — the plateau rises under its veil
@@ -305,7 +313,7 @@
 		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), endEl: document.getElementById('stage-end'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { if (P > 0.06) water.allowLoad(); life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); mist?.setProgress(P); } });
 		// VERSION 4: the sea under the call (src/ocean.js — three.js Water)
 		// (?noocean turns it off)
-		if (V4 && !LITE && !Q.has('noocean')) { try { const { createOcean, OCEAN } = await import('./src/ocean.js?v=2026-09-20n'); const oc = document.getElementById('ocean'); oc.hidden = false; window.__ocean = createOcean({ canvas: oc, section: document.getElementById('work'), cfg: OCEAN }); } catch (e) { console.warn('ocean', e); } }
+		if (V4 && !LITE && !Q.has('noocean')) { try { const { createOcean, OCEAN } = await import('./src/ocean.js?v=2026-09-20o'); const oc = document.getElementById('ocean'); oc.hidden = false; window.__ocean = createOcean({ canvas: oc, section: document.getElementById('work'), cfg: OCEAN }); } catch (e) { console.warn('ocean', e); } }
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
 		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-20a'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)

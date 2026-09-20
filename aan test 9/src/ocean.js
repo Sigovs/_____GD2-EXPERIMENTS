@@ -22,11 +22,11 @@ export const OCEAN = {
 	drift: [0.35, 0.21],     // normal-map offset per second, in tiles (68 across the plane): the ripples' travel — at 0.01 it stood still (Alex: "почему не двигается")
 	breathe: 0.06,           // the normal map's repeat breathes ±this, slowly — the pattern never reads as one sliding sheet
 	envRotation: 1.47,       // the sky's turn (radians) — where the bright side of it lands on the water
-	envIntensity: 1,         // how much sky the surface reflects
-	sun: { color: 0xffffff, intensity: 3.9, pos: [26, 53, 8] },
-	ambient: 0.9,
-	overlay: { strength: 1, brightness: 1.8, saturation: 1.2 },   // their ocean texture as the body's colour
-	exposure: 1,
+	envIntensity: 0.55,      // how much sky the surface reflects (the sky map is a blue day; the underwater film is slate-teal — less of it)
+	sun: { color: 0xd6e6ec, intensity: 3.4, pos: [26, 53, 8] },   // the light cooled toward the film's highlights (#a6c6d2)
+	ambient: 0.7,
+	overlay: { strength: 0.4, brightness: 1.6, saturation: 0.55 },   // their ocean texture is royal blue; the underwater film (water-v3, mean #1E343F) is slate-teal — the texture only textures now, the tint is ours
+	exposure: 0.9,
 	camera: { fov: 35, height: 80, forward: 10 },
 	mouse: 3,                // deg of tilt with the cursor
 	edge: 0.28,              // of the height: the top and bottom sink into the page's ground (dithered canvas, no banding)
