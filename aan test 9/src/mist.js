@@ -15,7 +15,7 @@
 export const MIST = {
 	window: [0.03, 0.38],          // the whole pass; the camp rests after it until the water (ACT: 0.448)
 	cover: [0.17, 0.25],           // the veil is full here; the plateau rises under it
-	plateau: [0.15, 0.27],         // the plateau's rise (scene progress) — hidden by the veil
+	plateau: [0.15, 0.27],         // the plateau's rise (scene progress), with the scroll (a timed glide was tried and cancelled — Alex, 20 Sep)
 	veil: { color: '#5c6878', peak: 0 },     // OFF (Alex, 20 Sep: "белый шум просто перекрывает экран") — the clouds pass, nothing whites out
 	brightness: 0.62,              // the plates are daylight white; the page is night
 	mouse: 22,                     // px lean of the whole pass with the cursor
@@ -90,6 +90,6 @@ export function createMist({ el, cfg = MIST }) {
 	return {
 		cfg, el,
 		setProgress(p) { P = p; },
-		enterAt() { return smooth((P - cfg.plateau[0]) / (cfg.plateau[1] - cfg.plateau[0])); },   // the plateau's rise, under the veil
+		enterAt() { return smooth((P - cfg.plateau[0]) / (cfg.plateau[1] - cfg.plateau[0])); },   // the plateau's rise, with the scroll
 	};
 }

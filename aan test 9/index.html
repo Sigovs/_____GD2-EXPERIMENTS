@@ -253,7 +253,9 @@
 			let hp = 0;
 			film = { setProgress(P) { hp = Math.min(1, Math.max(0, P / R)); post({ p: hp }); }, get frame() { return hp * 240; }, get progress() { return hp; }, cfg: { range: [0, R] } };
 		} else if (HERO === 'still') {
-			const still = document.getElementById('hero-still'); if (V4) still.src = 'assets/frames/1920/f241.webp'; still.hidden = false; document.getElementById('hero-film').remove();   // v4: the pull-back's last frame — the one the plateau's frame 240 matches
+			// v4: the original "new hero finale" image (Alex, 20 Sep), not a video frame
+			const still = document.getElementById('hero-still'); if (V4) still.src = 'assets/layers/mountain-finale.webp';
+			still.hidden = false; document.getElementById('hero-film').remove();
 			document.body.classList.add('is-ready'); document.body.dispatchEvent(new Event('ready'));
 			film = { setProgress() {}, get frame() { return 240; }, get progress() { return 1; }, cfg: { range: [0, 1] } };   // the far plane has no frames: the light and the hand-over read a finished film
 		} else {
@@ -290,7 +292,7 @@
 		import { createLayers } from './src/layers.js?v=2026-09-20b';
 		// VERSION 4: the cloud pass (src/mist.js) — the plateau rises under its veil
 		let mist = null;
-		if (V4) { const { createMist, MIST } = await import('./src/mist.js?v=2026-09-20b'); const me = document.getElementById('mist'); me.hidden = false; mist = createMist({ el: me, cfg: MIST }); window.__mist = mist; }
+		if (V4) { const { createMist, MIST } = await import('./src/mist.js?v=2026-09-20d'); const me = document.getElementById('mist'); me.hidden = false; mist = createMist({ el: me, cfg: MIST }); window.__mist = mist; }
 		window.__layers = Q.has('nolayers') ? null : createLayers({ mountain: HERO === 'mountain3d' ? null /* the 3-D scene has its own parallax */ : document.getElementById(HERO === 'still' ? 'hero-still' : 'hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: plateauFilm ? document.getElementById('plane-plateau') : null, heroEnd: ACT.heroEnd, enterAt: mist ? () => mist.enterAt() : null });   // single: the plane holds only the light, it does not move
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
 		import { createWaterLife } from './src/water-life.js?v=2026-09-20a';
@@ -302,7 +304,8 @@
 		// import { createWaterRipple } from './src/water-ripple.js?v=2026-09-18v';   // parked with the rings
 		// the WebGL surface (the ambient sine-field distortion + the cursor rings) is OFF by default (Alex, 19 Sep: the water
 		// "looks like a hack" — a generic wobble over a good film); ?waves=1 brings it back
-		const waves = (LITE || !Q.has('waves')) ? { enabled: false, setPresence() {} } : createWaterWaves({ canvas: document.getElementById('water-waves'), film: water });
+		// v4: the water's SURFACE effect is back on the underwater film (Alex, 20 Sep: "верни css effect с водой") — the ambient sine field of water-waves.js, rings still off
+		const waves = (LITE || !(Q.has('waves') || V4)) ? { enabled: false, setPresence() {} } : createWaterWaves({ canvas: document.getElementById('water-waves'), film: water });
 		// the cursor's ripple is OFF (Alex, 18 Sep): no rings (WATER_WAVES.rings) and no SVG lens fallback either
 		const ripple = { setPresence() {} };   // was: waves.enabled ? … : createWaterRipple({ target: document.getElementById('water-film') })
 		window.__waves = waves;
