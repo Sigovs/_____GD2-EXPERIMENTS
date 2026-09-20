@@ -305,7 +305,7 @@
 		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), endEl: document.getElementById('stage-end'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { if (P > 0.06) water.allowLoad(); life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); mist?.setProgress(P); } });
 		// VERSION 4: the sea under the call (src/ocean.js — three.js Water)
 		// (?noocean turns it off)
-		if (V4 && !LITE && !Q.has('noocean')) { try { const { createOcean, OCEAN } = await import('./src/ocean.js?v=2026-09-20k'); const oc = document.getElementById('ocean'); oc.hidden = false; window.__ocean = createOcean({ canvas: oc, section: document.getElementById('work'), cfg: OCEAN }); } catch (e) { console.warn('ocean', e); } }
+		if (V4 && !LITE && !Q.has('noocean')) { try { const { createOcean, OCEAN } = await import('./src/ocean.js?v=2026-09-20m'); const oc = document.getElementById('ocean'); oc.hidden = false; window.__ocean = createOcean({ canvas: oc, section: document.getElementById('work'), cfg: OCEAN }); } catch (e) { console.warn('ocean', e); } }
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
 		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-20a'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)

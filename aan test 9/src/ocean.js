@@ -19,7 +19,8 @@ export const OCEAN = {
 	color: '#204462',        // the material's base (theirs)
 	roughness: 0, metalness: 0.61,
 	normalRepeat: 68, normalScale: 0.7, normalRotation: 1.2,
-	drift: [0.012, 0.007],   // normal-map offset per second (the ripples' travel), two directions
+	drift: [0.35, 0.21],     // normal-map offset per second, in tiles (68 across the plane): the ripples' travel — at 0.01 it stood still (Alex: "почему не двигается")
+	breathe: 0.06,           // the normal map's repeat breathes ±this, slowly — the pattern never reads as one sliding sheet
 	envRotation: 1.47,       // the sky's turn (radians) — where the bright side of it lands on the water
 	envIntensity: 1,         // how much sky the surface reflects
 	sun: { color: 0xffffff, intensity: 3.9, pos: [26, 53, 8] },
@@ -38,7 +39,7 @@ export function createOcean({ canvas, section, cfg = OCEAN }) {
 	renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 	renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = cfg.exposure;
 	renderer.outputColorSpace = THREE.SRGBColorSpace;
-	renderer.setClearColor(new THREE.Color(cfg.ground), 1);
+	renderer.setClearColor(new THREE.Color().setStyle(cfg.ground, THREE.SRGBColorSpace), 1);
 	const scene = new THREE.Scene();
 	const camera = new THREE.PerspectiveCamera(cfg.camera.fov, 1, 0.1, 500);
 	camera.position.set(0, cfg.camera.height, cfg.camera.forward); camera.lookAt(0, 0, 0);
@@ -82,13 +83,15 @@ export function createOcean({ canvas, section, cfg = OCEAN }) {
 	const vctx = veil.getContext('2d');
 	function paintVeil(W, H) {
 		veil.width = Math.max(2, Math.round(W / 4)); veil.height = Math.max(2, Math.round(H / 2));
-		const img = vctx.createImageData(veil.width, veil.height), d = img.data, g = new THREE.Color(cfg.ground);
+		// the ground's bytes as they are — THREE.Color would linearise them (#05 → ~0) and the fade would end in black, a seam against the page
+		const gh = cfg.ground.replace('#', ''), g = { r: parseInt(gh.slice(0, 2), 16), g: parseInt(gh.slice(2, 4), 16), b: parseInt(gh.slice(4, 6), 16) };
+		const img = vctx.createImageData(veil.width, veil.height), d = img.data;
 		const e = cfg.edge;
 		for (let y = 0; y < veil.height; y++) {
 			const v = y / (veil.height - 1);
 			const t = v < e ? 1 - v / e : v > 1 - e ? 1 - (1 - v) / e : 0;
 			const a = t * t * (3 - 2 * t);
-			for (let x = 0; x < veil.width; x++) { const i = (y * veil.width + x) * 4; d[i] = g.r * 255; d[i + 1] = g.g * 255; d[i + 2] = g.b * 255; d[i + 3] = Math.max(0, Math.min(255, Math.floor(a * 255 + Math.random()))); }
+			for (let x = 0; x < veil.width; x++) { const i = (y * veil.width + x) * 4; d[i] = g.r; d[i + 1] = g.g; d[i + 2] = g.b; d[i + 3] = Math.max(0, Math.min(255, Math.floor(a * 255 + Math.random()))); }
 		}
 		vctx.putImageData(img, 0, 0);
 	}
@@ -103,14 +106,14 @@ export function createOcean({ canvas, section, cfg = OCEAN }) {
 	}
 	addEventListener('resize', resize); resize();
 
-	let on = false, last = performance.now(), raf = 0;
+	let on = false, last = performance.now(), raf = 0, tAcc = 0;
 	const io = new IntersectionObserver((es) => { on = es.some((e) => e.isIntersecting); if (on && !raf) raf = requestAnimationFrame(frame); }, { threshold: 0.01 });
 	io.observe(section);
 	function frame(now) {
 		raf = 0;
 		const dt = Math.min(0.1, (now - last) / 1000); last = now;
 		lean.x += (mouse.x - lean.x) * Math.min(1, dt * 2); lean.y += (mouse.y - lean.y) * Math.min(1, dt * 2);
-		if (normal) { const k = reduced ? 0.4 : 1; normal.offset.x += cfg.drift[0] * dt * k; normal.offset.y += cfg.drift[1] * dt * k; }
+		if (normal) { const k = reduced ? 0.4 : 1; normal.offset.x += cfg.drift[0] * dt * k; normal.offset.y += cfg.drift[1] * dt * k; tAcc += dt * k; const br = 1 + Math.sin(tAcc * 0.35) * cfg.breathe; normal.repeat.set(cfg.normalRepeat * br, cfg.normalRepeat / br); }
 		const t = THREE.MathUtils.degToRad(cfg.mouse);
 		camera.position.set(Math.sin(lean.x * t) * cfg.camera.height, cfg.camera.height, cfg.camera.forward + Math.sin(lean.y * t) * cfg.camera.height * 0.5);
 		camera.lookAt(0, 0, 0);
