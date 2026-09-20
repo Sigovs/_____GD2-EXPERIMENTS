@@ -282,7 +282,7 @@
 		import { createLayers } from './src/layers.js?v=2026-09-20b';
 		// VERSION 4: the cloud pass (src/mist.js) — the plateau rises under its veil
 		let mist = null;
-		if (V4) { const { createMist, MIST } = await import('./src/mist.js?v=2026-09-20a'); const me = document.getElementById('mist'); me.hidden = false; mist = createMist({ el: me, cfg: MIST }); window.__mist = mist; }
+		if (V4) { const { createMist, MIST } = await import('./src/mist.js?v=2026-09-20b'); const me = document.getElementById('mist'); me.hidden = false; mist = createMist({ el: me, cfg: MIST }); window.__mist = mist; }
 		window.__layers = Q.has('nolayers') ? null : createLayers({ mountain: HERO === 'mountain3d' ? null /* the 3-D scene has its own parallax */ : document.getElementById(HERO === 'still' ? 'hero-still' : 'hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: plateauFilm ? document.getElementById('plane-plateau') : null, heroEnd: ACT.heroEnd, enterAt: mist ? () => mist.enterAt() : null });   // single: the plane holds only the light, it does not move
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
 		import { createWaterLife } from './src/water-life.js?v=2026-09-20a';
