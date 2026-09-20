@@ -81,10 +81,6 @@ body {
 .layer--plateau { pointer-events: none; display: block; }
 .layer--still { object-fit: cover; object-position: 50% 50%; display: block; }
 .layer--still[hidden] { display: none; }
-/* v4: the route over the mountain plane — hidden until the intro lands, then on; leans with the mountain (route.js copies its transform) */
-.layer--route { pointer-events: none; opacity: 0; transition: opacity 1200ms ease; }
-.layer--route.is-on { opacity: 1; }
-.layer--route[hidden] { display: none; }
 .layer--3d { border: 0; pointer-events: none; background: var(--ground); }
 .layer--3d[hidden] { display: none; }
 #plane-plateau { transform-origin: 50% 100%; }   /* the near plane grows from its bottom edge at the hand-over */
