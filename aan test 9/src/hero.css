@@ -278,14 +278,17 @@ body {
 }
 
 /* ---- about us: the page surfaces onto the plain ground and says who was speaking ---- */
+/* the three closing chapters — About, Brands, the footer — are each ONE FULL SCREEN (Alex, 20 Sep): the content sits
+   at the vertical centre of its screen, the footer's small print on the screen's bottom edge */
 .about {
 	position: relative; z-index: 3;
 	background: var(--ground); color: var(--ink);
-	padding-block: var(--space-10) var(--space-8);          /* the top carries the arrival from the dark; the brands below bring their own space */
+	min-height: 100vh; min-height: 100svh;
+	display: flex; flex-direction: column; justify-content: center;
+	padding-block: var(--space-9);
 	margin-top: -1px;
 	padding-inline: var(--gutter);
 }
-@media (min-width: 60rem) { .about { padding-block: var(--space-11) var(--space-9); } }
 .about__inner { display: grid; gap: var(--space-6); }
 @media (min-width: 60rem) { .about__inner { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--space-8); } }
 .about__title {
@@ -313,10 +316,11 @@ body {
 	position: relative; z-index: 3;
 	background: var(--ground);
 	color: var(--ink);
-	padding-block: var(--space-8) var(--space-10);        /* bottom-heavy: the page closes, it does not stop (spacing D2) */
+	min-height: 100vh; min-height: 100svh;
+	display: flex; flex-direction: column; justify-content: center;
+	padding-block: var(--space-9);
 	padding-inline: var(--gutter);
 }
-@media (min-width: 60rem) { .brands { padding-block: var(--space-9) var(--space-11); } }
 .brands__inner { max-width: none; }   /* gutter to gutter, as every other mass on this page (the statement, the captions, the calls) */
 .brands__title {
 	/* a chapter heading, not a label: the page's other masses are display-scale, a 14px caption could not close them */
@@ -355,11 +359,14 @@ body {
 .footer {
 	position: relative; z-index: 3;
 	background: var(--ground); color: var(--ink);
-	padding-block: var(--space-8) var(--space-8);
+	min-height: 100vh; min-height: 100svh;
+	display: flex;
+	padding-block: var(--space-8) var(--space-6);
 	padding-inline: var(--gutter);
 	border-top: 1px solid rgba(238, 243, 251, 0.10);
 }
-.footer__inner { max-width: none; }
+.footer__inner { max-width: none; flex: 1; display: flex; flex-direction: column; }
+.footer__top { margin-block: auto; }   /* the row floats at the screen's centre; the small print holds the bottom edge */
 .footer__top {
 	display: grid; gap: var(--space-7) var(--space-8);
 	grid-template-columns: 1fr;
@@ -388,7 +395,7 @@ body {
 .footer__social a:hover { color: var(--ink); border-color: rgba(238, 243, 251, 0.4); }
 .footer__social svg { width: 20px; height: 20px; }
 .footer__bottom {
-	margin-top: var(--space-9);
+	margin-top: var(--space-8);
 	padding-top: var(--space-5);
 	border-top: 1px solid rgba(238, 243, 251, 0.10);
 	display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3) var(--space-6);
