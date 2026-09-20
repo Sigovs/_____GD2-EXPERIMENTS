@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-20x">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-20y">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -47,6 +47,8 @@
 		</div>
 		<!-- ACT II — the water: starts under the surface (the tent's light warped above), comes up over the mountain
 		     for a moment, then the scroll scrubs the descent. Same frame transport. -->
+		<!-- VERSION 4 (?ver=4): the cloud pass — the scroll flies through the clouds from the mountain to the camp (src/mist.js) -->
+		<div id="mist" class="stage__mist" aria-hidden="true" hidden></div>
 		<canvas id="water-film" class="stage__video stage__act" aria-hidden="true"></canvas>
 		<!-- the water answers the cursor with rings: a wave field refracting the film (src/water-waves.js); hidden until it stirs -->
 		<canvas id="water-waves" class="stage__glow" aria-hidden="true" style="visibility:hidden"></canvas>
@@ -154,6 +156,8 @@
 	     the arrow in a ring. Hover: the lines lift, the ring fills. Click: the ring blows out, the arrow flies, and the
 	     second state comes up — "Let's talk", the Book a call pill. The call link and the mail are PLACEHOLDERS. -->
 	<section class="work" id="work" aria-labelledby="work-title">
+		<!-- VERSION 4: a live sea under the call (src/ocean.js) -->
+		<canvas id="ocean" class="work__ocean" aria-hidden="true" hidden></canvas>
 		<div class="work__inner">
 			<div class="work__rest">
 				<p class="work__status"><span class="work__dot" aria-hidden="true"></span>Available for projects</p>
@@ -230,7 +234,9 @@
 		/* ?lite=1 — a diagnosis switch (Alex, 19 Sep: "стало тяжело крутить"): no stage filter, no grade / grain / radial layers, no WebGL water surface */
 		const LITE = Q.has('lite'); if (LITE) document.documentElement.classList.add('is-lite');
 		/* VERSIONS (Alex, 19 Sep): ?water=old | new, ?hero=pullback | still | gora6 | gora5 | mountain3d — to compare without editing */
-		const HERO = Q.get('hero') || 'pullback';   // 'mountain3d' = the 3-D mountain of test 7 with its route (iframe, embed mode) · 'still' = one frame · 'pullback' | 'gora6' | 'gora5' = films
+		const VER = Q.get('ver');   // ?ver=4 — VERSION 4 (Alex, 20 Sep): the mountain's last frame stands still; the scroll flies through the clouds to the camp; a live sea under the call. v1–v3 = the water versions on the scrubbed hero
+		const V4 = VER === '4'; if (V4) document.documentElement.classList.add('is-v4');
+		const HERO = Q.get('hero') || (V4 ? 'still' : 'pullback');   // 'mountain3d' = the 3-D mountain of test 7 with its route (iframe, embed mode) · 'still' = one frame · 'pullback' | 'gora6' | 'gora5' = films
 		const HERO_DIRS = { pullback: 'assets/frames', gora6: 'assets/frames/gora6', gora5: 'assets/frames/gora5' };
 		const heroDir = (w) => `${HERO_DIRS[HERO]}/${w > 1700 ? 1920 : w > 1000 ? 1600 : w > 520 ? 960 : 640}`;
 		import { createDescent, ACT } from './src/descent.js?v=2026-09-20q';
@@ -247,7 +253,7 @@
 			let hp = 0;
 			film = { setProgress(P) { hp = Math.min(1, Math.max(0, P / R)); post({ p: hp }); }, get frame() { return hp * 240; }, get progress() { return hp; }, cfg: { range: [0, R] } };
 		} else if (HERO === 'still') {
-			const still = document.getElementById('hero-still'); still.hidden = false; document.getElementById('hero-film').remove();
+			const still = document.getElementById('hero-still'); if (V4) still.src = 'assets/frames/1920/f241.webp'; still.hidden = false; document.getElementById('hero-film').remove();   // v4: the pull-back's last frame — the one the plateau's frame 240 matches
 			document.body.classList.add('is-ready'); document.body.dispatchEvent(new Event('ready'));
 			film = { setProgress() {}, get frame() { return 240; }, get progress() { return 1; }, cfg: { range: [0, 1] } };   // the far plane has no frames: the light and the hand-over read a finished film
 		} else {
@@ -260,7 +266,7 @@
 		// the loading order (Alex, 19 Sep: the film jumped on the scroll — holes while three films loaded at once): the mountain
 		// first; the plateau once the mountain has 160 of its 241 frames; the water once the scroll nears it
 		{ const t = setInterval(() => { if (film.loaded === undefined || film.loaded >= 160) { plateauFilm?.allowLoad(); clearInterval(t); } }, 250); }
-		const heroFilms = { setProgress(p) { film.setProgress(p); plateauFilm?.setProgress(p); }, get frame() { return film.frame; }, get progress() { return film.progress; }, cfg: film.cfg };
+		const heroFilms = { setProgress(p) { film.setProgress(p); plateauFilm?.setProgress(V4 ? film.cfg.range[1] : p); }, get frame() { return film.frame; }, get progress() { return film.progress; }, cfg: film.cfg };   // v4: the plateau holds frame 240 — the still is the mountain's last frame
 		// the tent's light: over the plate's tent (multiplane) or the film's own tent (single6 — rotoscoped from its frames)
 		const GLOW_SINGLE6 = { ...TENT_GLOW, film: null, intensity: 0.6, top: { ...TENT_GLOW.top, intensity: 0.35 }, fadeIn: [152, 172], fadeOut: null,
 			track: [[150, 0.99, 0.995, 0.02], [156, 0.934, 0.963, 0.16], [162, 0.868, 0.944, 0.22], [168, 0.816, 0.918, 0.22], [174, 0.779, 0.894, 0.23], [180, 0.745, 0.867, 0.21], [186, 0.719, 0.844, 0.20], [192, 0.697, 0.827, 0.19], [198, 0.68, 0.811, 0.23], [204, 0.666, 0.797, 0.24], [210, 0.658, 0.786, 0.23], [216, 0.65, 0.777, 0.23], [222, 0.643, 0.768, 0.225], [228, 0.638, 0.763, 0.22], [234, 0.634, 0.757, 0.22], [240, 0.631, 0.752, 0.22]] };
@@ -272,8 +278,11 @@
 		window.__water = water;
 		window.__glow = Q.has('noglow') ? { cfg: TENT_GLOW, setPalette() {} } : createTentGlow({ canvas: document.getElementById('tent-glow'), dodgeCanvas: document.getElementById('tent-dodge'), topCanvas: document.getElementById('tent-glow-top'), film: plateauFilm || film, cfg: plateauFilm ? TENT_GLOW : GLOW_SINGLE6 });
 		// the planes: the film, the clouds, the plateau — each on its own move (src/layers.js)
-		import { createLayers } from './src/layers.js?v=2026-09-19y';
-		window.__layers = Q.has('nolayers') ? null : createLayers({ mountain: HERO === 'mountain3d' ? null /* the 3-D scene has its own parallax */ : document.getElementById(HERO === 'still' ? 'hero-still' : 'hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: plateauFilm ? document.getElementById('plane-plateau') : null, heroEnd: ACT.heroEnd });   // single: the plane holds only the light, it does not move
+		import { createLayers } from './src/layers.js?v=2026-09-20b';
+		// VERSION 4: the cloud pass (src/mist.js) — the plateau rises under its veil
+		let mist = null;
+		if (V4) { const { createMist, MIST } = await import('./src/mist.js?v=2026-09-20a'); const me = document.getElementById('mist'); me.hidden = false; mist = createMist({ el: me, cfg: MIST }); window.__mist = mist; }
+		window.__layers = Q.has('nolayers') ? null : createLayers({ mountain: HERO === 'mountain3d' ? null /* the 3-D scene has its own parallax */ : document.getElementById(HERO === 'still' ? 'hero-still' : 'hero-film'), clouds: document.getElementById('cloud-canvas'), plateau: plateauFilm ? document.getElementById('plane-plateau') : null, heroEnd: ACT.heroEnd, enterAt: mist ? () => mist.enterAt() : null });   // single: the plane holds only the light, it does not move
 		// the hand-over between the acts drives both films (and the clouds, once they are up) from one progress
 		import { createWaterLife } from './src/water-life.js?v=2026-09-20a';
 		const life = createWaterLife({ canvas: document.getElementById('water-life'), waterCanvas: document.getElementById('water-film') });
@@ -292,7 +301,9 @@
 		// photographs floating up through the water (src/drift-cards.js)
 		import { createDriftCards } from './src/drift-cards.js?v=2026-09-18x';
 		window.__drift = WATER === 'v3' ? null : createDriftCards();   // no photographs in the v3 water (Alex, 19 Sep)
-		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), endEl: document.getElementById('stage-end'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { if (P > 0.06) water.allowLoad(); life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); } });
+		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), endEl: document.getElementById('stage-end'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { if (P > 0.06) water.allowLoad(); life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); mist?.setProgress(P); } });
+		// VERSION 4: the sea under the call (src/ocean.js — three.js Water)
+		if (V4 && !LITE) { try { const { createOcean, OCEAN } = await import('./src/ocean.js?v=2026-09-20a'); const oc = document.getElementById('ocean'); oc.hidden = false; window.__ocean = createOcean({ canvas: oc, section: document.getElementById('work'), cfg: OCEAN }); } catch (e) { console.warn('ocean', e); } }
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
 		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-20a'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)

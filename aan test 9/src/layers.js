@@ -38,7 +38,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const smooth = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
 const lerp = (a, b, t) => a + (b - a) * t;
 
-export function createLayers({ mountain, clouds, plateau, heroEnd = 0.56, cfg = LAYERS }) {
+export function createLayers({ mountain, clouds, plateau, heroEnd = 0.56, enterAt = null, cfg = LAYERS }) {   // enterAt: v4 — the plateau's rise under the cloud pass (mist.js) instead of the scroll window
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	const mouse = { x: 0, y: 0 }, lean = { x: 0, y: 0 };
 	window.addEventListener('pointermove', (e) => { mouse.x = (e.clientX / innerWidth) * 2 - 1; mouse.y = (e.clientY / innerHeight) * 2 - 1; }, { passive: true });
@@ -64,7 +64,7 @@ export function createLayers({ mountain, clouds, plateau, heroEnd = 0.56, cfg = 
 		if (clouds) { const out = 1 - smooth((h - cfg.cloudsOut[0]) / (cfg.cloudsOut[1] - cfg.cloudsOut[0])); const o = lerp(1, cfg.night.clouds, n) * out; clouds.style.opacity = o.toFixed(3); clouds.style.visibility = o > 0.002 ? 'visible' : 'hidden'; }
 		// the plateau: rises in, then lifts out ahead of the act
 		const pl = P0.plateau;
-		const enter = smooth((P - pl.enter[0]) / (pl.enter[1] - pl.enter[0]));
+		const enter = enterAt ? enterAt() : smooth((P - pl.enter[0]) / (pl.enter[1] - pl.enter[0]));
 		const lift = smooth((h - pl.lift[0]) / (pl.lift[1] - pl.lift[0]));
 		place(plateau, { ...pl, scale: (pl.scale || 1) + lift * (pl.grow || 0) }, lerp(pl.from, 0, enter) - lift * pl.liftVh);
 		requestAnimationFrame(frame);

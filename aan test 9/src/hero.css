@@ -113,6 +113,18 @@ body {
 .is-lite .stage { filter: none !important; }
 .is-lite #grade, .is-lite #fx-grain, .is-lite #fx-radial, .is-lite #water-waves { display: none !important; }
 .stage__end { position: fixed; inset: 0; z-index: 1; background: var(--ground); opacity: 0; pointer-events: none; }
+/* ---- v4: the cloud pass (src/mist.js) — over the hero act, under the water; tinted for the night in one filter ---- */
+.stage__mist { position: absolute; inset: 0; overflow: hidden; pointer-events: none; visibility: hidden; filter: brightness(var(--mist-b, 0.6)) saturate(0.7); }
+.stage__mist[hidden] { display: none; }
+.mist__pass { position: absolute; left: 50%; top: 50%; width: 70vw; height: auto; margin: -20vw 0 0 -35vw; opacity: 0; will-change: transform, opacity; transform-origin: 50% 50%; }
+.mist__veil { position: absolute; inset: -2vh -2vw; opacity: 0; will-change: opacity; }
+.mist__bank { position: absolute; left: -10%; width: 120%; top: 0; height: 300%; background: #fff; will-change: transform; }   /* the plate on top, solid white under it, three screens deep */
+.mist__bank img { display: block; width: 100%; height: auto; margin-bottom: -2px; }
+.mist__bank--back { left: -5%; width: 110%; }
+/* ---- v4: the sea under the call (src/ocean.js) ---- */
+.work__ocean { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.work__ocean[hidden] { display: none; }
+.is-v4 .work__inner { position: relative; }
 .stage__vignette {
 	position: absolute;
 	inset: 0;
