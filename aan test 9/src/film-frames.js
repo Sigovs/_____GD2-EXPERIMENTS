@@ -77,7 +77,7 @@ export function createFilmFrames({ canvas, poster, cfg: overrides = {}, loadAfte
 
 	// object-fit: cover
 	function cover(img) {
-		const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+		const iw = img.naturalWidth || img.displayWidth || img.width, ih = img.naturalHeight || img.displayHeight || img.height;   // <img> · VideoFrame · ImageBitmap
 		const s = Math.max(W / iw, H / ih);
 		const dw = iw * s, dh = ih * s;
 		return [(W - dw) / 2 * dpr, (H - dh) / 2 * dpr, dw * dpr, dh * dpr];
