@@ -355,6 +355,108 @@ body {
 .brands__cell:hover img { opacity: 0.7; }
 /* no arrival: the wall is simply there (Alex, 20 Sep: "animation добавлять не будем") */
 
+/* ---- let's work together: the call, one full screen (index.html: #work; src/lets-work.js) ---- */
+.work {
+	position: relative; z-index: 3;
+	background: var(--ground); color: var(--ink);
+	min-height: 100vh; min-height: 100svh;
+	display: flex; align-items: center; justify-content: center;
+	padding-block: var(--space-9); padding-inline: var(--gutter);
+	--work-ease: cubic-bezier(0.16, 1, 0.3, 1);
+	--work-rule: rgba(238, 243, 251, 0.18);
+}
+.work__inner { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--space-7); text-align: center; }
+.work__rest { display: flex; flex-direction: column; align-items: center; gap: var(--space-7); }
+/* the availability */
+.work__status {
+	margin: 0; display: flex; align-items: center; gap: var(--space-3);
+	font-size: 0.875rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-dim);
+	transition: opacity 500ms ease, transform 500ms ease;
+}
+.work__dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: #34d399; }
+.work__dot::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: #34d399; opacity: 0.75; animation: work-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite; }
+@keyframes work-ping { 75%, 100% { transform: scale(2.4); opacity: 0; } }
+/* the trigger: the statement + the ring, one button */
+.work__trigger {
+	position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--space-6);
+	margin: 0; padding: 0 var(--space-8); border: 0; background: none; color: inherit; font: inherit; cursor: pointer;
+}
+.work__trigger:focus-visible { outline: 2px solid #97C82C; outline-offset: 12px; border-radius: 4px; }
+.work__title {
+	margin: 0;
+	font-size: clamp(2.6rem, 7vw, 7rem); font-weight: 700; line-height: 0.98; letter-spacing: -0.03em;   /* the page's display rank */
+	transition: opacity 700ms var(--work-ease), transform 700ms var(--work-ease);
+}
+.work__line { display: block; overflow: hidden; }
+.work__lift { display: block; transition: transform 700ms var(--work-ease); }
+.work__line:nth-child(2) .work__lift { transition-delay: 75ms; }
+.work__lift--dim { color: rgba(238, 243, 251, 0.55); }
+.work__trigger:hover .work__lift { transform: translateY(-8%); }
+.work__ring {
+	position: relative; display: grid; place-items: center; width: clamp(4rem, 6vw, 5rem); aspect-ratio: 1;
+	color: var(--ink);
+	transition: opacity 600ms var(--work-ease), transform 600ms var(--work-ease);
+}
+.work__ring svg { position: relative; width: 45%; height: 45%; transition: transform 500ms var(--work-ease), color 500ms ease, opacity 600ms ease; }
+.work__ring-fill {
+	position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--work-rule);
+	transition: transform 500ms ease-out, background-color 500ms ease, border-color 500ms ease, opacity 700ms ease;
+}
+.work__trigger:hover .work__ring-fill { transform: scale(1.1); background: var(--ink); border-color: var(--ink); }
+.work__trigger:hover .work__ring svg { transform: translate(2px, -2px); color: var(--ground); }
+.work__rule {
+	position: absolute; top: 50%; width: clamp(2rem, 3vw, 3rem); height: 1px; background: var(--work-rule);
+	transition: transform 500ms ease, opacity 500ms ease;
+}
+.work__rule--l { left: 0; transform-origin: right center; }
+.work__rule--r { right: 0; transform-origin: left center; }
+.work__trigger:hover .work__rule { transform: scaleX(1.5); background: var(--ink); }
+.work__note { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); transition: opacity 500ms ease 100ms, transform 500ms ease 100ms; }
+.work__note p { margin: 0; max-width: 34rem; font-size: 0.9375rem; line-height: 1.6; color: var(--ink-dim); text-wrap: pretty; }
+.work__note a { font-size: 0.875rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(238, 243, 251, 0.55); text-decoration: none; }
+.work__note a:hover { color: var(--ink); }
+/* CLICKED: the rest leaves — the statement up, the note down, the ring blows out and the arrow flies */
+.work.is-clicked .work__status { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+.work.is-clicked .work__title { opacity: 0; transform: translateY(-40px) scale(0.95); }
+.work.is-clicked .work__ring-fill { transform: scale(3); background: transparent; border-color: var(--ink); opacity: 0; }
+.work.is-clicked .work__ring svg { transform: translate(100px, -100px) scale(0.5); opacity: 0; color: var(--ink); }
+.work.is-clicked .work__rule { opacity: 0; }
+.work.is-clicked .work__rule--l { transform: scaleX(0) translateX(-20px); }
+.work.is-clicked .work__rule--r { transform: scaleX(0) translateX(20px); }
+.work.is-clicked .work__note { opacity: 0; transform: translateY(20px); }
+.work.is-clicked .work__trigger { pointer-events: none; }
+/* the second state: "Let's talk" — held under the first, comes up once the ring is gone */
+.work__talk {
+	position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-6);
+	opacity: 0; transform: translateY(20px) scale(0.95); pointer-events: none;
+	transition: opacity 700ms var(--work-ease), transform 700ms var(--work-ease);
+}
+.work.is-talk .work__talk { opacity: 1; transform: none; pointer-events: auto; }
+.work__perfect, .work__talk-title, .work__book, .work__sub { opacity: 0; transform: translateY(10px); transition: opacity 500ms ease, transform 500ms ease; }
+.work.is-talk .work__perfect { opacity: 1; transform: none; transition-delay: 100ms; }
+.work.is-talk .work__talk-title { opacity: 1; transform: none; transition-delay: 200ms; }
+.work.is-talk .work__book { opacity: 1; transform: none; transition-delay: 150ms; }
+.work.is-talk .work__sub { opacity: 1; transform: none; transition-delay: 450ms; }
+.work__perfect { margin: 0; font-size: 0.875rem; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-dim); }
+.work__talk-title { margin: calc(-1 * var(--space-4)) 0 0; font-size: clamp(1.75rem, 2.6vw, 2.5rem); font-weight: 700; letter-spacing: -0.02em; }
+.work__book { display: flex; align-items: center; gap: var(--space-4); color: var(--ink); text-decoration: none; }
+.work__book-rule { width: clamp(2rem, 3vw, 3rem); height: 1px; background: var(--work-rule); transition: transform 500ms ease, opacity 500ms ease; }
+.work__book:hover .work__book-rule { transform: scaleX(0); opacity: 0; }
+.work__pill {
+	display: flex; align-items: center; gap: var(--space-3);
+	padding: 0.85em 1.5em; border-radius: 999px; border: 1px solid rgba(238, 243, 251, 0.35);
+	font-size: 0.9375rem; font-weight: 600; letter-spacing: 0.02em;
+	transition: background 500ms ease, border-color 500ms ease, color 500ms ease, transform 500ms ease, box-shadow 500ms ease;
+}
+.work__pill svg { width: 18px; height: 18px; transition: transform 500ms var(--work-ease); }
+.work__book:hover .work__pill { background: var(--ink); border-color: var(--ink); color: var(--ground); transform: scale(1.02); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35); }
+.work__book:hover .work__pill svg:last-child { transform: translate(3px, -3px) scale(1.1); }
+.work__book:focus-visible { outline: 2px solid #97C82C; outline-offset: 6px; border-radius: 999px; }
+.work__sub { margin: 0; font-size: 0.875rem; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(238, 243, 251, 0.45); }
+@media (prefers-reduced-motion: reduce) {
+	.work *, .work *::before { transition-duration: 1ms !important; animation: none !important; }
+}
+
 /* ---- the footer: the page's last mass ---- */
 .footer {
 	position: relative; z-index: 3;

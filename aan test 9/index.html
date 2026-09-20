@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-20u">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-20v">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -109,23 +109,7 @@
 
 	<!-- the scroll length: how much travel the films get (progress.js measures the scene by this track) -->
 	<div class="spacer" aria-hidden="true"></div>
-	<!-- after the descent, on the plain ground: ABOUT US — the page surfaces and says who was speaking. The same left
-	     edge and ink as the brands; the heading at the chapter rank, the lead at the caption rank, the body built for
-	     reading (measure, 1.6 leading). COPY IS PLACEHOLDER — the client's lines go here. -->
-	<section class="about" id="about" aria-labelledby="about-title">
-		<div class="about__inner">
-			<h2 class="about__title" id="about-title">About us</h2>
-			<div class="about__body">
-				<p class="about__lead">We take companies where they could not go alone — and bring them back with the map.</p>
-				<div class="about__copy">
-					<p>GD2 is a growth and compliance partner for businesses that climb. We plan the route, carry the load and read the pressure, so the companies we work with grow without losing their footing.</p>
-					<p>Strategy, operations and regulatory work sit under one roof, with one team accountable for the whole descent. Founded by operators, not consultants: we build every engagement around the decision that has to be made next — not the deck that has to be presented.</p>
-				</div>
-				<div class="about__cta"><a class="cta cta--ghost" href="#main">Talk to us</a></div>
-			</div>
-		</div>
-	</section>
-	<!-- the brands. The page's last chapter — the same ink, the same left edge, the
+	<!-- after the descent, on the plain ground: the brands. The first of the closing chapters — the same ink, the same left edge, the
 	     eyebrow role at rank three, a quiet grid of logos — one ink (assets/brands/*.svg, fills normalised), fixed-height slots. -->
 	<section class="brands" id="brands" aria-labelledby="brands-title">
 		<div class="brands__inner">
@@ -149,6 +133,52 @@
 		</div>
 	</section>
 
+	<!-- ABOUT US — after the brands, the page says who was speaking. The same left
+	     edge and ink as the brands; the heading at the chapter rank, the lead at the caption rank, the body built for
+	     reading (measure, 1.6 leading). COPY IS PLACEHOLDER — the client's lines go here. -->
+	<section class="about" id="about" aria-labelledby="about-title">
+		<div class="about__inner">
+			<h2 class="about__title" id="about-title">About us</h2>
+			<div class="about__body">
+				<p class="about__lead">We take companies where they could not go alone — and bring them back with the map.</p>
+				<div class="about__copy">
+					<p>GD2 is a growth and compliance partner for businesses that climb. We plan the route, carry the load and read the pressure, so the companies we work with grow without losing their footing.</p>
+					<p>Strategy, operations and regulatory work sit under one roof, with one team accountable for the whole descent. Founded by operators, not consultants: we build every engagement around the decision that has to be made next — not the deck that has to be presented.</p>
+				</div>
+				<div class="about__cta"><a class="cta cta--ghost" href="#main">Talk to us</a></div>
+			</div>
+		</div>
+	</section>
+	<!-- LET'S WORK TOGETHER — the call, one full screen (Alex, 20 Sep, after the "lets-work-section" component: the same
+	     states, rebuilt in the page's own language — no React on a static page). Rest: the availability, the statement,
+	     the arrow in a ring. Hover: the lines lift, the ring fills. Click: the ring blows out, the arrow flies, and the
+	     second state comes up — "Let's talk", the Book a call pill. The call link and the mail are PLACEHOLDERS. -->
+	<section class="work" id="work" aria-labelledby="work-title">
+		<div class="work__inner">
+			<div class="work__rest">
+				<p class="work__status"><span class="work__dot" aria-hidden="true"></span>Available for projects</p>
+				<button class="work__trigger" type="button" aria-label="Let's work together — start the conversation">
+					<h2 class="work__title" id="work-title"><span class="work__line"><span class="work__lift">Let's work</span></span><span class="work__line"><span class="work__lift work__lift--dim">together</span></span></h2>
+					<span class="work__ring" aria-hidden="true"><span class="work__ring-fill"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg></span>
+					<span class="work__rule work__rule--l" aria-hidden="true"></span><span class="work__rule work__rule--r" aria-hidden="true"></span>
+				</button>
+				<div class="work__note">
+					<p>Have a climb in mind? Tell us where you want to be — we'll bring the map.</p>
+					<a href="mailto:hello@gd2.com">hello@gd2.com</a>
+				</div>
+			</div>
+			<div class="work__talk" aria-hidden="true">
+				<p class="work__perfect">Perfect</p>
+				<h3 class="work__talk-title">Let's talk</h3>
+				<a class="work__book" href="https://cal.com/" target="_blank" rel="noopener" tabindex="-1">
+					<span class="work__book-rule" aria-hidden="true"></span>
+					<span class="work__pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg><span>Book a call</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg></span>
+					<span class="work__book-rule" aria-hidden="true"></span>
+				</a>
+				<p class="work__sub">15 min intro call</p>
+			</div>
+		</div>
+	</section>
 	<!-- the footer: the same ground and left edge; navigation, contact, the social set (one icon set, Lucide-style strokes
 	     matched to the 600 text), and the small print. Phone, mail and links are PLACEHOLDERS. -->
 	<footer class="footer" aria-label="Footer">
@@ -269,6 +299,11 @@
 		const openEditor = async () => { const { openGlowEditor } = await import('./src/glow-editor.js?v=2026-09-20a'); window.__glowEditor = openGlowEditor({ glow: window.__glow, film }); };
 		if (new URLSearchParams(location.search).get('edit') === 'glow') openEditor();
 		addEventListener('keydown', (e) => { if ((e.key === 'g' || e.key === 'G') && !window.__glowEditor && !e.metaKey && !e.ctrlKey) openEditor(); });
+	</script>
+	<script type="module">
+		// the call: the click blows the ring out and brings the second state up (src/lets-work.js)
+		import { initLetsWork } from './src/lets-work.js?v=2026-09-20a';
+		initLetsWork(document.getElementById('work'));
 	</script>
 	<script type="module">
 		// the vignette, dithered on a canvas — a CSS gradient banded (src/vignette.js)
