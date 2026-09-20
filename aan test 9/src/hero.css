@@ -13,6 +13,21 @@
 * { box-sizing: border-box; }
 
 html { background: var(--ground); }
+/* ---- the closing chapters SNAP and SLIDE IN (Alex, 20 Sep: "slide in на scroll, scroll anchored, каждый раз").
+        proximity, not mandatory: the films' long track has no snap points and must scrub freely — the snap only takes
+        hold once a chapter is near. Each chapter's content slides up as it arrives, and again every time it returns
+        (src/slide-in.js toggles .is-in both ways). ---- */
+html { scroll-snap-type: y proximity; }
+.brands, .about, .work, .footer { scroll-snap-align: start; }
+.brands__inner, .about__inner, .work__inner, .footer__inner {
+	opacity: 0; transform: translateY(56px);
+	transition: opacity 900ms cubic-bezier(0.16, 1, 0.3, 1), transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.is-in > .brands__inner, .is-in > .about__inner, .is-in > .work__inner, .is-in > .footer__inner { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+	html { scroll-snap-type: none; }
+	.brands__inner, .about__inner, .work__inner, .footer__inner { opacity: 1; transform: none; transition: none; }
+}
 
 body {
 	margin: 0;

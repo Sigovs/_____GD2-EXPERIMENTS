@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2397C82C%27/%3E%3Cpath d=%27M6 24 L16 8 L26 24 Z%27 fill=%27%2305080f%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="src/nav.css?v=2026-09-18w">
-<link rel="stylesheet" href="src/hero.css?v=2026-09-20v">
+<link rel="stylesheet" href="src/hero.css?v=2026-09-20w">
 <link rel="stylesheet" href="src/route.css">
 </head>
 <body>
@@ -304,6 +304,9 @@
 		// the call: the click blows the ring out and brings the second state up (src/lets-work.js)
 		import { initLetsWork } from './src/lets-work.js?v=2026-09-20a';
 		initLetsWork(document.getElementById('work'));
+		// the closing chapters slide in as they arrive, every time (src/slide-in.js; the snap is in hero.css)
+		import { initSlideIn } from './src/slide-in.js?v=2026-09-20a';
+		initSlideIn(document.querySelectorAll('.brands, .about, .work, .footer'));
 	</script>
 	<script type="module">
 		// the vignette, dithered on a canvas — a CSS gradient banded (src/vignette.js)
