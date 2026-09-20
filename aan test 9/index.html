@@ -261,7 +261,7 @@
 		}
 		// the plateau plate: keyed frames with alpha, the same scrub as the mountain (src/layers.js moves the plane)
 		// diagnosis switches (Alex, 20 Sep: the renderer crashes were bisected with these): ?noplateau, ?noglow, ?nolayers skip one module each
-		const plateauFilm = Q.has('noplateau') ? null : createFilmFrames({ canvas: document.getElementById('plateau'), cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, alpha: true, fitParent: true, dir: (w) => (w > 1700 ? 'assets/frames/plateau/1920' : w > 1000 ? 'assets/frames/plateau/1600' : w > 520 ? 'assets/frames/plateau/960' : 'assets/frames/plateau/640') }, loadAfter: 1e9 });   // the plateau waits for the mountain: its frames start once the mountain has most of its own (below)
+		const plateauFilm = Q.has('noplateau') ? null : createFilmFrames({ canvas: document.getElementById('plateau'), cfg: { range: [0, ACT.heroEnd * ACT.heroFilmEnd], scroll: false, alpha: true, fitParent: true, dir: (w) => `${V4 ? 'assets/frames/plateau-v3' : 'assets/frames/plateau'}/${w > 1700 ? 1920 : w > 1000 ? 1600 : w > 520 ? 960 : 640}` }, loadAfter: 1e9 });   // v4: "plato final. v3" — the camp stays in the clear the whole way (Alex, 20 Sep)   // the plateau waits for the mountain: its frames start once the mountain has most of its own (below)
 		window.__plateau = plateauFilm;
 		// the loading order (Alex, 19 Sep: the film jumped on the scroll — holes while three films loaded at once): the mountain
 		// first; the plateau once the mountain has 160 of its 241 frames; the water once the scroll nears it
@@ -305,7 +305,7 @@
 		window.__descent = createDescent({ heroWrap: document.getElementById('act-hero'), waterCanvas: document.getElementById('water-film'), endEl: document.getElementById('stage-end'), cloudCanvas: null /* layers.js owns the clouds' opacity now */, heroFilm: heroFilms, waterFilm: water, clouds: null, onWater: (w, P) => { if (P > 0.06) water.allowLoad(); life.setPresence(w, P); ripple.setPresence(w); waves.setPresence(w, P); mist?.setProgress(P); } });
 		// VERSION 4: the sea under the call (src/ocean.js — three.js Water)
 		// (?noocean turns it off)
-		if (V4 && !LITE && !Q.has('noocean')) { try { const { createOcean, OCEAN } = await import('./src/ocean.js?v=2026-09-20m'); const oc = document.getElementById('ocean'); oc.hidden = false; window.__ocean = createOcean({ canvas: oc, section: document.getElementById('work'), cfg: OCEAN }); } catch (e) { console.warn('ocean', e); } }
+		if (V4 && !LITE && !Q.has('noocean')) { try { const { createOcean, OCEAN } = await import('./src/ocean.js?v=2026-09-20n'); const oc = document.getElementById('ocean'); oc.hidden = false; window.__ocean = createOcean({ canvas: oc, section: document.getElementById('work'), cfg: OCEAN }); } catch (e) { console.warn('ocean', e); } }
 		// what was tuned in the editor is kept in this browser and applied here, so the page itself shows it
 		try { const saved = JSON.parse(localStorage.getItem('gd2.tent-glow.t9') || 'null'); if (saved && !Array.isArray(saved)) { const { applySaved } = await import('./src/glow-editor.js?v=2026-09-20a'); applySaved(window.__glow.cfg, saved); if (saved.palette) window.__glow.setPalette(saved.palette); } } catch {}
 		// the shape editor for the glow: ?edit=glow in the URL, or the G key (src/glow-editor.js)

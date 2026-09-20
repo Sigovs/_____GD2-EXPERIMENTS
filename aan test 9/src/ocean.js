@@ -16,7 +16,7 @@
 import * as THREE from 'three';
 
 export const OCEAN = {
-	color: '#204462',        // the material's base (theirs)
+	color: '#0E2937',        // the material's base — Alex's tint (20 Sep)
 	roughness: 0, metalness: 0.61,
 	normalRepeat: 68, normalScale: 0.7, normalRotation: 1.2,
 	drift: [0.35, 0.21],     // normal-map offset per second, in tiles (68 across the plane): the ripples' travel — at 0.01 it stood still (Alex: "почему не двигается")
