@@ -10,16 +10,16 @@ import * as THREE from 'three';
 import { Water } from 'three/addons/objects/Water.js';
 
 export const OCEAN = {
-	color: 0x0b3f8c,       // OCEAN BLUE (Alex, 20 Sep: "ocean blue") — the water's own colour
-	sun: 0xdbe9ff,         // the light on the ripples
+	color: 0x041d4a,       // OCEAN BLUE (Alex, 20 Sep: "ocean blue") — the water's own colour
+	sun: 0x9fbce6,         // the light on the ripples
 	sunDir: [0.1, 0.3, -1],
-	sky: 0x123f7a,         // what the surface reflects (a dome, no picture) — blue too, so the reflection stays blue
+	sky: 0x081f45,         // what the surface reflects (a dome, no picture) — blue too, so the reflection stays blue
 	distortion: 4.5,
 	size: 9,               // ripple scale (Water's `size`)
 	speed: 0.55,           // time scale
 	tilt: 32,              // deg: the camera looks down at the surface (90 = straight down); low = the moon's path stretches toward us
 	height: 26,            // camera height
-	fog: 0x061a3a,         // the far water sinks into a deep blue, then the page's ground takes over at the section's edges (CSS)
+	fog: 0x040f22,         // the far water sinks into a deep blue, then the page's ground takes over at the section's edges (CSS)
 	fogNear: 50, fogFar: 240,
 	mouse: 2.5,            // deg of tilt with the cursor
 };
