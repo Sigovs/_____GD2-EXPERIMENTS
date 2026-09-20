@@ -10,32 +10,32 @@ import * as THREE from 'three';
 import { Water } from 'three/addons/objects/Water.js';
 
 export const OCEAN = {
-	color: 0x041d4a,       // OCEAN BLUE (Alex, 20 Sep: "ocean blue") — the water's own colour
+	color: 0x03173b,       // OCEAN BLUE (Alex, 20 Sep: "ocean blue") — the water's own colour
 	sun: 0x9fbce6,         // the light on the ripples
 	sunDir: [0.1, 0.3, -1],
-	sky: 0x081f45,         // what the surface reflects (a dome, no picture) — blue too, so the reflection stays blue
-	distortion: 4.5,
-	size: 9,               // ripple scale (Water's `size`)
+	sky: 0x061636,         // what the surface reflects (a dome, no picture) — blue too, so the reflection stays blue
+	distortion: 3.2,
+	size: 12,              // ripple scale (Water's `size`): finer
 	speed: 0.55,           // time scale
-	tilt: 32,              // deg: the camera looks down at the surface (90 = straight down); low = the moon's path stretches toward us
+	tilt: 40,              // deg: the camera looks down at the surface (90 = straight down); low = the moon's path stretches toward us
 	height: 26,            // camera height
-	fog: 0x040f22,         // the far water sinks into a deep blue, then the page's ground takes over at the section's edges (CSS)
-	fogNear: 50, fogFar: 240,
+	fog: 0x05080f,         // the page's ground: the far water sinks INTO the site (Alex, 20 Sep: "чтобы уходил в темень, сочетался с фоном")
+	fogNear: 18, fogFar: 150,
 	mouse: 2.5,            // deg of tilt with the cursor
 };
 
 export function createOcean({ canvas, section, cfg = OCEAN }) {
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
-	renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+	renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));   // full pixels: at 1.5 the surface went soft (Alex, 20 Sep: "замыленный")
 	renderer.setClearColor(cfg.fog, 1);
 	const scene = new THREE.Scene();
 	scene.fog = new THREE.Fog(cfg.fog, cfg.fogNear, cfg.fogFar);
 	const camera = new THREE.PerspectiveCamera(50, 1, 0.5, 400);
 	const sun = new THREE.Vector3(...cfg.sunDir).normalize();
-	const normals = new THREE.TextureLoader().load('assets/ocean/water-normal.webp', (t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; });
+	const normals = new THREE.TextureLoader().load('assets/ocean/water-normal.webp', (t) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); t.needsUpdate = true; });   // anisotropy: the far half of the surface is seen at a grazing angle — without it the ripples smear
 	const water = new Water(new THREE.PlaneGeometry(600, 600), {
-		textureWidth: 512, textureHeight: 512,
+		textureWidth: 1024, textureHeight: 1024,
 		waterNormals: normals,
 		sunDirection: sun, sunColor: cfg.sun, waterColor: cfg.color,
 		distortionScale: cfg.distortion, fog: true,
